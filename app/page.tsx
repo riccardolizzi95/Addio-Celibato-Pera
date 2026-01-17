@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50">
@@ -14,9 +15,13 @@ export default function Home() {
           <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-blue-200 active:scale-95 transition-all">
             ✈️ Voli & Alloggi
           </button>
-          <button className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
-            🎉 Proponi Attività
-          </button>
+          
+          <Link href="/attivita" className="w-full">
+            <button className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
+              🎉 Proponi Attività
+            </button>
+          </Link>
+
           <button className="w-full bg-amber-500 text-white py-3 rounded-xl font-semibold shadow-lg shadow-amber-200 active:scale-95 transition-all">
             💰 Gestione Spese
           </button>
