@@ -10,7 +10,7 @@ export default function Home() {
         <p className="mt-2 text-slate-600">
           Il centro di comando per l'addio al celibato più epico di sempre.
         </p>
-        
+
         <div className="mt-8 space-y-4 flex flex-col items-center">
           {/* Bottone Voli (per ora senza link) */}
           <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-blue-200 active:scale-95 transition-all">
@@ -29,7 +29,7 @@ export default function Home() {
             💰 Gestione Spese
           </button>
         </div>
-        
+
       </div>
     </main>
   );

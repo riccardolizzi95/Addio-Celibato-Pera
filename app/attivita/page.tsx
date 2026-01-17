@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Aggiungiamo useEffect
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -8,16 +8,14 @@ export default function AttivitaPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [proposta, setProposta] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 1. Creiamo uno stato per contenere la lista delle proposte che arrivano dal DB
   const [listaProposte, setListaProposte] = useState<any[]>([]);
 
-  // 2. Funzione per SCARICARE i dati dal database
+  // Carica i dati dal DB
   const scaricaDati = async () => {
     const { data, error } = await supabase
       .from('proposte')
-      .select('*') // Prendi tutto
-      .order('created_at', { ascending: false }); // Metti le più recenti in alto
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Errore download:", error);
@@ -26,11 +24,11 @@ export default function AttivitaPage() {
     }
   };
 
-  // 3. Questo sensore dice: "Appena apri la pagina, scarica i dati"
   useEffect(() => {
     scaricaDati();
   }, []);
 
+  // Invia nuova proposta
   const inviaPropostaAlDatabase = async () => {
     if (!proposta) return;
     setIsLoading(true);
@@ -40,14 +38,27 @@ export default function AttivitaPage() {
       .insert([{ titolo: proposta, creatore: 'Riccardo', voti: 0 }]);
 
     if (error) {
-      alert("Errore: " + error.message);
+      alert("Errore salvataggio: " + error.message);
     } else {
       setProposta("");
       setIsFormOpen(false);
-      // 4. Molto importante: rinfreschiamo la lista dopo aver salvato!
       scaricaDati();
     }
     setIsLoading(false);
+  };
+
+  // Funzione per VOTARE
+  const votaProposta = async (id: number, votiAttuali: number) => {
+    const { error } = await supabase
+      .from('proposte')
+      .update({ voti: votiAttuali + 1 })
+      .eq('id', id);
+
+    if (error) {
+      console.error("Errore voto:", error);
+    } else {
+      scaricaDati(); // Rinfresca la lista per vedere il nuovo numero
+    }
   };
 
   return (
@@ -58,7 +69,6 @@ export default function AttivitaPage() {
       </div>
 
       <div className="space-y-4">
-        {/* 5. Cicliamo sulla listaProposte per creare una card per ogni riga del DB */}
         {listaProposte.length === 0 ? (
           <p className="text-center text-slate-400 py-10 italic">Nessuna proposta ancora...</p>
         ) : (
@@ -68,40 +78,49 @@ export default function AttivitaPage() {
               <div className="flex justify-between items-center mt-3">
                 <p className="text-xs text-slate-400">Da: {item.creatore}</p>
                 <div className="flex items-center gap-2">
-                   <button className="bg-slate-100 px-3 py-1 rounded-full text-sm">👍 {item.voti}</button>
+                  <button 
+                    onClick={() => votaProposta(item.id, item.voti)}
+                    className="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-sm font-bold active:scale-90 transition-transform"
+                  >
+                    👍 {item.voti}
+                  </button>
                 </div>
               </div>
             </div>
           ))
         )}
 
-        {/* Pulsante per aggiungere */}
         {isFormOpen ? (
           <div className="bg-white p-6 rounded-xl shadow-md border-2 border-blue-400">
-            <h2 className="font-bold mb-4">Nuova Proposta</h2>
+            <h2 className="font-bold mb-4 text-lg">Cosa vuoi proporre?</h2>
             <input 
               type="text" 
-              placeholder="Cosa vuoi fare?" 
-              className="w-full p-3 border rounded-lg mb-4"
+              placeholder="Esempio: Aperitivo in barca" 
+              className="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 ring-blue-500"
               value={proposta}
               onChange={(e) => setProposta(e.target.value)}
               disabled={isLoading}
             />
             <div className="flex gap-2">
-              <button onClick={() => setIsFormOpen(false)} className="flex-1 py-2 bg-slate-100 rounded-lg">Annulla</button>
               <button 
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg"
+                onClick={() => setIsFormOpen(false)} 
+                className="flex-1 py-3 bg-slate-100 rounded-xl font-medium"
+              >
+                Annulla
+              </button>
+              <button 
                 onClick={inviaPropostaAlDatabase}
                 disabled={isLoading}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold disabled:opacity-50"
               >
-                {isLoading ? "Caricamento..." : "Invia"}
+                {isLoading ? "Invio..." : "Conferma"}
               </button>
             </div>
           </div>
         ) : (
           <button 
             onClick={() => setIsFormOpen(true)}
-            className="w-full border-2 border-dashed border-slate-300 rounded-xl py-6 text-slate-500"
+            className="w-full border-2 border-dashed border-slate-300 rounded-xl py-6 text-slate-500 font-medium hover:bg-slate-100 transition-colors"
           >
             + Aggiungi una proposta
           </button>
