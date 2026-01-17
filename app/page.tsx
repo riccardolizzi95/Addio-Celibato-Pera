@@ -11,21 +11,25 @@ export default function Home() {
           Il centro di comando per l'addio al celibato più epico di sempre.
         </p>
         
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4 flex flex-col items-center">
+          {/* Bottone Voli (per ora senza link) */}
           <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-blue-200 active:scale-95 transition-all">
             ✈️ Voli & Alloggi
           </button>
-          
-          <Link href="/attivita" className="w-full">
+
+          {/* Bottone Attività con Link sistemato */}
+          <Link href="/attivita" className="w-full block">
             <button className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
               🎉 Proponi Attività
             </button>
           </Link>
 
+          {/* Bottone Spese (per ora senza link) */}
           <button className="w-full bg-amber-500 text-white py-3 rounded-xl font-semibold shadow-lg shadow-amber-200 active:scale-95 transition-all">
             💰 Gestione Spese
           </button>
         </div>
+        
       </div>
     </main>
   );
