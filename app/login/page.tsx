@@ -23,11 +23,10 @@ export default function LoginPage() {
     // LOGICA DI REINDIRIZZAMENTO:
     // Se il profilo non esiste (null) o se è il primo accesso, vai a setup-account
     if (!profilo || profilo.primo_accesso === true) {
-      router.push('/setup-account');
-    } else {
-      // Se il profilo esiste già e non è il primo accesso, vai in attività
-      router.push('/attivita');
-    }
+        router.push('/setup-account');
+        } else {
+        router.push('/'); // <-- Cambiato da '/attivita' a '/'
+        }
   };
 
   return (
