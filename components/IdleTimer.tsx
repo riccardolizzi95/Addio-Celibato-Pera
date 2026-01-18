@@ -1,54 +1,57 @@
 'use client';
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-// Definiamo il tempo di inattività: 10 minuti (10 * 60 * 1000 millisecondi)
-const IDLE_TIMEOUT = 10 * 60 * 1000;
-
 export default function IdleTimer({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutInMinutes = 10;
+  const timeoutInMs = timeoutInMinutes * 60 * 1000;
 
-  const handleLogout = async () => {
-    console.log("Inattività rilevata per 10 minuti. Logout in corso...");
+  const logout = useCallback(async () => {
+    localStorage.removeItem('lastActivity'); // Pulisce il timestamp
     await supabase.auth.signOut();
     router.push('/login');
-  };
+  }, [router]);
 
-  const resetTimer = () => {
-    // Ogni volta che l'utente si muove, cancelliamo il vecchio timer e ne facciamo uno nuovo
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(handleLogout, IDLE_TIMEOUT);
+  const checkInactivity = useCallback(() => {
+    const lastActivity = localStorage.getItem('lastActivity');
+    if (lastActivity) {
+      const now = Date.now();
+      const diff = now - parseInt(lastActivity, 10);
+
+      // Se la differenza è maggiore di 10 minuti, slogga
+      if (diff > timeoutInMs) {
+        logout();
+      }
+    }
+  }, [logout, timeoutInMs]);
+
+  const updateActivity = () => {
+    localStorage.setItem('lastActivity', Date.now().toString());
   };
 
   useEffect(() => {
-    // Lista di eventi da monitorare per capire se l'utente è attivo
-    const activityEvents = [
-      'mousedown', 
-      'mousemove', 
-      'keydown', 
-      'scroll', 
-      'touchstart'
-    ];
+    // 1. Controllo immediato al caricamento (fondamentale per il mobile)
+    checkInactivity();
 
-    // Aggiungiamo i "sensori" al browser
-    activityEvents.forEach((event) => {
-      window.addEventListener(event, resetTimer);
+    // 2. Eventi da monitorare per resettare l'attività
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      window.addEventListener(event, updateActivity);
     });
 
-    // Avviamo il primo timer all'avvio
-    resetTimer();
+    // 3. Controllo periodico ogni 30 secondi mentre la pagina è aperta
+    const interval = setInterval(checkInactivity, 30000);
 
-    // Pulizia quando il componente viene rimosso
     return () => {
-      activityEvents.forEach((event) => {
-        window.removeEventListener(event, resetTimer);
+      events.forEach(event => {
+        window.removeEventListener(event, updateActivity);
       });
-      if (timerRef.current) clearTimeout(timerRef.current);
+      clearInterval(interval);
     };
-  }, []);
+  }, [checkInactivity]);
 
   return <>{children}</>;
 }

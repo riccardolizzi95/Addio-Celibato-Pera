@@ -40,9 +40,12 @@ export default function Home() {
         </p>
 
         <div className="w-full space-y-4">
-          <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-            ✈️ Voli & Alloggi
-          </button>
+          {/* Collegamento alla pagina Coming Soon dei Voli */}
+          <Link href="/voli" className="w-full block">
+            <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+              ✈️ Voli & Alloggi
+            </button>
+          </Link>
 
           <Link href="/attivita" className="w-full block">
             <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3">
@@ -50,9 +53,12 @@ export default function Home() {
             </button>
           </Link>
 
-          <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-            💰 Gestione Spese
-          </button>
+          {/* Collegamento alla pagina Coming Soon delle Spese */}
+          <Link href="/spese" className="w-full block">
+            <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+              💰 Gestione Spese
+            </button>
+          </Link>
         </div>
       </div>
 
