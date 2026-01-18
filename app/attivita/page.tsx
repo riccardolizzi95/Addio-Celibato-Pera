@@ -4,31 +4,25 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Trash2 } from 'lucide-react'; // Icona per cancellare
 
 export default function AttivitaPage() {
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [proposta, setProposta] = useState("");
+    const [titolo, setTitolo] = useState("");
+    const [descrizione, setDescrizione] = useState("");
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [listaProposte, setListaProposte] = useState<any[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
     const [myUsername, setMyUsername] = useState("");
     const router = useRouter();
 
-    // 1. Scarica proposte includendo i voti e i nomi di chi ha votato
     const scaricaDati = async () => {
         const { data, error } = await supabase
             .from('proposte')
-            .select(`
-                *,
-                voti_proposte (
-                    valore,
-                    user_id,
-                    profili ( username )
-                )
-            `)
+            .select(`*, voti_proposte (*, profili (username))`)
             .order('created_at', { ascending: false });
-        
         if (!error) setListaProposte(data || []);
     };
 
@@ -41,7 +35,6 @@ export default function AttivitaPage() {
                 setUserId(session.user.id);
                 const { data: prof } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
                 if (prof) setMyUsername(prof.username);
-                
                 setLoading(false);
                 scaricaDati();
             }
@@ -49,49 +42,46 @@ export default function AttivitaPage() {
         checkUser();
     }, [router]);
 
-    // 2. Logica di Voto Avanzata (Like/Unlike/Downvote)
-    const gestisciVoto = async (propostaId: number, valoreRichiesto: number) => {
-        if (!userId) return;
+    const inviaProposta = async () => {
+        // Ora controlliamo solo che il titolo non sia vuoto
+        if (!titolo) return alert("Inserisci almeno un titolo per la proposta!");
 
-        // Controlliamo se l'utente ha già un voto su questa proposta
-        const votoEsistente = listaProposte
-            .find(p => p.id === propostaId)
-            ?.voti_proposte?.find((v: any) => v.user_id === userId);
-
-        if (votoEsistente && votoEsistente.valore === valoreRichiesto) {
-            // Se clicco lo STESSO tasto -> RIMUOVO il voto (Unlike)
-            await supabase
-                .from('voti_proposte')
-                .delete()
-                .eq('proposta_id', propostaId)
-                .eq('user_id', userId);
-        } else {
-            // Altrimenti -> AGGIORNO o INSERISCO (Upsert)
-            await supabase
-                .from('voti_proposte')
-                .upsert({
-                    proposta_id: propostaId,
-                    user_id: userId,
-                    valore: valoreRichiesto
-                }, { onConflict: 'proposta_id,user_id' });
-        }
-        
-        scaricaDati(); // Rinfresca tutto
-    };
-
-    const inviaPropostaAlDatabase = async () => {
-        if (!proposta) return;
         setIsLoadingAction(true);
         const { error } = await supabase
             .from('proposte')
-            .insert([{ titolo: proposta, creatore: myUsername || 'Anonimo' }]);
+            .insert([{
+                titolo,
+                descrizione: descrizione || "", // Se vuota, salviamo una stringa vuota
+                creatore: myUsername || 'Anonimo',
+                user_id: userId
+            }]);
 
         if (!error) {
-            setProposta("");
+            setTitolo("");
+            setDescrizione("");
             setIsFormOpen(false);
             scaricaDati();
         }
         setIsLoadingAction(false);
+    };
+
+    const eliminaProposta = async (id: number) => {
+        if (confirm("Stai per cancellare definitivamente questa proposta. Vuoi procedere?")) {
+            await supabase.from('proposte').delete().eq('id', id);
+            scaricaDati();
+        }
+    };
+
+    const gestisciVoto = async (propostaId: number, valoreRichiesto: number) => {
+        if (!userId) return;
+        const votoEsistente = listaProposte.find(p => p.id === propostaId)?.voti_proposte?.find((v: any) => v.user_id === userId);
+
+        if (votoEsistente && votoEsistente.valore === valoreRichiesto) {
+            await supabase.from('voti_proposte').delete().eq('proposta_id', propostaId).eq('user_id', userId);
+        } else {
+            await supabase.from('voti_proposte').upsert({ proposta_id: propostaId, user_id: userId, valore: valoreRichiesto }, { onConflict: 'proposta_id,user_id' });
+        }
+        scaricaDati();
     };
 
     if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>;
@@ -100,72 +90,82 @@ export default function AttivitaPage() {
         <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900 pb-20">
             <div className="flex items-center justify-between mb-8">
                 <Link href="/" className="text-blue-600 font-semibold">← Home</Link>
-                <h1 className="text-2xl font-bold">Proposte</h1>
+                <h1 className="text-2xl font-bold text-center">Proposte</h1>
             </div>
 
-            <div className="space-y-6">
-                {listaProposte.map((item) => {
-                    // Calcoliamo chi ha votato cosa
-                    const votiSu = item.voti_proposte?.filter((v: any) => v.valore === 1) || [];
-                    const votiGiu = item.voti_proposte?.filter((v: any) => v.valore === -1) || [];
-                    const mioVoto = item.voti_proposte?.find((v: any) => v.user_id === userId)?.valore;
-
-                    return (
-                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                            <h3 className="font-bold text-xl text-slate-800">{item.titolo}</h3>
-                            <p className="text-xs text-slate-400 mt-1">Proposto da: <span className="font-medium text-slate-600">{item.creatore}</span></p>
-                            
-                            <div className="flex flex-col gap-4 mt-6">
-                                {/* Sezione POLLICE SU */}
-                                <div className="space-y-2">
-                                    <button 
-                                        onClick={() => gestisciVoto(item.id, 1)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${mioVoto === 1 ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600'}`}
-                                    >
-                                        👍 {votiSu.length}
-                                    </button>
-                                    {votiSu.length > 0 && (
-                                        <p className="text-[10px] text-slate-400 pl-1 italic">
-                                            Sì: {votiSu.map((v: any) => v.profili?.username).join(", ")}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* Sezione POLLICE GIÙ */}
-                                <div className="space-y-2">
-                                    <button 
-                                        onClick={() => gestisciVoto(item.id, -1)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${mioVoto === -1 ? 'bg-rose-500 text-white shadow-md' : 'bg-slate-100 text-slate-600'}`}
-                                    >
-                                        👎 {votiGiu.length}
-                                    </button>
-                                    {votiGiu.length > 0 && (
-                                        <p className="text-[10px] text-slate-400 pl-1 italic">
-                                            No: {votiGiu.map((v: any) => v.profili?.username).join(", ")}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-
-                {/* Pulsante Aggiungi (come prima) */}
+            {/* 3. Pulsante NUOVA PROPOSTA IN ALTO */}
+            <div className="mb-8">
                 {isFormOpen ? (
-                    <div className="bg-white p-6 rounded-2xl shadow-md border-2 border-blue-400">
-                        <input type="text" placeholder="Cosa proponi?" className="w-full p-4 border rounded-xl mb-4 bg-slate-50" value={proposta} onChange={(e) => setProposta(e.target.value)} />
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-400 animate-in fade-in zoom-in duration-200">
+                        <input type="text" placeholder="Titolo (es: Aperitivo)" className="w-full p-4 border rounded-xl mb-3 bg-slate-50 font-bold" value={titolo} onChange={(e) => setTitolo(e.target.value)} />
+                        <textarea placeholder="Descrizione dell'attività..." className="w-full p-4 border rounded-xl mb-4 bg-slate-50 min-h-[100px]" value={descrizione} onChange={(e) => setDescrizione(e.target.value)} />
                         <div className="flex gap-2">
                             <button onClick={() => setIsFormOpen(false)} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Annulla</button>
-                            <button onClick={inviaPropostaAlDatabase} disabled={isLoadingAction} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">
-                                {isLoadingAction ? "Invio..." : "Conferma"}
-                            </button>
+                            <button onClick={inviaProposta} disabled={isLoadingAction} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Conferma</button>
                         </div>
                     </div>
                 ) : (
-                    <button onClick={() => setIsFormOpen(true)} className="w-full border-2 border-dashed border-slate-300 rounded-2xl py-8 text-slate-500 font-bold hover:bg-slate-100 transition-colors">
-                        + Nuova Proposta
+                    <button onClick={() => setIsFormOpen(true)} className="w-full bg-blue-600 text-white rounded-2xl py-5 font-bold shadow-xl shadow-blue-100 active:scale-95 transition-all text-lg">
+                        🚀 Proponi una nuova missione
                     </button>
                 )}
+            </div>
+
+            <div className="space-y-4">
+                {listaProposte.map((item) => {
+                    const votiSu = item.voti_proposte?.filter((v: any) => v.valore === 1) || [];
+                    const votiGiu = item.voti_proposte?.filter((v: any) => v.valore === -1) || [];
+                    const mioVoto = item.voti_proposte?.find((v: any) => v.user_id === userId)?.valore;
+                    const isExpanded = expandedId === item.id;
+
+                    return (
+                        <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-5 flex justify-between items-start">
+                                {/* 2. TITOLO CLICCABILE */}
+                                <div className="flex-1 cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : item.id)}>
+                                    <h3 className="font-bold text-xl text-slate-800">{item.titolo}</h3>
+                                    <p className="text-xs text-slate-400 mt-1">Da: {item.creatore}</p>
+                                </div>
+
+                                {/* 2. CESTINO PER IL CREATORE */}
+                                {userId === item.user_id && (
+                                    <button onClick={() => eliminaProposta(item.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                        <Trash2 size={18} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* DESCRIZIONE ESPANDIBILE */}
+                            {isExpanded && (
+                                <div className="px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
+                                    {/* Mostra il box descrizione solo se esiste del testo */}
+                                    {item.descrizione && item.descrizione.trim() !== "" && (
+                                        <div className="p-4 bg-slate-50 rounded-xl text-slate-600 text-sm whitespace-pre-wrap mb-4">
+                                            {item.descrizione}
+                                        </div>
+                                    )}
+
+                                    {/* Pulsanti di Voto (Like e Unlike) */}
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex flex-col flex-1 items-start gap-1">
+                                            <button onClick={() => gestisciVoto(item.id, -1)} className={`w-full py-3 rounded-xl font-bold transition-all ${mioVoto === -1 ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                👎 {votiGiu.length}
+                                            </button>
+                                            {votiGiu.length > 0 && <p className="text-[10px] text-slate-400 italic truncate w-full pl-1">No: {votiGiu.map((v: any) => v.profili?.username).join(", ")}</p>}
+                                        </div>
+
+                                        <div className="flex flex-col flex-1 items-start gap-1">
+                                            <button onClick={() => gestisciVoto(item.id, 1)} className={`w-full py-3 rounded-xl font-bold transition-all ${mioVoto === 1 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                👍 {votiSu.length}
+                                            </button>
+                                            {votiSu.length > 0 && <p className="text-[10px] text-slate-400 italic truncate w-full pl-1">Sì: {votiSu.map((v: any) => v.profili?.username).join(", ")}</p>}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </main>
     );
