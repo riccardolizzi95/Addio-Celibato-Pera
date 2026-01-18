@@ -30,38 +30,44 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
-        <span className="text-6xl mb-4 block">🍐</span>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Missione Pera</h1>
-        <p className="mt-2 text-slate-600">Il centro di comando per l'addio al celibato più epico di sempre.</p>
+    <main className="flex min-h-screen flex-col items-center bg-slate-50 text-slate-900 p-6">
+      {/* Contenuto Centrale senza il blocco bianco */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm text-center">
+        <span className="text-8xl mb-6 drop-shadow-sm">🍐</span>
+        <h1 className="text-4xl font-black tracking-tight mb-2">Missione Pera</h1>
+        <p className="text-slate-500 mb-10 text-lg">
+          Il centro di comando per l'addio al celibato più epico di sempre.
+        </p>
 
-        <div className="mt-8 space-y-4 flex flex-col items-center">
-          <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-blue-200 active:scale-95 transition-all">
+        <div className="w-full space-y-4">
+          <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-3">
             ✈️ Voli & Alloggi
           </button>
 
-          <Link href="/attivita" className="w-full block text-slate-900">
-            <button className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
+          <Link href="/attivita" className="w-full block">
+            <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3">
               🎉 Proponi Attività
             </button>
           </Link>
 
-          <button className="w-full bg-amber-500 text-white py-3 rounded-xl font-semibold shadow-lg shadow-amber-200 active:scale-95 transition-all">
+          <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
             💰 Gestione Spese
-          </button>
-          
-          <button 
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push('/login');
-            }}
-            className="mt-4 text-sm text-slate-400 hover:text-slate-600"
-          >
-            Esci (Logout)
           </button>
         </div>
       </div>
+
+      {/* Logout posizionato in fondo alla pagina */}
+      <footer className="w-full py-8 flex justify-center">
+        <button 
+          onClick={async () => {
+            await supabase.auth.signOut();
+            router.push('/login');
+          }}
+          className="text-slate-400 hover:text-slate-600 text-sm font-medium transition-colors underline underline-offset-4"
+        >
+          Disconnetti Account (Logout)
+        </button>
+      </footer>
     </main>
   );
 }

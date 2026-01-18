@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Eye } from 'lucide-react'; 
+import { User, Eye, ClipboardList } from 'lucide-react'; 
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
@@ -14,7 +14,7 @@ export default function Navbar() {
       if (session) {
         setUser(session.user);
         
-        // Recuperiamo lo username reale dal database
+        // Recuperiamo lo username reale dal database per mostrarlo nell'elenco online
         const { data: profilo } = await supabase
           .from('profili')
           .select('username')
@@ -28,7 +28,7 @@ export default function Navbar() {
         channel
           .on('presence', { event: 'sync' }, () => {
             const state = channel.presenceState();
-            // Otteniamo nomi unici per evitare duplicati se uno ha più schede aperte
+            // Otteniamo nomi unici per evitare duplicati
             const names = Object.values(state)
               .flat()
               .map((u: any) => u.user_name);
@@ -51,12 +51,24 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
-      <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
-        Missione Pera 🍐
-      </Link>
+      {/* SEZIONE SINISTRA: Minute e Logo */}
+      <div className="flex items-center gap-4">
+        <Link 
+          href="/minute" 
+          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+          title="Verbali Incontri"
+        >
+          <ClipboardList size={24} />
+        </Link>
+        
+        <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
+          Missione Pera 🍐
+        </Link>
+      </div>
       
+      {/* SEZIONE DESTRA: Online indicator e Profilo */}
       <div className="flex items-center gap-3">
-        {/* Indicatore Online Social: appare se >= 2 persone */}
+        {/* Indicatore Online Social: appare se >= 2 persone sono connesse */}
         {onlineUsers.length >= 2 && (
           <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-100 animate-pulse">
             <Eye size={16} />

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// 1. Importiamo la Navbar che hai creato nella cartella components
+
+// 1. Importiamo i componenti necessari
 import Navbar from "@/components/Navbar"; 
+import IdleTimer from "@/components/IdleTimer"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,11 +31,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 2. Inseriamo la Navbar qui: apparirà sopra ogni pagina */}
-        <Navbar /> 
-        
-        {/* 3. Qui verranno iniettati i contenuti delle varie pagine (Home, Attività, etc.) */}
-        {children}
+        {/* 2. Avvolgiamo tutto il contenuto con IdleTimer. 
+          In questo modo il controllo dell'inattività sarà attivo su ogni pagina.
+        */}
+        <IdleTimer>
+          {/* La Navbar apparirà fissa in alto in ogni pagina */}
+          <Navbar /> 
+          
+          {/* Qui verranno visualizzati i contenuti delle singole pagine (Home, Attività, etc.) */}
+          {children}
+        </IdleTimer>
       </body>
     </html>
   );
