@@ -9,70 +9,84 @@ export default function AttivitaPage() {
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [proposta, setProposta] = useState("");
-    const [isLoadingAction, setIsLoadingAction] = useState(false); // Stato per i caricamenti dei bottoni
+    const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [listaProposte, setListaProposte] = useState<any[]>([]);
-    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [myUsername, setMyUsername] = useState("");
     const router = useRouter();
 
-    // 1. Funzione di scaricamento (spostata fuori per essere accessibile a tutti)
+    // 1. Scarica proposte includendo i voti e i nomi di chi ha votato
     const scaricaDati = async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('proposte')
-            .select('*')
+            .select(`
+                *,
+                voti_proposte (
+                    valore,
+                    user_id,
+                    profili ( username )
+                )
+            `)
             .order('created_at', { ascending: false });
-        setListaProposte(data || []);
+        
+        if (!error) setListaProposte(data || []);
     };
 
-    // 2. Protezione della pagina
     useEffect(() => {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 router.push('/login');
             } else {
+                setUserId(session.user.id);
+                const { data: prof } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
+                if (prof) setMyUsername(prof.username);
+                
                 setLoading(false);
-                scaricaDati(); // Carica i dati appena confermata la sessione
+                scaricaDati();
             }
         };
         checkUser();
     }, [router]);
 
-    // 3. Gestione utenti online
-    useEffect(() => {
-        if (loading) return;
+    // 2. Logica di Voto Avanzata (Like/Unlike/Downvote)
+    const gestisciVoto = async (propostaId: number, valoreRichiesto: number) => {
+        if (!userId) return;
 
-        const channel = supabase.channel('room1', {
-            config: { presence: { key: 'user' } }
-        });
+        // Controlliamo se l'utente ha già un voto su questa proposta
+        const votoEsistente = listaProposte
+            .find(p => p.id === propostaId)
+            ?.voti_proposte?.find((v: any) => v.user_id === userId);
 
-        channel
-            .on('presence', { event: 'sync' }, () => {
-                const state = channel.presenceState();
-                const usernames = Object.values(state).flat().map((u: any) => u.user_name);
-                setOnlineUsers(usernames);
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    await channel.track({ user_name: user?.email, online_at: new Date().toISOString() });
-                }
-            });
+        if (votoEsistente && votoEsistente.valore === valoreRichiesto) {
+            // Se clicco lo STESSO tasto -> RIMUOVO il voto (Unlike)
+            await supabase
+                .from('voti_proposte')
+                .delete()
+                .eq('proposta_id', propostaId)
+                .eq('user_id', userId);
+        } else {
+            // Altrimenti -> AGGIORNO o INSERISCO (Upsert)
+            await supabase
+                .from('voti_proposte')
+                .upsert({
+                    proposta_id: propostaId,
+                    user_id: userId,
+                    valore: valoreRichiesto
+                }, { onConflict: 'proposta_id,user_id' });
+        }
+        
+        scaricaDati(); // Rinfresca tutto
+    };
 
-        return () => { channel.unsubscribe(); };
-    }, [loading]);
-
-    // 4. Invia nuova proposta
     const inviaPropostaAlDatabase = async () => {
         if (!proposta) return;
-        setIsLoadingAction(true); // Usiamo il nome corretto
-
+        setIsLoadingAction(true);
         const { error } = await supabase
             .from('proposte')
-            .insert([{ titolo: proposta, creatore: 'Riccardo', voti: 0 }]);
+            .insert([{ titolo: proposta, creatore: myUsername || 'Anonimo' }]);
 
-        if (error) {
-            alert("Errore salvataggio: " + error.message);
-        } else {
+        if (!error) {
             setProposta("");
             setIsFormOpen(false);
             scaricaDati();
@@ -80,87 +94,76 @@ export default function AttivitaPage() {
         setIsLoadingAction(false);
     };
 
-    // 5. Funzione per VOTARE
-    const votaProposta = async (id: number, votiAttuali: number) => {
-        const { error } = await supabase
-            .from('proposte')
-            .update({ voti: votiAttuali + 1 })
-            .eq('id', id);
-
-        if (error) {
-            console.error("Errore voto:", error);
-        } else {
-            scaricaDati();
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        );
-    }
+    if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>;
 
     return (
-        <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900">
+        <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900 pb-20">
             <div className="flex items-center justify-between mb-8">
                 <Link href="/" className="text-blue-600 font-semibold">← Home</Link>
                 <h1 className="text-2xl font-bold">Proposte</h1>
             </div>
 
-            {/* Occhio Online */}
-            {onlineUsers.length >= 2 && (
-                <div className="fixed bottom-6 right-6 bg-white shadow-xl border border-slate-100 px-4 py-2 rounded-full flex items-center gap-2 animate-bounce">
-                    <span className="text-xl">👁️</span>
-                    <span className="font-bold text-slate-700">{onlineUsers.length} online</span>
-                </div>
-            )}
+            <div className="space-y-6">
+                {listaProposte.map((item) => {
+                    // Calcoliamo chi ha votato cosa
+                    const votiSu = item.voti_proposte?.filter((v: any) => v.valore === 1) || [];
+                    const votiGiu = item.voti_proposte?.filter((v: any) => v.valore === -1) || [];
+                    const mioVoto = item.voti_proposte?.find((v: any) => v.user_id === userId)?.valore;
 
-            <div className="space-y-4">
-                {listaProposte.map((item) => (
-                    <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <h3 className="font-bold text-lg">{item.titolo}</h3>
-                        <div className="flex justify-between items-center mt-3">
-                            <p className="text-xs text-slate-400">Da: {item.creatore}</p>
-                            <button
-                                onClick={() => votaProposta(item.id, item.voti)}
-                                className="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-sm font-bold"
-                            >
-                                👍 {item.voti}
-                            </button>
+                    return (
+                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                            <h3 className="font-bold text-xl text-slate-800">{item.titolo}</h3>
+                            <p className="text-xs text-slate-400 mt-1">Proposto da: <span className="font-medium text-slate-600">{item.creatore}</span></p>
+                            
+                            <div className="flex flex-col gap-4 mt-6">
+                                {/* Sezione POLLICE SU */}
+                                <div className="space-y-2">
+                                    <button 
+                                        onClick={() => gestisciVoto(item.id, 1)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${mioVoto === 1 ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600'}`}
+                                    >
+                                        👍 {votiSu.length}
+                                    </button>
+                                    {votiSu.length > 0 && (
+                                        <p className="text-[10px] text-slate-400 pl-1 italic">
+                                            Sì: {votiSu.map((v: any) => v.profili?.username).join(", ")}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Sezione POLLICE GIÙ */}
+                                <div className="space-y-2">
+                                    <button 
+                                        onClick={() => gestisciVoto(item.id, -1)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${mioVoto === -1 ? 'bg-rose-500 text-white shadow-md' : 'bg-slate-100 text-slate-600'}`}
+                                    >
+                                        👎 {votiGiu.length}
+                                    </button>
+                                    {votiGiu.length > 0 && (
+                                        <p className="text-[10px] text-slate-400 pl-1 italic">
+                                            No: {votiGiu.map((v: any) => v.profili?.username).join(", ")}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
 
+                {/* Pulsante Aggiungi (come prima) */}
                 {isFormOpen ? (
-                    <div className="bg-white p-6 rounded-xl shadow-md border-2 border-blue-400">
-                        <h2 className="font-bold mb-4 text-lg">Nuova Proposta</h2>
-                        <input
-                            type="text"
-                            placeholder="Esempio: Aperitivo in barca"
-                            className="w-full p-3 border rounded-lg mb-4"
-                            value={proposta}
-                            onChange={(e) => setProposta(e.target.value)}
-                            disabled={isLoadingAction}
-                        />
+                    <div className="bg-white p-6 rounded-2xl shadow-md border-2 border-blue-400">
+                        <input type="text" placeholder="Cosa proponi?" className="w-full p-4 border rounded-xl mb-4 bg-slate-50" value={proposta} onChange={(e) => setProposta(e.target.value)} />
                         <div className="flex gap-2">
-                            <button onClick={() => setIsFormOpen(false)} className="flex-1 py-3 bg-slate-100 rounded-xl">Annulla</button>
-                            <button
-                                onClick={inviaPropostaAlDatabase}
-                                disabled={isLoadingAction}
-                                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold"
-                            >
+                            <button onClick={() => setIsFormOpen(false)} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Annulla</button>
+                            <button onClick={inviaPropostaAlDatabase} disabled={isLoadingAction} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">
                                 {isLoadingAction ? "Invio..." : "Conferma"}
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <button
-                        onClick={() => setIsFormOpen(true)}
-                        className="w-full border-2 border-dashed border-slate-300 rounded-xl py-6 text-slate-500 font-medium"
-                    >
-                        + Aggiungi una proposta
+                    <button onClick={() => setIsFormOpen(true)} className="w-full border-2 border-dashed border-slate-300 rounded-2xl py-8 text-slate-500 font-bold hover:bg-slate-100 transition-colors">
+                        + Nuova Proposta
                     </button>
                 )}
             </div>
