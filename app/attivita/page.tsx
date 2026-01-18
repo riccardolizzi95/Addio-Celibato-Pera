@@ -42,6 +42,28 @@ export default function AttivitaPage() {
         checkUser();
     }, [router]);
 
+    // Effetto per gli aggiornamenti in TEMPO REALE
+    useEffect(() => {
+        // Creiamo un canale che ascolta ogni modifica (INSERT, UPDATE, DELETE) 
+        // su tutte le tabelle pubbliche (proposte e voti)
+        const channel = supabase
+            .channel('schema-db-changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public' },
+                () => {
+                    console.log("Cambiamento rilevato nel DB! Aggiorno...");
+                    scaricaDati(); // Ricarica la lista automaticamente
+                }
+            )
+            .subscribe();
+
+        // Pulizia quando chiudi la pagina
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+    
     const inviaProposta = async () => {
         // Ora controlliamo solo che il titolo non sia vuoto
         if (!titolo) return alert("Inserisci almeno un titolo per la proposta!");
