@@ -1,23 +1,23 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // 1. Nuovo stato per gestire il caricamento
   const [isLoading, setIsLoading] = useState(false); 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Recuperiamo l'eventuale link di destinazione originale
+  const returnTo = searchParams.get('returnTo');
 
   const handleLogin = async () => {
     if (!email || !password) return alert("Inserisci email e password!");
-    
-    // Inizia il caricamento e disabilita il pulsante
     setIsLoading(true); 
 
     try {
-      // Tentativo di login
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
@@ -25,30 +25,26 @@ export default function LoginPage() {
         return alert(error.message);
       }
 
-      // Se il login ha successo, cerchiamo il profilo
-      const { data: profilo, error: profiloError } = await supabase
+      // Recuperiamo il profilo
+      const { data: profilo } = await supabase
         .from('profili')
         .select('primo_accesso')
         .eq('id', data.user?.id)
         .maybeSingle();
 
-      if (profiloError) {
-        console.error("Errore nel recupero profilo:", profiloError);
-      }
+      // ASPETTIAMO UN MOMENTO (200ms)
+      // Questo risolve il problema sui telefoni: diamo tempo al browser di salvare la sessione
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      // LOGICA DI REINDIRIZZAMENTO:
       if (!profilo || profilo.primo_accesso === true) {
         router.push('/setup-account');
       } else {
-        router.push('/'); 
+        // Se c'è un link di ritorno (es. la minuta), vai lì, altrimenti vai alla Home
+        router.push(returnTo || '/'); 
       }
     } catch (err) {
-      console.error("Errore imprevisto durante il login:", err);
-      alert("Si è verificato un errore imprevisto. Prova a ricaricare la pagina.");
-    } finally {
-      // In caso di errore o problemi, riattiviamo il pulsante dopo un po'
-      // Se il login ha successo, il router cambierà pagina prima di questo
-      setTimeout(() => setIsLoading(false), 5000); 
+      alert("Errore imprevisto. Riprova.");
+      setIsLoading(false);
     }
   };
 
@@ -63,6 +59,7 @@ export default function LoginPage() {
           placeholder="Email" 
           disabled={isLoading}
           className="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
+          value={email}
           onChange={e => setEmail(e.target.value)} 
         />
         <input 
@@ -70,6 +67,7 @@ export default function LoginPage() {
           placeholder="Password" 
           disabled={isLoading}
           className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
+          value={password}
           onChange={e => setPassword(e.target.value)} 
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
@@ -80,11 +78,7 @@ export default function LoginPage() {
           className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-slate-400"
         >
           {isLoading ? (
-            <>
-              {/* Rotellina di caricamento (Spinner) */}
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Accesso in corso...
-            </>
+            <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Accesso...</>
           ) : (
             "Accedi alla Missione"
           )}

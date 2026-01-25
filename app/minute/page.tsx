@@ -49,9 +49,16 @@ export default function MinutePage() {
 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return router.push('/login');
-            const { data: profilo } = await supabase.from('profili').select('admin').eq('id', session.user.id).single();
+            // Usiamo getUser() invece di getSession() perché è più preciso nel verificare l'autenticità reale
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                // Se non c'è l'utente, lo mandiamo al login passandogli l'URL attuale
+                const currentUrl = window.location.pathname + window.location.search;
+                return router.push(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+            }
+
+            const { data: profilo } = await supabase.from('profili').select('admin').eq('id', user.id).single();
             if (profilo?.admin) setIsAdmin(true);
             setLoading(false);
             scaricaMinute();
