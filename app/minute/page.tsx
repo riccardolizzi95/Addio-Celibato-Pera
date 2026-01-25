@@ -49,22 +49,24 @@ export default function MinutePage() {
 
     useEffect(() => {
         const checkUser = async () => {
-            // Usiamo getUser() invece di getSession() perché è più preciso nel verificare l'autenticità reale
-            const { data: { user } } = await supabase.auth.getUser();
+            // getSession è più veloce e affidabile per i controlli client-side immediati su telefono
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if (!user) {
-                // Se non c'è l'utente, lo mandiamo al login passandogli l'URL attuale
+            if (!session) {
+                // Se non c'è sessione, lo mandiamo al login ricordando dove voleva andare
                 const currentUrl = window.location.pathname + window.location.search;
-                return router.push(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+                window.location.href = `/login?returnTo=${encodeURIComponent(currentUrl)}`;
+                return;
             }
 
-            const { data: profilo } = await supabase.from('profili').select('admin').eq('id', user.id).single();
+            // Se arriviamo qui la sessione esiste
+            const { data: profilo } = await supabase.from('profili').select('admin').eq('id', session.user.id).single();
             if (profilo?.admin) setIsAdmin(true);
             setLoading(false);
             scaricaMinute();
         };
         checkUser();
-    }, [router]);
+    }, []); // Rimosso router dalle dipendenze per evitare ricaricamenti inutili
 
     const aggiungiPartecipante = () => {
         if (!nuovoPartecipante.trim()) return;
