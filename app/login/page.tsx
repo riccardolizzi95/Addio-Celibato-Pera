@@ -6,27 +6,50 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // 1. Nuovo stato per gestire il caricamento
+  const [isLoading, setIsLoading] = useState(false); 
   const router = useRouter();
 
   const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!email || !password) return alert("Inserisci email e password!");
     
-    if (error) return alert(error.message);
+    // Inizia il caricamento e disabilita il pulsante
+    setIsLoading(true); 
 
-    // Cerchiamo il profilo dell'utente
-    const { data: profilo, error: profiloError } = await supabase
-      .from('profili')
-      .select('primo_accesso')
-      .eq('id', data.user?.id)
-      .maybeSingle(); // Usiamo maybeSingle così non va in errore se non trova nulla
+    try {
+      // Tentativo di login
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        setIsLoading(false);
+        return alert(error.message);
+      }
 
-    // LOGICA DI REINDIRIZZAMENTO:
-    // Se il profilo non esiste (null) o se è il primo accesso, vai a setup-account
-    if (!profilo || profilo.primo_accesso === true) {
+      // Se il login ha successo, cerchiamo il profilo
+      const { data: profilo, error: profiloError } = await supabase
+        .from('profili')
+        .select('primo_accesso')
+        .eq('id', data.user?.id)
+        .maybeSingle();
+
+      if (profiloError) {
+        console.error("Errore nel recupero profilo:", profiloError);
+      }
+
+      // LOGICA DI REINDIRIZZAMENTO:
+      if (!profilo || profilo.primo_accesso === true) {
         router.push('/setup-account');
-        } else {
-        router.push('/'); // <-- Cambiato da '/attivita' a '/'
-        }
+      } else {
+        router.push('/'); 
+      }
+    } catch (err) {
+      console.error("Errore imprevisto durante il login:", err);
+      alert("Si è verificato un errore imprevisto. Prova a ricaricare la pagina.");
+    } finally {
+      // In caso di errore o problemi, riattiviamo il pulsante dopo un po'
+      // Se il login ha successo, il router cambierà pagina prima di questo
+      setTimeout(() => setIsLoading(false), 5000); 
+    }
   };
 
   return (
@@ -38,21 +61,33 @@ export default function LoginPage() {
         <input 
           type="email" 
           placeholder="Email" 
-          className="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500"
+          disabled={isLoading}
+          className="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
           onChange={e => setEmail(e.target.value)} 
         />
         <input 
           type="password" 
-          placeholder="Password temporanea" 
-          className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500"
+          placeholder="Password" 
+          disabled={isLoading}
+          className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
           onChange={e => setPassword(e.target.value)} 
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
         
         <button 
           onClick={handleLogin} 
-          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all"
+          disabled={isLoading}
+          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-slate-400"
         >
-          Accedi alla Missione
+          {isLoading ? (
+            <>
+              {/* Rotellina di caricamento (Spinner) */}
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Accesso in corso...
+            </>
+          ) : (
+            "Accedi alla Missione"
+          )}
         </button>
       </div>
     </main>
