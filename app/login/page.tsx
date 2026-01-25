@@ -1,13 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false); 
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Recuperiamo l'eventuale link di destinazione originale
@@ -25,24 +24,23 @@ export default function LoginPage() {
         return alert(error.message);
       }
 
-      // Recuperiamo il profilo
+      // Recuperiamo il profilo per controllare il primo accesso
       const { data: profilo } = await supabase
         .from('profili')
         .select('primo_accesso')
         .eq('id', data.user?.id)
         .maybeSingle();
 
-      // ASPETTIAMO UN MOMENTO (200ms)
-      // Questo risolve il problema sui telefoni: diamo tempo al browser di salvare la sessione
-      await new Promise(resolve => setTimeout(resolve, 200));
-
+      // SOLUZIONE DEFINITIVA: Forziamo il ricaricamento della pagina di destinazione
+      // window.location.href agisce come un refresh manuale, risolvendo il problema dei telefoni
       if (!profilo || profilo.primo_accesso === true) {
-        router.push('/setup-account');
+        window.location.href = '/setup-account';
       } else {
-        // Se c'è un link di ritorno (es. la minuta), vai lì, altrimenti vai alla Home
-        router.push(returnTo || '/'); 
+        // Se non c'è returnTo, andiamo in home
+        window.location.href = returnTo || '/'; 
       }
     } catch (err) {
+      console.error("Errore login:", err);
       alert("Errore imprevisto. Riprova.");
       setIsLoading(false);
     }
@@ -58,7 +56,7 @@ export default function LoginPage() {
           type="email" 
           placeholder="Email" 
           disabled={isLoading}
-          className="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
+          className="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50 bg-white"
           value={email}
           onChange={e => setEmail(e.target.value)} 
         />
@@ -66,7 +64,7 @@ export default function LoginPage() {
           type="password" 
           placeholder="Password" 
           disabled={isLoading}
-          className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
+          className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50 bg-white"
           value={password}
           onChange={e => setPassword(e.target.value)} 
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
