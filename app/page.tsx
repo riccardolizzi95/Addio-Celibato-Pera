@@ -29,12 +29,10 @@ export default function Home() {
   }
 
   return (
-    /* Rimosso min-h-screen per evitare lo scorrimento forzato */
+    /* Rimosso min-h-screen per eliminare lo scorrimento inutile */
     <main className="flex flex-col items-center bg-slate-50 text-slate-900 p-6">
       
-      {/* Cambiato justify-center in pt-4 per avvicinare il contenuto alla Navbar.
-          Rimosso flex-1 che spingeva i contenuti verso il basso.
-      */}
+      {/* Rimosso flex-1 e justify-center. Aggiunto pt-4 per avvicinare i contenuti alla Navbar */}
       <div className="flex flex-col items-center w-full max-w-sm text-center pt-4">
         <span className="text-8xl mb-6 drop-shadow-sm font-normal">🍐</span>
         <h1 className="text-4xl font-black tracking-tight mb-2">Missione Pera</h1>
@@ -61,8 +59,8 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Spaziatore finale ridotto */}
-      <div className="py-6"></div>
+      {/* Piccolo spazio di respiro in fondo */}
+      <div className="py-8"></div>
     </main>
   );
 }
