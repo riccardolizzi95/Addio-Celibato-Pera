@@ -1,8 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Cambiamo il nome della funzione da middleware a proxy
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -35,15 +34,18 @@ export async function proxy(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Se non c'è sessione e non siamo al login, reindirizza
+  // Se non c'è sessione e non siamo al login, reindirizza salvando l'URL originale
   if (!session && !request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const url = request.nextUrl.clone();
+    const returnTo = url.pathname + url.search; // Prende percorso + parametri (es: /minute?id=123)
+    url.pathname = '/login';
+    url.searchParams.set('returnTo', returnTo); // Lo aggiunge come parametro al login
+    return NextResponse.redirect(url);
   }
 
   return response
 }
 
-// Il matcher rimane invariato
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }

@@ -3,22 +3,19 @@ import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useSearchParams } from 'next/navigation';
 
-// 1. Creiamo un componente interno che usa i parametri di ricerca
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false); 
   const searchParams = useSearchParams();
   
-  // Link di ritorno (es: la minuta) o Home
   const returnTo = searchParams.get('returnTo') || '/';
 
-  // Se l'utente è già loggato (rilevato nel loop), lo spostiamo subito
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        window.location.href = returnTo;
+        window.location.assign(returnTo);
       }
     };
     checkSession();
@@ -26,7 +23,6 @@ function LoginForm() {
 
   const handleLogin = async () => {
     if (!email || !password) return alert("Inserisci email e password!");
-    
     const cleanEmail = email.trim();
     setIsLoading(true); 
 
@@ -44,14 +40,12 @@ function LoginForm() {
         return alert(error.message);
       }
 
-      // Recuperiamo il profilo per il controllo primo accesso
       const { data: profilo } = await supabase
         .from('profili')
         .select('primo_accesso')
         .eq('id', data.user?.id)
         .maybeSingle();
 
-      // FORZIAMO IL REFRESH TOTALE PER EVITARE LOOP
       if (!profilo || profilo.primo_accesso === true) {
         window.location.assign('/setup-account');
       } else {
@@ -107,7 +101,6 @@ function LoginForm() {
   );
 }
 
-// 2. Il componente principale esportato deve avvolgere tutto in Suspense
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50 text-slate-900">
