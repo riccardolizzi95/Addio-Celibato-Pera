@@ -29,8 +29,13 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-slate-50 text-slate-900 p-6">
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm text-center">
+    /* Rimosso min-h-screen per evitare lo scorrimento forzato */
+    <main className="flex flex-col items-center bg-slate-50 text-slate-900 p-6">
+      
+      {/* Cambiato justify-center in pt-4 per avvicinare il contenuto alla Navbar.
+          Rimosso flex-1 che spingeva i contenuti verso il basso.
+      */}
+      <div className="flex flex-col items-center w-full max-w-sm text-center pt-4">
         <span className="text-8xl mb-6 drop-shadow-sm font-normal">🍐</span>
         <h1 className="text-4xl font-black tracking-tight mb-2">Missione Pera</h1>
         <p className="text-slate-500 mb-10 text-lg text-center leading-relaxed font-normal">
@@ -56,7 +61,8 @@ export default function Home() {
         </div>
       </div>
       
-      <div className="py-8"></div>
+      {/* Spaziatore finale ridotto */}
+      <div className="py-6"></div>
     </main>
   );
 }
