@@ -10,26 +10,17 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     const [selectedVolo, setSelectedVolo] = useState<any>(null);
     const [nuovoVolo, setNuovoVolo] = useState({ codice: '', data: '', gruppo: '' });
 
-    // FIX SAFARI/MOBILE: Converte la data in formato ISO standard per evitare "Invalid Date"
-    const standardizzaData = (str: string) => {
-        if (!str) return '';
-        return str.replace(/\s/, 'T');
-    };
+    const standardizzaData = (str: string) => str ? str.replace(/\s/, 'T') : '';
 
     const fetchFlightData = async (code: string, date: string) => {
         const cleanCode = code.replace(/\s+/g, '').toUpperCase();
-        const apiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
-
-        if (!apiKey) throw new Error("Chiave API mancante su Vercel!");
-
         const options = {
             method: 'GET',
             headers: {
-                'X-RapidAPI-Key': apiKey,
+                'X-RapidAPI-Key': process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '',
                 'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
             }
         };
-
         const res = await fetch(`https://aerodatabox.p.rapidapi.com/flights/number/${cleanCode}/${date}`, options);
         if (!res.ok) return null;
         const data = await res.json();
@@ -44,15 +35,15 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     useEffect(() => { scaricaVoli(); }, []);
 
     const handleAggiungiVolo = async () => {
-        if (!nuovoVolo.codice || !nuovoVolo.data) return alert("Comandante, inserisci codice e data!");
+        if (!nuovoVolo.codice || !nuovoVolo.data) return alert("Inserisci codice e data!");
         setIsVerifying(true);
         try {
             const live = await fetchFlightData(nuovoVolo.codice, nuovoVolo.data);
-            if (!live) throw new Error("Volo non trovato. Prova con un codice senza spazi (es. HV5466).");
+            if (!live) throw new Error("Volo non trovato. Verifica il codice.");
 
             await supabase.from('voli').insert([{
                 codice_volo: nuovoVolo.codice.toUpperCase().trim(),
-                compagnia: live.airline?.name || "Transavia",
+                compagnia: live.airline?.name || "Sconosciuta",
                 partenza_aeroporto: live.departure?.airport?.iata,
                 arrivo_aeroporto: live.arrival?.airport?.iata,
                 orario_partenza: standardizzaData(live.departure?.scheduledTime?.local),
@@ -79,16 +70,16 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
             {isVoloFormOpen && (
                 <div className="bg-white p-6 rounded-[2.5rem] border-2 border-blue-500 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2">Codice Volo</label>
+                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Codice Volo</label>
                         <input type="text" placeholder="Es: HV5466" className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none text-lg font-bold" value={nuovoVolo.codice} onChange={e => setNuovoVolo({...nuovoVolo, codice: e.target.value})} />
                     </div>
                     
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2">Data Partenza</label>
+                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Data Partenza</label>
                         <div className="relative">
                             <input 
                                 type="date" 
-                                className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none text-lg font-bold appearance-none min-h-[60px] text-slate-700" 
+                                className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none text-lg font-bold text-slate-700 min-h-[60px]" 
                                 value={nuovoVolo.data} 
                                 onChange={e => setNuovoVolo({...nuovoVolo, data: e.target.value})} 
                             />
@@ -97,11 +88,11 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2">Etichetta Gruppo</label>
-                        <input type="text" placeholder="Es: Da Udine / Da Verona" className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none font-bold" value={nuovoVolo.gruppo} onChange={e => setNuovoVolo({...nuovoVolo, gruppo: e.target.value})} />
+                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Gruppo</label>
+                        <input type="text" placeholder="Es: Da Verona" className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none font-bold" value={nuovoVolo.gruppo} onChange={e => setNuovoVolo({...nuovoVolo, gruppo: e.target.value})} />
                     </div>
 
-                    <button onClick={handleAggiungiVolo} disabled={isVerifying} className="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-lg shadow-blue-200 active:scale-95 transition-all flex justify-center items-center">
+                    <button onClick={handleAggiungiVolo} disabled={isVerifying} className="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-lg active:scale-95 transition-all flex justify-center items-center">
                         {isVerifying ? <RefreshCw className="animate-spin" /> : "VERIFICA E ATTIVA 🚀"}
                     </button>
                 </div>
@@ -113,9 +104,15 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     const dSched = new Date(v.orario_partenza);
                     const aSched = new Date(v.orario_arrivo);
                     
+                    // Logica Ritardi Partenza
                     const dLiveStr = standardizzaData(api?.departure?.actualTime?.local || api?.departure?.predictedTime?.local);
                     const dLive = dLiveStr ? new Date(dLiveStr) : null;
-                    const hasDelay = dLive && Math.abs(dLive.getTime() - dSched.getTime()) > 60000;
+                    const hasDDelay = dLive && Math.abs(dLive.getTime() - dSched.getTime()) > 60000;
+
+                    // Logica Ritardi Arrivo
+                    const aLiveStr = standardizzaData(api?.arrival?.actualTime?.local || api?.arrival?.predictedTime?.local);
+                    const aLive = aLiveStr ? new Date(aLiveStr) : null;
+                    const hasADelay = aLive && Math.abs(aLive.getTime() - aSched.getTime()) > 60000;
 
                     return (
                         <div key={v.id} onClick={() => setSelectedVolo(v)} className="bg-white rounded-[2.5rem] p-6 shadow-md border border-slate-100 relative overflow-hidden active:scale-[0.98] transition-all">
@@ -126,13 +123,14 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                             </p>
 
                             <div className="flex justify-between items-center mb-8 px-1">
+                                {/* PARTENZA */}
                                 <div className="text-center w-1/3">
                                     <p className="text-4xl font-black tracking-tighter text-slate-800 leading-none">{v.partenza_aeroporto}</p>
                                     <div className="mt-2 h-5">
-                                        <p className={`text-sm font-bold ${hasDelay ? 'line-through text-slate-300' : 'text-slate-600'}`}>
+                                        <p className={`text-sm font-bold ${hasDDelay ? 'line-through text-slate-300' : 'text-slate-600'}`}>
                                             {dSched.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}
                                         </p>
-                                        {hasDelay && <p className="text-sm font-black text-red-600 animate-pulse">{dLive?.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</p>}
+                                        {hasDDelay && <p className="text-sm font-black text-red-600 animate-pulse">{dLive?.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</p>}
                                     </div>
                                 </div>
 
@@ -142,14 +140,20 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                                     <p className="text-[10px] font-black text-blue-600 mt-2 tracking-widest uppercase">{v.codice_volo}</p>
                                 </div>
 
+                                {/* ARRIVO */}
                                 <div className="text-center w-1/3">
                                     <p className="text-4xl font-black tracking-tighter text-slate-800 leading-none">{v.arrivo_aeroporto}</p>
-                                    <p className="text-sm font-bold text-slate-600 mt-2">{aSched.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</p>
+                                    <div className="mt-2 h-5">
+                                        <p className={`text-sm font-bold ${hasADelay ? 'line-through text-slate-300' : 'text-slate-600'}`}>
+                                            {aSched.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}
+                                        </p>
+                                        {hasADelay && <p className="text-sm font-black text-red-600 animate-pulse">{aLive?.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</p>}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                                <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase bg-white px-3 py-1.5 rounded-full border border-emerald-50 shadow-sm">
+                                <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase bg-white px-3 py-1.5 rounded-full border border-emerald-100 shadow-sm">
                                     <Activity size={12} className="animate-pulse" /> LIVE
                                 </div>
                                 <div className="flex gap-4">
@@ -168,7 +172,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                 })}
             </div>
 
-            {/* POPUP SCHEDA TECNICA */}
+            {/* POPUP SCHEDA TECNICA (Stesso di prima, ma con Maps link corretti) */}
             {selectedVolo && (
                 <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedVolo(null)}>
                     <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-300" onClick={e => e.stopPropagation()}>
@@ -177,7 +181,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                                 <h3 className="text-3xl font-black italic tracking-tighter">Logistica Volo</h3>
                                 <p className="text-blue-600 font-bold text-sm uppercase">{selectedVolo.codice_volo} • {selectedVolo.compagnia}</p>
                             </div>
-                            <button onClick={() => setSelectedVolo(null)} className="p-3 bg-slate-100 rounded-full active:scale-90"><X size={24}/></button>
+                            <button onClick={() => setSelectedVolo(null)} className="p-3 bg-slate-100 rounded-full"><X size={24}/></button>
                         </div>
                         
                         <div className="space-y-4">
@@ -204,7 +208,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                         </div>
 
                         {isAdmin && (
-                            <button onClick={async () => { if(confirm("Eliminare volo?")) { await supabase.from('voli').delete().eq('id', selectedVolo.id); setSelectedVolo(null); scaricaVoli(); } }} className="w-full mt-8 text-red-400 font-bold text-[10px] uppercase flex items-center justify-center gap-1"><Trash2 size={14}/> Elimina Volo Permanente</button>
+                            <button onClick={async () => { if(confirm("Eliminare volo?")) { await supabase.from('voli').delete().eq('id', selectedVolo.id); setSelectedVolo(null); scaricaVoli(); } }} className="w-full mt-8 text-red-400 font-bold text-[10px] uppercase flex items-center justify-center gap-1 hover:text-red-600 transition-colors"><Trash2 size={14}/> Elimina Volo Missione</button>
                         )}
                     </div>
                 </div>
