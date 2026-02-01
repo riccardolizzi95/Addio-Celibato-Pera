@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { Check, X, ShieldCheck } from 'lucide-react';
 
 export default function SetupAccount() {
     const [loading, setLoading] = useState(true);
@@ -9,21 +9,24 @@ export default function SetupAccount() {
     const [newPassword, setNewPassword] = useState('');
     const [isConfiguring, setIsConfiguring] = useState(false);
 
+    // Validazione Password
+    const hasUpper = /[A-Z]/.test(newPassword);
+    const hasLower = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const isLongEnough = newPassword.length >= 8;
+    const isPasswordValid = hasUpper && hasLower && hasNumber && isLongEnough;
+
     useEffect(() => {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                const currentUrl = window.location.pathname + window.location.search;
-                window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
-            } else {
-                setLoading(false);
-            }
+            if (!session) window.location.assign('/login');
+            else setLoading(false);
         };
         checkUser();
     }, []);
 
     const handleSetup = async () => {
-        if (!nome || !newPassword) return alert("Inserisci nome e password!");
+        if (!nome || !isPasswordValid) return alert("Assicurati che la password rispetti i requisiti!");
         setIsConfiguring(true);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -34,18 +37,55 @@ export default function SetupAccount() {
         setIsConfiguring(false);
     };
 
-    if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="animate-spin h-12 w-12 border-t-2 border-b-2 border-blue-500 rounded-full"></div></div>;
+    if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-50 italic text-blue-500">Inizializzazione profilo...</div>;
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50 text-slate-900">
-            <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 text-center">
-                <span className="text-5xl mb-4 block">🍐</span><h1 className="text-3xl font-bold mb-2">Benvenuto!</h1><p className="text-slate-500 mb-8">Personalizza il tuo profilo.</p>
-                <div className="space-y-4 text-left">
-                    <div><label className="text-sm font-semibold text-slate-700 ml-1">Come ti chiamano gli amici?</label><input type="text" placeholder="Es: Riccardo" className="w-full p-4 border rounded-2xl mt-1 outline-none focus:ring-2 ring-blue-500 bg-slate-50" onChange={e => setNome(e.target.value)} /></div>
-                    <div><label className="text-sm font-semibold text-slate-700 ml-1">Password sicura</label><input type="password" placeholder="Nuova Password" className="w-full p-4 border rounded-2xl mt-1 outline-none focus:ring-2 ring-blue-500 bg-slate-50" onChange={e => setNewPassword(e.target.value)} /></div>
+        <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50 text-slate-900 font-sans">
+            <div className="w-full max-w-md bg-white p-8 rounded-[3rem] shadow-2xl border border-slate-100 text-center">
+                <div className="mb-6">
+                    <span className="text-6xl mb-2 block">🍐</span>
+                    <h1 className="text-3xl font-black italic tracking-tighter">Benvenuto, Re!</h1>
+                    <p className="text-slate-400 font-medium">Configura il tuo accesso alla Missione.</p>
                 </div>
-                <button onClick={handleSetup} disabled={isConfiguring} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all mt-8 disabled:bg-slate-300">{isConfiguring ? "Configurazione..." : "Inizia la Missione"}</button>
+
+                <div className="space-y-6 text-left">
+                    <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Il tuo nome (o nickname)</label>
+                        <input type="text" placeholder="Es: Pera Master" className="w-full p-4 bg-slate-50 border-none ring-1 ring-slate-200 rounded-2xl outline-none focus:ring-2 ring-blue-500 font-bold" onChange={e => setNome(e.target.value)} />
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Nuova Password</label>
+                        <input type="password" placeholder="Scegli una password forte" className="w-full p-4 bg-slate-50 border-none ring-1 ring-slate-200 rounded-2xl outline-none focus:ring-2 ring-blue-500 font-bold" onChange={e => setNewPassword(e.target.value)} />
+                        
+                        {/* Requisiti visivi */}
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                            <Requirement label="Maiuscola" met={hasUpper} />
+                            <Requirement label="Minuscola" met={hasLower} />
+                            <Requirement label="Numero" met={hasNumber} />
+                            <Requirement label="Min. 8 caratt." met={isLongEnough} />
+                        </div>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={handleSetup} 
+                    disabled={isConfiguring || !isPasswordValid || !nome} 
+                    className="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-lg active:scale-95 transition-all mt-8 disabled:bg-slate-200 disabled:text-slate-400 flex items-center justify-center gap-2"
+                >
+                    <ShieldCheck size={20} />
+                    {isConfiguring ? "Salvataggio..." : "Attiva Account e Inizia 🚀"}
+                </button>
             </div>
         </main>
+    );
+}
+
+function Requirement({ label, met }: { label: string, met: boolean }) {
+    return (
+        <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase ${met ? 'text-emerald-500' : 'text-slate-300'}`}>
+            {met ? <Check size={12} strokeWidth={4} /> : <X size={12} strokeWidth={4} />}
+            {label}
+        </div>
     );
 }
