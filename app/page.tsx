@@ -11,23 +11,24 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Se non è loggato, va al login
+        // Se non c'è sessione, manda al login
         const currentUrl = window.location.pathname + window.location.search;
         window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
         return;
       }
 
-      // Se è loggato, controlliamo se ha completato il setup
-      const { data: profilo } = await supabase
+      // Se loggato, verifichiamo lo stato del profilo
+      const { data: profilo, error } = await supabase
         .from('profili')
         .select('primo_accesso')
         .eq('id', session.user.id)
         .maybeSingle();
 
-      // Se il profilo non esiste o è al primo accesso, forza il setup
-      if (!profilo || profilo.primo_accesso) {
+      // Se il profilo non esiste ancora o primo_accesso è true, manda al setup
+      if (!profilo || profilo.primo_accesso === true) {
         window.location.assign('/setup-account');
       } else {
+        // Altrimenti, carica la Home
         setLoading(false);
       }
     };
