@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plane, Plus, Trash2, Clock, AlertCircle, X, RefreshCw, Info, Activity, MapPin, CalendarDays } from 'lucide-react';
+import { Plane, Plus, Trash2, Clock, AlertCircle, X, RefreshCw, Info, Activity, MapPin, CalendarDays, History } from 'lucide-react';
 
 export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     const [voli, setVoli] = useState<any[]>([]);
@@ -114,6 +114,9 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     const aLive = aLiveStr ? new Date(aLiveStr) : null;
                     const hasADelay = aLive && Math.abs(aLive.getTime() - aSched.getTime()) > 60000;
 
+                    // NUOVO: Recupero Timestamp Ultimo Aggiornamento dall'API
+                    const lastUpdate = api?.lastUpdatedUtc ? new Date(api.lastUpdatedUtc) : null;
+
                     return (
                         <div key={v.id} onClick={() => setSelectedVolo(v)} className="bg-white rounded-[2.5rem] p-6 shadow-md border border-slate-100 relative overflow-hidden active:scale-[0.98] transition-all">
                             <div className="absolute top-0 right-0 bg-blue-600 text-white px-5 py-2 rounded-bl-[1.5rem] text-[10px] font-black uppercase tracking-tighter shadow-sm">{v.gruppo || 'Missione'}</div>
@@ -153,8 +156,17 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                             </div>
 
                             <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                                <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase bg-white px-3 py-1.5 rounded-full border border-emerald-100 shadow-sm">
-                                    <Activity size={12} className="animate-pulse" /> LIVE
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase bg-white px-3 py-1.5 rounded-full border border-emerald-100 shadow-sm w-fit">
+                                        <Activity size={12} className="animate-pulse" /> LIVE
+                                    </div>
+                                    {/* VISUALIZZAZIONE ULTIMO AGGIORNAMENTO */}
+                                    {lastUpdate && (
+                                        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 mt-1 ml-1">
+                                            <History size={10} />
+                                            Aggiornato: {lastUpdate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex gap-4">
                                     <div className="text-right">
@@ -172,7 +184,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                 })}
             </div>
 
-            {/* POPUP SCHEDA TECNICA (Stesso di prima, ma con Maps link corretti) */}
+            {/* POPUP SCHEDA TECNICA */}
             {selectedVolo && (
                 <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedVolo(null)}>
                     <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-300" onClick={e => e.stopPropagation()}>
@@ -181,7 +193,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                                 <h3 className="text-3xl font-black italic tracking-tighter">Logistica Volo</h3>
                                 <p className="text-blue-600 font-bold text-sm uppercase">{selectedVolo.codice_volo} • {selectedVolo.compagnia}</p>
                             </div>
-                            <button onClick={() => setSelectedVolo(null)} className="p-3 bg-slate-100 rounded-full"><X size={24}/></button>
+                            <button onClick={() => setSelectedVolo(null)} className="p-3 bg-slate-100 rounded-full active:scale-90"><X size={24}/></button>
                         </div>
                         
                         <div className="space-y-4">
