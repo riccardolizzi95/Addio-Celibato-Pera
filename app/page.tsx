@@ -7,16 +7,32 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkUserAndStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
+        // Se non è loggato, va al login
         const currentUrl = window.location.pathname + window.location.search;
         window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+        return;
+      }
+
+      // Se è loggato, controlliamo se ha completato il setup
+      const { data: profilo } = await supabase
+        .from('profili')
+        .select('primo_accesso')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      // Se il profilo non esiste o è al primo accesso, forza il setup
+      if (!profilo || profilo.primo_accesso) {
+        window.location.assign('/setup-account');
       } else {
         setLoading(false);
       }
     };
-    checkUser();
+    
+    checkUserAndStatus();
   }, []);
 
   if (loading) {
