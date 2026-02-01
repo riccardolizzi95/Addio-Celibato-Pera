@@ -44,19 +44,42 @@ function LoginForm() {
   const handleResetPassword = async () => {
     if (!email) return setMessage({ text: "Inserisci la tua mail!", type: 'error' });
     setIsLoading(true);
+    setMessage(null);
 
-    // Rileva automaticamente se siamo su Vercel o in locale
-    const baseUrl = window.location.origin;
+    try {
+      // 1. Controlliamo se la mail è nella White List degli invitati
+      const { data: invitato, error: checkError } = await supabase
+        .from('invitati')
+        .select('email')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${baseUrl}/setup-account`,
-    });
+      if (checkError) throw checkError;
 
-    setIsLoading(false);
-    if (error) return setMessage({ text: error.message, type: 'error' });
+      if (!invitato) {
+        setIsLoading(false);
+        return setMessage({
+          text: "Questa email non è autorizzata per la Missione Pera! 🍐 Contatta il Comandante.",
+          type: 'error'
+        });
+      }
 
-    setMessage({ text: "Mail di recupero inviata! Controlla la posta.", type: 'success' });
-    setTimeout(() => setForgotMode(false), 3000);
+      // 2. Se è in lista, procediamo con l'invio della mail di reset
+      const baseUrl = window.location.origin;
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${baseUrl}/setup-account`,
+      });
+
+      if (resetError) throw resetError;
+
+      setMessage({ text: "Mail di recupero inviata! Controlla la posta.", type: 'success' });
+      setTimeout(() => setForgotMode(false), 3000);
+
+    } catch (err: any) {
+      setMessage({ text: err.message, type: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
