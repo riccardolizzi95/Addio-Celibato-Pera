@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Car, Plus, Trash2, X, UserPlus, ChevronUp, MapPin, Clock } from 'lucide-react';
+import { Car, Plus, Trash2, X, UserPlus, ChevronUp, MapPin, Clock, Pencil } from 'lucide-react';
 
 export default function MacchineTab({ currentUser, myUsername, isAdmin }: { currentUser: any, myUsername: string, isAdmin: boolean }) {
     const [macchine, setMacchine] = useState<any[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null); // null = nuova auto, stringa = modifica
     const [conducente, setConducente] = useState('');
     const [postiTotali, setPostiTotali] = useState('5');
     const [puntoRitrovo, setPuntoRitrovo] = useState('');
@@ -25,29 +26,53 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
         setTimeout(() => setFeedback(null), 3000);
     };
 
-    const aggiungiMacchina = async () => {
+    const apriFormModifica = (auto: any) => {
+        setEditingId(auto.id);
+        setConducente(auto.conducente || '');
+        setPostiTotali(String(auto.posti_totali || 5));
+        setPuntoRitrovo(auto.punto_ritrovo || '');
+        setOrarioRitrovo(auto.orario_ritrovo || '');
+        setIsFormOpen(true);
+        // Scrolla su al form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setIsFormOpen(false);
+        setEditingId(null);
+        setConducente('');
+        setPostiTotali('5');
+        setPuntoRitrovo('');
+        setOrarioRitrovo('');
+    };
+
+    const salvaMacchina = async () => {
         if (!conducente.trim()) return mostraFeedback('Inserisci il nome del conducente!', 'error');
         const posti = parseInt(postiTotali);
         if (isNaN(posti) || posti < 1 || posti > 9) return mostraFeedback('I posti devono essere tra 1 e 9.', 'error');
 
         setIsSaving(true);
-        const { error } = await supabase.from('macchine').insert([{
+        const payload = {
             conducente: conducente.trim(),
             posti_totali: posti,
             punto_ritrovo: puntoRitrovo.trim() || null,
             orario_ritrovo: orarioRitrovo.trim() || null,
-            creato_da: currentUser?.id
-        }]);
+        };
+
+        let error;
+        if (editingId) {
+            // Modifica record esistente
+            ({ error } = await supabase.from('macchine').update(payload).eq('id', editingId));
+        } else {
+            // Nuovo record
+            ({ error } = await supabase.from('macchine').insert([{ ...payload, creato_da: currentUser?.id }]));
+        }
 
         if (error) {
             mostraFeedback('Errore durante il salvataggio. Riprova.', 'error');
         } else {
-            mostraFeedback(`Auto di ${conducente.trim()} aggiunta! 🚗`, 'success');
-            setConducente('');
-            setPostiTotali('5');
-            setPuntoRitrovo('');
-            setOrarioRitrovo('');
-            setIsFormOpen(false);
+            mostraFeedback(editingId ? 'Auto aggiornata! ✅' : `Auto di ${conducente.trim()} aggiunta! 🚗`, 'success');
+            resetForm();
             scaricaMacchine();
         }
         setIsSaving(false);
@@ -83,17 +108,21 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                 </div>
             )}
 
-            {/* Pulsante / Form aggiungi auto */}
+            {/* Pulsante apri/chiudi form */}
             <button
-                onClick={() => setIsFormOpen(!isFormOpen)}
+                onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)}
                 className="w-full bg-white border-2 border-dashed border-slate-300 p-5 rounded-[1.5rem] text-slate-500 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-all"
             >
                 {isFormOpen ? <ChevronUp size={20} /> : <Plus size={20} />}
                 {isFormOpen ? 'Annulla' : 'Aggiungi auto per la missione'}
             </button>
 
+            {/* Form aggiungi / modifica */}
             {isFormOpen && (
                 <div className="bg-white p-6 rounded-[2rem] border-2 border-blue-400 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest">
+                        {editingId ? '✏️ Modifica Auto' : '🚗 Nuova Auto'}
+                    </p>
                     <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Nome Conducente</label>
                         <input
@@ -102,7 +131,6 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                             className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
                             value={conducente}
                             onChange={e => setConducente(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && aggiungiMacchina()}
                         />
                     </div>
                     <div>
@@ -138,11 +166,11 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                         <p className="text-[10px] text-slate-400 ml-1 mt-1">Inserisci l'indirizzo esatto per aprirlo in Maps 📍</p>
                     </div>
                     <button
-                        onClick={aggiungiMacchina}
+                        onClick={salvaMacchina}
                         disabled={isSaving}
                         className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all disabled:bg-slate-300"
                     >
-                        {isSaving ? 'Salvataggio...' : '🚗 Aggiungi Auto'}
+                        {isSaving ? 'Salvataggio...' : editingId ? '✅ Salva Modifiche' : '🚗 Aggiungi Auto'}
                     </button>
                 </div>
             )}
@@ -161,9 +189,11 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                 const postiFull = postiOccupati >= auto.posti_totali;
                 const sonoABordo = auto.macchina_passeggeri?.some((p: any) => p.user_id === currentUser?.id);
                 const mioPasseggeroId = auto.macchina_passeggeri?.find((p: any) => p.user_id === currentUser?.id)?.id;
+                const possoGestire = isAdmin || auto.creato_da === currentUser?.id;
 
                 return (
                     <div key={auto.id} className="bg-white rounded-[2rem] p-6 shadow-md border border-slate-100">
+                        {/* Header */}
                         <div className="flex justify-between items-start mb-5">
                             <div>
                                 <h3 className="text-xl font-black text-slate-800 italic flex items-center gap-2">
@@ -173,14 +203,23 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                                     {postiOccupati} / {auto.posti_totali} posti occupati {postiFull && '— PIENA'}
                                 </p>
                             </div>
-                            {(isAdmin || auto.creato_da === currentUser?.id) && (
-                                <button
-                                    onClick={() => eliminaMacchina(auto.id)}
-                                    className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                                    title="Elimina auto"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                            {possoGestire && (
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => apriFormModifica(auto)}
+                                        className="text-slate-300 hover:text-blue-500 transition-colors p-2"
+                                        title="Modifica auto"
+                                    >
+                                        <Pencil size={17} />
+                                    </button>
+                                    <button
+                                        onClick={() => eliminaMacchina(auto.id)}
+                                        className="text-slate-300 hover:text-red-500 transition-colors p-2"
+                                        title="Elimina auto"
+                                    >
+                                        <Trash2 size={17} />
+                                    </button>
+                                </div>
                             )}
                         </div>
 
