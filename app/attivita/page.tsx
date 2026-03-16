@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Trash2, Pencil, X } from 'lucide-react';
+import { Trash2, Pencil, Search, Euro, Users } from 'lucide-react';
 
 export default function AttivitaPage() {
     const [loading, setLoading] = useState(true);
@@ -10,6 +10,8 @@ export default function AttivitaPage() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [titolo, setTitolo] = useState("");
     const [descrizione, setDescrizione] = useState("");
+    const [costoStimato, setCostoStimato] = useState("");
+    const [maxPartecipanti, setMaxPartecipanti] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [listaProposte, setListaProposte] = useState<any[]>([]);
@@ -29,8 +31,7 @@ export default function AttivitaPage() {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                const currentUrl = window.location.pathname + window.location.search;
-                window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+                window.location.assign(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
             } else {
                 setUserId(session.user.id);
                 const { data: prof } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
@@ -59,6 +60,8 @@ export default function AttivitaPage() {
         setEditingId(null);
         setTitolo("");
         setDescrizione("");
+        setCostoStimato("");
+        setMaxPartecipanti("");
     };
 
     const apriModifica = (item: any, e: React.MouseEvent) => {
@@ -66,26 +69,46 @@ export default function AttivitaPage() {
         setEditingId(item.id);
         setTitolo(item.titolo);
         setDescrizione(item.descrizione || "");
+        setCostoStimato(item.costo_stimato != null ? String(item.costo_stimato) : "");
+        setMaxPartecipanti(item.max_partecipanti != null ? String(item.max_partecipanti) : "");
         setIsFormOpen(true);
         setExpandedId(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const cercaSuGoogle = () => {
+        if (!titolo.trim()) return;
+        const query = `${titolo.trim()} Amsterdam cosa fare`;
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+    };
+
     const salvaProposte = async () => {
         if (!titolo.trim()) return mostraFeedback("Inserisci almeno un titolo!", 'error');
+
+        const costo = costoStimato ? parseFloat(costoStimato) : null;
+        const maxPax = maxPartecipanti ? parseInt(maxPartecipanti) : null;
+
+        if (costoStimato && (isNaN(costo!) || costo! < 0)) return mostraFeedback("Costo non valido.", 'error');
+        if (maxPartecipanti && (isNaN(maxPax!) || maxPax! < 1)) return mostraFeedback("Numero partecipanti non valido.", 'error');
+
         setIsLoadingAction(true);
+        const payload = {
+            titolo: titolo.trim(),
+            descrizione: descrizione.trim(),
+            costo_stimato: costo,
+            max_partecipanti: maxPax,
+        };
 
         if (editingId) {
-            const { error } = await supabase
-                .from('proposte')
-                .update({ titolo: titolo.trim(), descrizione: descrizione.trim() })
-                .eq('id', editingId);
+            const { error } = await supabase.from('proposte').update(payload).eq('id', editingId);
             if (error) mostraFeedback("Errore durante la modifica.", 'error');
             else { mostraFeedback("Proposta aggiornata! ✅", 'success'); resetForm(); scaricaDati(); }
         } else {
-            const { error } = await supabase
-                .from('proposte')
-                .insert([{ titolo: titolo.trim(), descrizione: descrizione.trim(), creatore: myUsername || 'Anonimo', user_id: userId }]);
+            const { error } = await supabase.from('proposte').insert([{
+                ...payload,
+                creatore: myUsername || 'Anonimo',
+                user_id: userId
+            }]);
             if (error) mostraFeedback("Errore durante l'invio.", 'error');
             else { mostraFeedback("Proposta inviata! 🚀", 'success'); resetForm(); scaricaDati(); }
         }
@@ -138,24 +161,66 @@ export default function AttivitaPage() {
             {/* Form nuova proposta / modifica */}
             <div className="mb-8">
                 {isFormOpen ? (
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-400 animate-in fade-in zoom-in-95 duration-200">
-                        <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-4">
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-400 animate-in fade-in zoom-in-95 duration-200 space-y-3">
+                        <p className="text-xs font-black text-blue-600 uppercase tracking-widest">
                             {editingId ? '✏️ Modifica Proposta' : '🚀 Nuova Proposta'}
                         </p>
-                        <input
-                            type="text"
-                            placeholder="Titolo"
-                            className="w-full p-4 border rounded-xl mb-3 bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
-                            value={titolo}
-                            onChange={e => setTitolo(e.target.value)}
-                        />
+
+                        {/* Titolo + bottone Google */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Titolo attività"
+                                className="w-full p-4 pr-14 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
+                                value={titolo}
+                                onChange={e => setTitolo(e.target.value)}
+                            />
+                            <button
+                                onClick={cercaSuGoogle}
+                                disabled={!titolo.trim()}
+                                title="Cerca su Google"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                                <Search size={18} />
+                            </button>
+                        </div>
+
+                        {/* Descrizione */}
                         <textarea
                             placeholder="Descrizione (opzionale)..."
-                            className="w-full p-4 border rounded-xl mb-4 bg-slate-50 min-h-[100px] outline-none focus:ring-2 ring-blue-500"
+                            className="w-full p-4 border rounded-xl bg-slate-50 min-h-[90px] outline-none focus:ring-2 ring-blue-500"
                             value={descrizione}
                             onChange={e => setDescrizione(e.target.value)}
                         />
-                        <div className="flex gap-2">
+
+                        {/* Costo + Max partecipanti */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="relative">
+                                <Euro size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Costo (€)"
+                                    className="w-full pl-9 pr-3 py-4 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
+                                    value={costoStimato}
+                                    onChange={e => setCostoStimato(e.target.value)}
+                                />
+                            </div>
+                            <div className="relative">
+                                <Users size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Max pax"
+                                    className="w-full pl-9 pr-3 py-4 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
+                                    value={maxPartecipanti}
+                                    onChange={e => setMaxPartecipanti(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
                             <button onClick={resetForm} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold">
                                 Annulla
                             </button>
@@ -190,45 +255,72 @@ export default function AttivitaPage() {
                     return (
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-                            {/* Header card */}
-                            <div className="p-5 flex justify-between items-start">
-                                <div
-                                    className="flex-1 cursor-pointer"
-                                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                                >
-                                    <h3 className="font-bold text-xl text-slate-800">{item.titolo}</h3>
-                                    <p className="text-xs text-slate-400 mt-1">Da: {item.creatore}</p>
+                            {/* Header card — sempre visibile */}
+                            <div
+                                className="p-5 cursor-pointer"
+                                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                            >
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex-1 min-w-0 pr-2">
+                                        <h3 className="font-bold text-xl text-slate-800 leading-tight">{item.titolo}</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Da: {item.creatore}</p>
+                                    </div>
+                                    {isMia && (
+                                        <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                                            <button onClick={e => apriModifica(item, e)} className="text-slate-300 hover:text-blue-500 transition-colors p-1.5" title="Modifica">
+                                                <Pencil size={16} />
+                                            </button>
+                                            <button onClick={e => eliminaProposta(item.id, e)} className="text-slate-300 hover:text-red-500 transition-colors p-1.5" title="Elimina">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Azioni visibili solo all'autore */}
-                                {isMia && (
-                                    <div className="flex items-center gap-1 ml-2">
-                                        <button
-                                            onClick={e => apriModifica(item, e)}
-                                            className="text-slate-300 hover:text-blue-500 transition-colors p-1"
-                                            title="Modifica proposta"
-                                        >
-                                            <Pencil size={17} />
-                                        </button>
-                                        <button
-                                            onClick={e => eliminaProposta(item.id, e)}
-                                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                                            title="Elimina proposta"
-                                        >
-                                            <Trash2 size={17} />
-                                        </button>
-                                    </div>
-                                )}
+                                {/* Info rapide sempre visibili: costo, max pax, voti */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {item.costo_stimato != null && (
+                                        <span className="flex items-center gap-1 text-[11px] font-black bg-amber-50 text-amber-600 border border-amber-100 px-2.5 py-1 rounded-full">
+                                            <Euro size={11} /> {Number(item.costo_stimato).toFixed(0)}€
+                                        </span>
+                                    )}
+                                    {item.max_partecipanti != null && (
+                                        <span className="flex items-center gap-1 text-[11px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-2.5 py-1 rounded-full">
+                                            <Users size={11} /> max {item.max_partecipanti}
+                                        </span>
+                                    )}
+                                    {/* Contatori voti sempre visibili nella miniatura */}
+                                    <span className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full border ${votiSu.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                        👍 {votiSu.length}
+                                    </span>
+                                    <span className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full border ${votiGiu.length > 0 ? 'bg-red-50 text-red-500 border-red-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                        👎 {votiGiu.length}
+                                    </span>
+                                </div>
                             </div>
 
-                            {/* Sezione espansa: descrizione + voti */}
+                            {/* Sezione espansa: descrizione + voti dettagliati */}
                             {isExpanded && (
-                                <div className="px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
+                                <div className="px-5 pb-5 border-t border-slate-50 pt-4 animate-in slide-in-from-top-2 duration-200">
+
+                                    {/* Pulsante Google */}
+                                    <a
+                                        href={`https://www.google.com/search?q=${encodeURIComponent(item.titolo + ' Amsterdam cosa fare')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 w-full mb-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        <Search size={14} /> Cerca su Google
+                                    </a>
+
                                     {item.descrizione?.trim() !== "" && (
-                                        <div className="p-4 bg-slate-50 rounded-xl text-slate-600 text-sm whitespace-pre-wrap mb-6">
+                                        <div className="p-4 bg-slate-50 rounded-xl text-slate-600 text-sm whitespace-pre-wrap mb-4">
                                             {item.descrizione}
                                         </div>
                                     )}
+
+                                    {/* Voti con nomi */}
                                     <div className="grid grid-cols-2 gap-4 items-start">
                                         <div className="flex flex-col gap-1">
                                             <button
