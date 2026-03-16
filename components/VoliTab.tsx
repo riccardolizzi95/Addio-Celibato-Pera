@@ -13,18 +13,9 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     const standardizzaData = (str: string) => str ? str.replace(/\s/, 'T') : '';
 
     const fetchFlightData = async (code: string, date: string) => {
-        const cleanCode = code.replace(/\s+/g, '').toUpperCase();
-        const options = {
-            method: 'GET',
-            headers: {
-                'X-RapidAPI-Key': process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '',
-                'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
-            }
-        };
-        const res = await fetch(`https://aerodatabox.p.rapidapi.com/flights/number/${cleanCode}/${date}`, options);
+        const res = await fetch(`/api/volo?code=${encodeURIComponent(code)}&date=${encodeURIComponent(date)}`);
         if (!res.ok) return null;
-        const data = await res.json();
-        return data && data.length > 0 ? data[0] : null;
+        return await res.json();
     };
 
     const scaricaVoli = async () => {
