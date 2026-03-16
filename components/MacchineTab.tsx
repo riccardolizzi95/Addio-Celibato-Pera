@@ -11,6 +11,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
     const [postiTotali, setPostiTotali] = useState('5');
     const [puntoRitrovo, setPuntoRitrovo] = useState('');
     const [orarioRitrovo, setOrarioRitrovo] = useState('');
+    const [dataRitrovo, setDataRitrovo] = useState('2026-04-18');
     const [isSaving, setIsSaving] = useState(false);
     const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -32,6 +33,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
         setPostiTotali(String(auto.posti_totali || 5));
         setPuntoRitrovo(auto.punto_ritrovo || '');
         setOrarioRitrovo(auto.orario_ritrovo || '');
+        setDataRitrovo(auto.data_ritrovo || '2026-04-18');
         setIsFormOpen(true);
         // Scrolla su al form
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -44,6 +46,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
         setPostiTotali('5');
         setPuntoRitrovo('');
         setOrarioRitrovo('');
+        setDataRitrovo('2026-04-18');
     };
 
     const salvaMacchina = async () => {
@@ -57,6 +60,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
             posti_totali: posti,
             punto_ritrovo: puntoRitrovo.trim() || null,
             orario_ritrovo: orarioRitrovo.trim() || null,
+            data_ritrovo: dataRitrovo || null,
         };
 
         let error;
@@ -157,14 +161,25 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                             onChange={e => setPostiTotali(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Orario di Ritrovo</label>
-                        <input
-                            type="time"
-                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
-                            value={orarioRitrovo}
-                            onChange={e => setOrarioRitrovo(e.target.value)}
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Data Ritrovo</label>
+                            <input
+                                type="date"
+                                className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
+                                value={dataRitrovo}
+                                onChange={e => setDataRitrovo(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Orario Ritrovo</label>
+                            <input
+                                type="time"
+                                className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
+                                value={orarioRitrovo}
+                                onChange={e => setOrarioRitrovo(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Punto di Ritrovo</label>
@@ -236,14 +251,18 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                         </div>
 
                         {/* Orario e Punto di Ritrovo */}
-                        {(auto.orario_ritrovo || auto.punto_ritrovo) && (
+                        {(auto.data_ritrovo || auto.orario_ritrovo || auto.punto_ritrovo) && (
                             <div className="bg-slate-50 rounded-2xl p-4 mb-5 space-y-3 border border-slate-100">
-                                {auto.orario_ritrovo && (
+                                {(auto.data_ritrovo || auto.orario_ritrovo) && (
                                     <div className="flex items-center gap-3">
                                         <Clock size={16} className="text-blue-500 shrink-0" />
                                         <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ritrovo alle</p>
-                                            <p className="font-black text-slate-800">{auto.orario_ritrovo}</p>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ritrovo</p>
+                                            <p className="font-black text-slate-800">
+                                                {auto.data_ritrovo && new Date(auto.data_ritrovo + 'T12:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                {auto.data_ritrovo && auto.orario_ritrovo && ' · '}
+                                                {auto.orario_ritrovo && auto.orario_ritrovo}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
