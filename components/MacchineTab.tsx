@@ -68,8 +68,22 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
             // Modifica record esistente
             ({ error } = await supabase.from('macchine').update(payload).eq('id', editingId));
         } else {
-            // Nuovo record
-            ({ error } = await supabase.from('macchine').insert([{ ...payload, creato_da: currentUser?.id }]));
+            // Nuovo record: inserisco l'auto e aggiungo subito il conducente come passeggero
+            const { data: nuovaAuto, error: insertError } = await supabase
+                .from('macchine')
+                .insert([{ ...payload, creato_da: currentUser?.id }])
+                .select('id')
+                .single();
+            error = insertError;
+
+            if (!error && nuovaAuto) {
+                // Aggiunge automaticamente il conducente come primo passeggero
+                await supabase.from('macchina_passeggeri').insert([{
+                    macchina_id: nuovaAuto.id,
+                    user_id: currentUser.id,
+                    username: myUsername,
+                }]);
+            }
         }
 
         if (error) {
@@ -299,18 +313,22 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
 
                         {/* Passeggeri */}
                         <div className="flex flex-wrap gap-2 mb-4">
-                            {auto.macchina_passeggeri?.map((p: any) => (
-                                <div key={p.id} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 border border-blue-100">
-                                    {p.username}
-                                    {(p.user_id === currentUser?.id || isAdmin) && (
-                                        <X
-                                            size={14}
-                                            className="cursor-pointer text-blue-300 hover:text-red-500 transition-colors"
-                                            onClick={() => scendi(p.id)}
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                            {auto.macchina_passeggeri?.map((p: any) => {
+                                const eConducente = p.user_id === auto.creato_da;
+                                const puoRimuovere = !eConducente && (p.user_id === currentUser?.id || isAdmin);
+                                return (
+                                    <div key={p.id} className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 border ${eConducente ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                        {eConducente && '🚗 '}{p.username}
+                                        {puoRimuovere && (
+                                            <X
+                                                size={14}
+                                                className="cursor-pointer text-blue-300 hover:text-red-500 transition-colors"
+                                                onClick={() => scendi(p.id)}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {!postiFull && !sonoABordo && (
@@ -321,7 +339,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                                 <UserPlus size={16} /> Sali a bordo
                             </button>
                         )}
-                        {sonoABordo && (
+                        {sonoABordo && auto.creato_da !== currentUser?.id && (
                             <button
                                 onClick={() => scendi(mioPasseggeroId)}
                                 className="w-full bg-slate-100 text-slate-500 px-4 py-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-500 transition-all active:scale-95"
