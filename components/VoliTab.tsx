@@ -102,8 +102,9 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     const aLiveStr = standardizzaData(api?.arrival?.actualTime?.local || api?.arrival?.predictedTime?.local);
                     const aLive = aLiveStr ? new Date(aLiveStr) : null;
 
-                    const hasDDelay = dLive && Math.abs(dLive.getTime() - dSched.getTime()) > 60000;
-                    const hasADelay = aLive && Math.abs(aLive.getTime() - aSched.getTime()) > 60000;
+                    const RITARDO_MINIMO_MS = 15 * 60 * 1000; // 15 minuti
+                    const hasDDelay = dLive && (dLive.getTime() - dSched.getTime()) > RITARDO_MINIMO_MS;
+                    const hasADelay = aLive && (aLive.getTime() - aSched.getTime()) > RITARDO_MINIMO_MS;
                     const lastUpdate = api?.lastUpdatedUtc ? new Date(api.lastUpdatedUtc) : null;
 
                     return (
@@ -156,7 +157,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                                     {lastUpdate && (
                                         <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 mt-1 ml-1 uppercase">
                                             <History size={10} />
-                                            Update: {lastUpdate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                                            Update: {lastUpdate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} {lastUpdate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     )}
                                 </div>
