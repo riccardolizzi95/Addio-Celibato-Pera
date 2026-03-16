@@ -77,6 +77,12 @@ export default function Home() {
               💰 Gestione Spese
             </button>
           </Link>
+
+          <Link href="/scherzi" className="w-full block">
+            <button className="w-full bg-purple-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-purple-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+              😈 Scherzi Matrimonio
+            </button>
+          </Link>
         </div>
       </div>
       <div className="py-8"></div>

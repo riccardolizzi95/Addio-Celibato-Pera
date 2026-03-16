@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Eye, ClipboardList } from 'lucide-react'; 
+import { User, Eye, ClipboardList, Smile } from 'lucide-react'; 
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
@@ -59,6 +59,14 @@ export default function Navbar() {
           title="Verbali Incontri"
         >
           <ClipboardList size={24} />
+        </Link>
+
+        <Link 
+          href="/scherzi" 
+          className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all"
+          title="Scherzi Matrimonio"
+        >
+          <Smile size={24} />
         </Link>
         
         <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
