@@ -99,6 +99,8 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
         else { mostraFeedback("Sceso dall'auto.", 'success'); scaricaMacchine(); }
     };
 
+    const hoGiaUnAuto = macchine.some(a => a.creato_da === currentUser?.id);
+
     return (
         <div className="space-y-6">
             {/* Feedback toast */}
@@ -108,14 +110,24 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                 </div>
             )}
 
-            {/* Pulsante apri/chiudi form */}
-            <button
-                onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)}
-                className="w-full bg-white border-2 border-dashed border-slate-300 p-5 rounded-[1.5rem] text-slate-500 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-all"
-            >
-                {isFormOpen ? <ChevronUp size={20} /> : <Plus size={20} />}
-                {isFormOpen ? 'Annulla' : 'Aggiungi auto per la missione'}
-            </button>
+            {/* Pulsante aggiungi — nascosto se hai già un'auto */}
+            {!hoGiaUnAuto && (
+                <button
+                    onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)}
+                    className="w-full bg-white border-2 border-dashed border-slate-300 p-5 rounded-[1.5rem] text-slate-500 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-all"
+                >
+                    {isFormOpen ? <ChevronUp size={20} /> : <Plus size={20} />}
+                    {isFormOpen ? 'Annulla' : 'Aggiungi auto per la missione'}
+                </button>
+            )}
+
+            {/* Banner se hai già un'auto */}
+            {hoGiaUnAuto && !isFormOpen && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 text-amber-700 text-xs font-bold flex items-center gap-3">
+                    <span className="text-xl">🚗</span>
+                    Hai già aggiunto la tua auto. Usa la matita per modificarla.
+                </div>
+            )}
 
             {/* Form aggiungi / modifica */}
             {isFormOpen && (
