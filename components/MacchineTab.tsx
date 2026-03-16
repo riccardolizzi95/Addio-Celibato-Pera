@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Car, Plus, Trash2, X, UserPlus, ChevronUp } from 'lucide-react';
+import { Car, Plus, Trash2, X, UserPlus, ChevronUp, MapPin, Clock } from 'lucide-react';
 
 export default function MacchineTab({ currentUser, myUsername, isAdmin }: { currentUser: any, myUsername: string, isAdmin: boolean }) {
     const [macchine, setMacchine] = useState<any[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [conducente, setConducente] = useState('');
     const [postiTotali, setPostiTotali] = useState('5');
+    const [puntoRitrovo, setPuntoRitrovo] = useState('');
+    const [orarioRitrovo, setOrarioRitrovo] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -32,6 +34,8 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
         const { error } = await supabase.from('macchine').insert([{
             conducente: conducente.trim(),
             posti_totali: posti,
+            punto_ritrovo: puntoRitrovo.trim() || null,
+            orario_ritrovo: orarioRitrovo.trim() || null,
             creato_da: currentUser?.id
         }]);
 
@@ -41,6 +45,8 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
             mostraFeedback(`Auto di ${conducente.trim()} aggiunta! 🚗`, 'success');
             setConducente('');
             setPostiTotali('5');
+            setPuntoRitrovo('');
+            setOrarioRitrovo('');
             setIsFormOpen(false);
             scaricaMacchine();
         }
@@ -111,6 +117,26 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                             onChange={e => setPostiTotali(e.target.value)}
                         />
                     </div>
+                    <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Orario di Ritrovo</label>
+                        <input
+                            type="time"
+                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
+                            value={orarioRitrovo}
+                            onChange={e => setOrarioRitrovo(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Punto di Ritrovo</label>
+                        <input
+                            type="text"
+                            placeholder="Es: Parcheggio Esselunga Via Roma"
+                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
+                            value={puntoRitrovo}
+                            onChange={e => setPuntoRitrovo(e.target.value)}
+                        />
+                        <p className="text-[10px] text-slate-400 ml-1 mt-1">Inserisci l'indirizzo esatto per aprirlo in Maps 📍</p>
+                    </div>
                     <button
                         onClick={aggiungiMacchina}
                         disabled={isSaving}
@@ -157,6 +183,39 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                                 </button>
                             )}
                         </div>
+
+                        {/* Orario e Punto di Ritrovo */}
+                        {(auto.orario_ritrovo || auto.punto_ritrovo) && (
+                            <div className="bg-slate-50 rounded-2xl p-4 mb-5 space-y-3 border border-slate-100">
+                                {auto.orario_ritrovo && (
+                                    <div className="flex items-center gap-3">
+                                        <Clock size={16} className="text-blue-500 shrink-0" />
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ritrovo alle</p>
+                                            <p className="font-black text-slate-800">{auto.orario_ritrovo}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {auto.punto_ritrovo && (
+                                    <div className="flex items-center gap-3">
+                                        <MapPin size={16} className="text-blue-500 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Punto di ritrovo</p>
+                                            <p className="font-bold text-slate-700 text-sm truncate">{auto.punto_ritrovo}</p>
+                                        </div>
+                                        <a
+                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(auto.punto_ritrovo)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="shrink-0 bg-blue-600 text-white text-[10px] font-black px-3 py-2 rounded-xl flex items-center gap-1 active:scale-95 transition-all shadow-sm shadow-blue-200"
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <MapPin size={12} /> MAPS
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Barra posti visiva */}
                         <div className="flex gap-1 mb-5">
