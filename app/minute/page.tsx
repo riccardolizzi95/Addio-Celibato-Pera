@@ -133,6 +133,19 @@ export default function MinutePage() {
         window.open(`https://wa.me/?text=${encodeURIComponent(messaggio)}`, '_blank');
     };
 
+    const toggleCompletato = async (passoId: string, completato: boolean) => {
+        await supabase.from('prossimi_passi').update({ completato: !completato }).eq('id', passoId);
+        // Aggiorno selectedMinuta localmente per risposta immediata
+        setSelectedMinuta((prev: any) => ({
+            ...prev,
+            prossimi_passi: prev.prossimi_passi.map((p: any) =>
+                p.id === passoId ? { ...p, completato: !completato } : p
+            )
+        }));
+        // Ricarico anche la lista per aggiornare i contatori
+        scaricaMinute();
+    };
+
     const formatDataLunga = (d: string) =>
         new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
 
@@ -412,14 +425,13 @@ export default function MinutePage() {
                             </div>
                             <h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2>
 
-                            {/* Presenti pills nel header */}
+                            {/* Presenti — riga singola scorrevole, compatta */}
                             {selectedMinuta.partecipanti && (
-                                <div className="flex flex-wrap gap-2 mt-4">
-                                    {selectedMinuta.partecipanti.split('; ').filter(Boolean).map((p: string, i: number) => (
-                                        <span key={i} className="bg-white/15 text-white/90 text-xs font-bold px-3 py-1 rounded-full">
-                                            {p}
-                                        </span>
-                                    ))}
+                                <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar">
+                                    <Users size={12} className="text-white/40 shrink-0" />
+                                    <p className="text-white/70 text-xs font-bold whitespace-nowrap">
+                                        {selectedMinuta.partecipanti.split('; ').filter(Boolean).join(' · ')}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -441,12 +453,12 @@ export default function MinutePage() {
                             )}
 
                             {/* Decisioni */}
-                            <div className="bg-emerald-500 p-6 rounded-3xl text-white shadow-lg shadow-emerald-100">
-                                <div className="flex items-center gap-2 mb-2 opacity-80">
-                                    <CheckCircle size={15} />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest">Decisioni Finali</h4>
+                            <div className="bg-emerald-500/10 border border-emerald-200 px-4 py-3 rounded-2xl">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                    <CheckCircle size={13} className="text-emerald-600" />
+                                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Decisioni Finali</h4>
                                 </div>
-                                <p className="font-black text-xl leading-snug">
+                                <p className="text-sm font-bold text-emerald-900 leading-relaxed">
                                     {selectedMinuta.decisioni || 'Nessuna decisione registrata'}
                                 </p>
                             </div>
@@ -458,23 +470,29 @@ export default function MinutePage() {
                                         <ListTodo size={15} className="text-blue-500" />
                                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prossimi Passi</h4>
                                     </div>
-                                    <div className="space-y-2.5">
+                                    <div className="space-y-2">
                                         {selectedMinuta.prossimi_passi.map((passo: any, i: number) => (
-                                            <div key={passo.id} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3">
-                                                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
-                                                    {i + 1}
-                                                </div>
+                                            <div key={passo.id}
+                                                className={`border p-3.5 rounded-2xl flex items-start gap-3 transition-all ${passo.completato ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                                                {/* Spunta completato */}
+                                                <button
+                                                    onClick={() => toggleCompletato(passo.id, passo.completato)}
+                                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all active:scale-90 ${passo.completato ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                    {passo.completato && <CheckCircle size={14} strokeWidth={3} />}
+                                                </button>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-black text-slate-800 text-sm mb-1.5">{passo.titolo}</p>
-                                                    <div className="flex flex-wrap gap-2">
+                                                    <p className={`font-bold text-sm mb-1 transition-all ${passo.completato ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                                        {passo.titolo}
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-1.5">
                                                         {passo.scadenza && (
-                                                            <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                                                                <Clock size={10} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-700'}`}>
+                                                                <Clock size={9} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
                                                             </span>
                                                         )}
                                                         {passo.responsabili && (
-                                                            <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                                                                <Users size={10} /> {passo.responsabili}
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-indigo-100 text-indigo-700'}`}>
+                                                                <Users size={9} /> {passo.responsabili}
                                                             </span>
                                                         )}
                                                     </div>
