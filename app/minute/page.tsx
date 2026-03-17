@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Users, MessageSquare, CheckCircle, Trash2, X, ChevronRight, Send, Edit3, Plus, ListTodo, UserPlus, Clock } from 'lucide-react';
+import { Users, MessageSquare, CheckCircle, Trash2, X, Send, Edit3, Plus, ListTodo, UserPlus, Clock, Calendar } from 'lucide-react';
 
 export default function MinutePage() {
     const [loading, setLoading] = useState(true);
@@ -21,6 +20,7 @@ export default function MinutePage() {
     const [listaPartecipanti, setListaPartecipanti] = useState<string[]>([]);
     const [passiList, setPassiList] = useState<any[]>([]);
     const [listaMinute, setListaMinute] = useState<any[]>([]);
+    const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     const scaricaMinute = async () => {
         const { data, error } = await supabase.from('minute').select('*, prossimi_passi (*)').order('data_incontro', { ascending: false });
@@ -39,8 +39,7 @@ export default function MinutePage() {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                const currentUrl = window.location.pathname + window.location.search;
-                window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+                window.location.assign(`/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
                 return;
             }
             const { data: profilo } = await supabase.from('profili').select('admin').eq('id', session.user.id).single();
@@ -50,6 +49,11 @@ export default function MinutePage() {
         };
         checkUser();
     }, []);
+
+    const mostraFeedback = (text: string, type: 'success' | 'error') => {
+        setFeedback({ text, type });
+        setTimeout(() => setFeedback(null), 3000);
+    };
 
     const aggiungiPartecipante = () => {
         if (!nuovoPartecipante.trim()) return;
@@ -72,16 +76,17 @@ export default function MinutePage() {
         setPassiList(minuta.prossimi_passi || []);
         setIsEditing(true);
         setIsFormOpen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const salvaMinuta = async () => {
-        if (!titolo || !dataIncontro) return alert("Titolo e Data sono obbligatori!");
+        if (!titolo || !dataIncontro) return mostraFeedback("Titolo e Data sono obbligatori!", 'error');
         const { data: { user } } = await supabase.auth.getUser();
-
         const payloadMinuta = {
-            titolo, data_incontro: dataIncontro, partecipanti: listaPartecipanti.join('; '), argomenti, decisioni, user_id: user?.id
+            titolo, data_incontro: dataIncontro,
+            partecipanti: listaPartecipanti.join('; '),
+            argomenti, decisioni, user_id: user?.id
         };
-
         let resultMinuta;
         if (isEditing && editId) {
             resultMinuta = await supabase.from('minute').update(payloadMinuta).eq('id', editId).select().single();
@@ -89,21 +94,23 @@ export default function MinutePage() {
         } else {
             resultMinuta = await supabase.from('minute').insert([payloadMinuta]).select().single();
         }
-
-        if (resultMinuta.error) return alert("Errore nel salvataggio");
-
+        if (resultMinuta.error) return mostraFeedback("Errore nel salvataggio.", 'error');
         if (passiList.length > 0) {
             const passiFinali = passiList.map(p => ({
-                titolo: p.titolo, scadenza: p.scadenza || null, responsabili: p.responsabili, minuta_id: resultMinuta.data.id, user_id: user?.id
+                titolo: p.titolo, scadenza: p.scadenza || null,
+                responsabili: p.responsabili, minuta_id: resultMinuta.data.id, user_id: user?.id
             }));
             await supabase.from('prossimi_passi').insert(passiFinali);
         }
-        resetForm(); scaricaMinute();
+        mostraFeedback(isEditing ? "Verbale aggiornato! ✅" : "Verbale salvato! 🍐", 'success');
+        resetForm();
+        scaricaMinute();
     };
 
     const resetForm = () => {
         setIsFormOpen(false); setIsEditing(false); setEditId(null);
-        setTitolo(""); setArgomenti(""); setDecisioni(""); setListaPartecipanti([]); setPassiList([]);
+        setTitolo(""); setArgomenti(""); setDecisioni("");
+        setListaPartecipanti([]); setPassiList([]);
         setDataIncontro(new Date().toISOString().split('T')[0]);
     };
 
@@ -115,147 +122,356 @@ export default function MinutePage() {
         const passiTesto = minuta.prossimi_passi?.length > 0
             ? minuta.prossimi_passi.map((p: any) => `- ${p.titolo}${p.responsabili ? ` (Resp: ${p.responsabili})` : ''}`).join('\n')
             : 'Nessun task previsto';
-
-        const messaggio = 
-            `*MISSIONE PERA - VERBALE DI INCONTRO*\n` +
-            `------------------------------------\n\n` +
-            `*DATA:* ${dataFormattata}\n` +
-            `*TITOLO:* ${minuta.titolo}\n` +
-            `*PRESENTI:* ${presenti}\n\n` +
-            `*DISCUSSIONE:*\n${minuta.argomenti || 'Nessun dettaglio inserito'}\n\n` +
-            `*DECISIONI FINALI:*\n_${minuta.decisioni || 'Nessuna decisione registrata'}_\n\n` +
-            `*PROSSIMI PASSI:*\n${passiTesto}\n\n` +
-            `------------------------------------\n\n` +
-            `*APRI IL DETTAGLIO NELL'APP:*\n` +
-            `${urlApp}\n\n` +
-            `_Se non sei ancora registrato, per favore condividi qui la tua mail in modo che io possa creare la tua utenza._`;
-
+        const messaggio =
+            `*MISSIONE PERA - VERBALE DI INCONTRO*\n------------------------------------\n\n` +
+            `*DATA:* ${dataFormattata}\n*TITOLO:* ${minuta.titolo}\n*PRESENTI:* ${presenti}\n\n` +
+            `*DISCUSSIONE:*\n${minuta.argomenti || 'Nessun dettaglio'}\n\n` +
+            `*DECISIONI FINALI:*\n_${minuta.decisioni || 'Nessuna decisione'}_\n\n` +
+            `*PROSSIMI PASSI:*\n${passiTesto}\n\n------------------------------------\n\n` +
+            `*APRI NELL'APP:*\n${urlApp}\n\n` +
+            `_Se non sei ancora registrato, condividi qui la tua mail._`;
         window.open(`https://wa.me/?text=${encodeURIComponent(messaggio)}`, '_blank');
     };
 
-    if (loading) return <div className="p-10 text-center font-bold bg-slate-50 min-h-screen italic">Preparazione missione...</div>;
+    const formatDataLunga = (d: string) =>
+        new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    if (loading) return (
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+    );
 
     return (
-        <main className="min-h-screen bg-slate-50 p-6 pb-20 text-slate-900">
-            <div className="max-w-2xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <Link href="/" className="text-blue-600 font-bold hover:underline">← Home</Link>
-                    <h1 className="text-2xl font-black italic tracking-tight">Minute Incontri</h1>
+        <main className="min-h-screen bg-slate-50 text-slate-900 pb-24">
+
+            {/* Feedback toast */}
+            {feedback && (
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300 whitespace-nowrap ${feedback.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                    {feedback.text}
                 </div>
+            )}
 
+            {/* Header */}
+            <div className="bg-white border-b border-slate-100 sticky top-0 z-20 shadow-sm">
+                <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
+                    <Link href="/" className="text-blue-600 font-bold text-sm">← Home</Link>
+                    <h1 className="text-lg font-black tracking-tight">Verbali 🍐</h1>
+                    <div className="w-12" /> {/* spacer */}
+                </div>
+            </div>
+
+            <div className="max-w-2xl mx-auto px-6 pt-6 space-y-6">
+
+                {/* Pulsante nuovo verbale / form */}
                 {isAdmin && (
-                    <button onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)} className="w-full mb-8 bg-white border-2 border-dashed border-slate-300 p-5 rounded-2xl text-slate-500 font-bold shadow-sm hover:border-blue-400 transition-all">
-                        {isFormOpen ? "Annulla" : "+ Scrivi nuovo verbale"}
-                    </button>
-                )}
+                    <>
+                        <button
+                            onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)}
+                            className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 border-2 border-dashed ${isFormOpen ? 'border-slate-300 text-slate-400 bg-white' : 'border-blue-300 text-blue-600 bg-blue-50 hover:bg-blue-100'}`}
+                        >
+                            {isFormOpen ? <X size={16} /> : <Plus size={16} />}
+                            {isFormOpen ? 'Annulla' : '+ Scrivi nuovo verbale'}
+                        </button>
 
-                {isFormOpen && (
-                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-blue-100 mb-10 space-y-4 animate-in zoom-in duration-300">
-                        <div className="grid grid-cols-2 gap-3">
-                            <input type="date" className="p-3 bg-slate-50 rounded-xl outline-none border" value={dataIncontro} onChange={e => setDataIncontro(e.target.value)} />
-                            <input type="text" placeholder="Titolo incontro" className="p-3 bg-slate-50 rounded-xl outline-none border font-bold" value={titolo} onChange={e => setTitolo(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Partecipanti</label>
-                            <div className="flex gap-2">
-                                <input type="text" placeholder="Aggiungi nome..." className="flex-1 p-3 bg-slate-50 rounded-xl border outline-none" value={nuovoPartecipante} onChange={e => setNuovoPartecipante(e.target.value)} onKeyPress={e => e.key === 'Enter' && aggiungiPartecipante()} />
-                                <button onClick={aggiungiPartecipante} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-100"><UserPlus size={20} /></button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {listaPartecipanti.map((p, i) => (
-                                    <span key={i} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 border border-blue-100">
-                                        {p} <X size={12} className="cursor-pointer text-blue-400" onClick={() => rimuoviPartecipante(i)}/>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                        <textarea placeholder="Discussione / Argomenti..." className="w-full p-3 bg-slate-50 rounded-xl outline-none border min-h-[100px]" value={argomenti} onChange={e => setArgomenti(e.target.value)} />
-                        <textarea placeholder="Decisioni Finali..." className="w-full p-3 bg-emerald-50 text-emerald-900 rounded-xl outline-none border min-h-[80px] font-bold" value={decisioni} onChange={e => setDecisioni(e.target.value)} />
-                        <div className="pt-4 border-t">
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><ListTodo size={14}/> Prossimi Passi</label>
-                                <button onClick={() => setPassiList([...passiList, { titolo: "", scadenza: "", responsabili: "" }])} className="text-xs bg-slate-100 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-slate-200 transition-all"><Plus size={14} /> Task</button>
-                            </div>
-                            <div className="space-y-3">
-                                {passiList.map((passo, index) => (
-                                    <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 relative animate-in slide-in-from-right-2 duration-200">
-                                        <X size={14} className="absolute top-3 right-3 text-slate-300 cursor-pointer hover:text-red-500" onClick={() => setPassiList(passiList.filter((_, i) => i !== index))}/>
-                                        <input type="text" placeholder="Cosa fare?" className="w-full p-2 bg-white border rounded-lg text-sm mb-2 font-bold outline-none" value={passo.titolo} onChange={e => {
-                                            const nl = [...passiList]; nl[index].titolo = e.target.value; setPassiList(nl);
-                                        }} />
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <input type="date" className="bg-white border rounded-lg p-2 text-[10px] outline-none" value={passo.scadenza} onChange={e => {
-                                                const nl = [...passiList]; nl[index].scadenza = e.target.value; setPassiList(nl);
-                                            }} />
-                                            <input type="text" placeholder="Responsabili" className="bg-white border rounded-lg p-2 text-[10px] outline-none" value={passo.responsabili} onChange={e => {
-                                                const nl = [...passiList]; nl[index].responsabili = e.target.value; setPassiList(nl);
-                                            }} />
+                        {isFormOpen && (
+                            <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                                {/* Form header */}
+                                <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
+                                    <p className="text-white font-black text-sm uppercase tracking-widest">
+                                        {isEditing ? '✏️ Modifica Verbale' : '📋 Nuovo Verbale'}
+                                    </p>
+                                </div>
+
+                                <div className="p-6 space-y-5">
+                                    {/* Data + Titolo */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Data</label>
+                                            <input type="date"
+                                                className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm font-bold"
+                                                value={dataIncontro} onChange={e => setDataIncontro(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Titolo</label>
+                                            <input type="text" placeholder="Es: Riunione voli"
+                                                className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm font-bold"
+                                                value={titolo} onChange={e => setTitolo(e.target.value)} />
                                         </div>
                                     </div>
-                                ))}
+
+                                    {/* Partecipanti */}
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Partecipanti</label>
+                                        <div className="flex gap-2 mb-3">
+                                            <input type="text" placeholder="Aggiungi nome..."
+                                                className="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm"
+                                                value={nuovoPartecipante}
+                                                onChange={e => setNuovoPartecipante(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && aggiungiPartecipante()} />
+                                            <button onClick={aggiungiPartecipante}
+                                                className="px-4 bg-blue-600 text-white rounded-xl font-bold shadow-md shadow-blue-100 active:scale-95 transition-all">
+                                                <UserPlus size={18} />
+                                            </button>
+                                        </div>
+                                        {listaPartecipanti.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {listaPartecipanti.map((p, i) => (
+                                                    <span key={i} className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border border-blue-100">
+                                                        {p}
+                                                        <X size={12} className="cursor-pointer text-blue-300 hover:text-red-400 transition-colors" onClick={() => rimuoviPartecipante(i)} />
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Argomenti */}
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Discussione / Argomenti</label>
+                                        <textarea placeholder="Di cosa avete parlato?"
+                                            className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 min-h-[100px] text-sm leading-relaxed"
+                                            value={argomenti} onChange={e => setArgomenti(e.target.value)} />
+                                    </div>
+
+                                    {/* Decisioni */}
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Decisioni Finali</label>
+                                        <textarea placeholder="Cosa avete deciso?"
+                                            className="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:ring-2 ring-emerald-400 min-h-[80px] font-bold text-emerald-900 text-sm"
+                                            value={decisioni} onChange={e => setDecisioni(e.target.value)} />
+                                    </div>
+
+                                    {/* Prossimi passi */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                <ListTodo size={13} /> Prossimi Passi
+                                            </label>
+                                            <button
+                                                onClick={() => setPassiList([...passiList, { titolo: "", scadenza: "", responsabili: "" }])}
+                                                className="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition-all">
+                                                <Plus size={13} /> Aggiungi task
+                                            </button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {passiList.map((passo, index) => (
+                                                <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 relative">
+                                                    <button onClick={() => setPassiList(passiList.filter((_, i) => i !== index))}
+                                                        className="absolute top-3 right-3 text-slate-300 hover:text-red-400 transition-colors">
+                                                        <X size={14} />
+                                                    </button>
+                                                    <input type="text" placeholder="Cosa fare?"
+                                                        className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm mb-2.5 font-bold outline-none focus:ring-2 ring-blue-400"
+                                                        value={passo.titolo}
+                                                        onChange={e => { const nl = [...passiList]; nl[index].titolo = e.target.value; setPassiList(nl); }} />
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <input type="date"
+                                                            className="bg-white border border-slate-200 rounded-xl p-2 text-xs outline-none focus:ring-2 ring-blue-400"
+                                                            value={passo.scadenza}
+                                                            onChange={e => { const nl = [...passiList]; nl[index].scadenza = e.target.value; setPassiList(nl); }} />
+                                                        <input type="text" placeholder="Responsabili"
+                                                            className="bg-white border border-slate-200 rounded-xl p-2 text-xs outline-none focus:ring-2 ring-blue-400"
+                                                            value={passo.responsabili}
+                                                            onChange={e => { const nl = [...passiList]; nl[index].responsabili = e.target.value; setPassiList(nl); }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <button onClick={salvaMinuta}
+                                        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all">
+                                        {isEditing ? "Aggiorna Verbale" : "Salva Verbale 🍐"}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <button onClick={salvaMinuta} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all">{isEditing ? "Aggiorna Missione" : "Salva Tutto 🍐"}</button>
+                        )}
+                    </>
+                )}
+
+                {/* Lista verbali */}
+                {listaMinute.length === 0 && (
+                    <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                        <p className="text-5xl mb-3">📋</p>
+                        <p className="text-slate-400 font-bold">Nessun verbale ancora scritto.</p>
                     </div>
                 )}
 
                 <div className="space-y-4">
-                    {listaMinute.map((minuta) => (
-                        <div key={minuta.id} onClick={() => setSelectedMinuta(minuta)} className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:border-blue-200 hover:shadow-md transition-all group">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <p className="text-blue-600 font-bold text-[10px] mb-1 uppercase tracking-wider">{new Date(minuta.data_incontro).toLocaleDateString('it-IT')}</p>
-                                    <h2 className="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">{minuta.titolo}</h2>
-                                </div>
-                                <div className="flex gap-1">
-                                    {isAdmin && (
-                                        <>
-                                            <button onClick={(e) => condividiWhatsApp(e, minuta)} className="p-2 text-slate-300 hover:text-emerald-500"><Send size={18} /></button>
-                                            <button onClick={(e) => avviaModifica(e, minuta)} className="p-2 text-slate-300 hover:text-blue-500"><Edit3 size={18} /></button>
-                                            <button onClick={(e) => { e.stopPropagation(); if(confirm("Eliminare?")) supabase.from('minute').delete().eq('id', minuta.id).then(() => scaricaMinute()); }} className="p-2 text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
-                                        </>
+                    {listaMinute.map((minuta, idx) => {
+                        const dataFormatted = formatDataLunga(minuta.data_incontro);
+                        const presenti = minuta.partecipanti?.split('; ').filter(Boolean) || [];
+                        const nPassi = minuta.prossimi_passi?.length || 0;
+
+                        return (
+                            <div key={minuta.id}
+                                onClick={() => setSelectedMinuta(minuta)}
+                                className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group overflow-hidden">
+
+                                {/* Striscia colorata top — colore alternato */}
+                                <div className={`h-1 w-full ${idx % 3 === 0 ? 'bg-blue-500' : idx % 3 === 1 ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+
+                                <div className="p-5">
+                                    {/* Header riga */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <Calendar size={12} className="text-slate-400 shrink-0" />
+                                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{dataFormatted}</p>
+                                            </div>
+                                            <h2 className="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">{minuta.titolo}</h2>
+                                        </div>
+
+                                        {/* Azioni admin */}
+                                        <div className="flex items-center gap-0.5 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                                            {isAdmin && (
+                                                <>
+                                                    <button onClick={e => condividiWhatsApp(e, minuta)}
+                                                        className="p-2 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Condividi su WhatsApp">
+                                                        <Send size={16} />
+                                                    </button>
+                                                    <button onClick={e => avviaModifica(e, minuta)}
+                                                        className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="Modifica">
+                                                        <Edit3 size={16} />
+                                                    </button>
+                                                    <button onClick={async e => {
+                                                        e.stopPropagation();
+                                                        await supabase.from('minute').delete().eq('id', minuta.id);
+                                                        scaricaMinute();
+                                                    }} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Elimina">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Decisione highlight */}
+                                    {minuta.decisioni && (
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 mb-4">
+                                            <p className="text-xs text-emerald-600 font-black uppercase tracking-widest mb-1">Decisione</p>
+                                            <p className="text-sm text-emerald-900 font-bold line-clamp-2">{minuta.decisioni}</p>
+                                        </div>
                                     )}
-                                    <div className="p-2 text-slate-300"><ChevronRight size={20} /></div>
-                                </div>
-                            </div>
-                            <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-100/50 mb-3">
-                                <p className="text-sm text-emerald-900 font-bold line-clamp-2 italic">"{minuta.decisioni || 'Nessuna decisione'}"</p>
-                            </div>
-                            {minuta.prossimi_passi?.length > 0 && (
-                                <div className="flex items-center gap-2 overflow-hidden border-t border-slate-50 pt-3">
-                                    <ListTodo size={14} className="text-blue-400 shrink-0" />
-                                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                        {minuta.prossimi_passi.map((p: any) => (
-                                            <span key={p.id} className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md whitespace-nowrap font-bold uppercase tracking-tighter">{p.titolo}</span>
-                                        ))}
+
+                                    {/* Footer riga: presenti + task */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {presenti.length > 0 && (
+                                                <div className="flex items-center gap-1.5 text-slate-400">
+                                                    <Users size={13} />
+                                                    <span className="text-xs font-bold">{presenti.length} presenti</span>
+                                                </div>
+                                            )}
+                                            {nPassi > 0 && (
+                                                <div className="flex items-center gap-1.5 text-blue-400">
+                                                    <ListTodo size={13} />
+                                                    <span className="text-xs font-bold">{nPassi} task</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-slate-300 font-bold group-hover:text-blue-400 transition-colors">
+                                            Apri →
+                                        </span>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
+            {/* MODAL DETTAGLIO */}
             {selectedMinuta && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-8 bg-gradient-to-br from-blue-600 to-blue-800 text-white flex justify-between items-start">
-                            <div><p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Incontro del {new Date(selectedMinuta.data_incontro).toLocaleDateString('it-IT')}</p><h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2></div>
-                            <button onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all"><X size={24}/></button>
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-4"
+                    onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}>
+                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300"
+                        onClick={e => e.stopPropagation()}>
+
+                        {/* Modal header */}
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-7">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2 text-white/50">
+                                    <Calendar size={13} />
+                                    <p className="text-xs font-black uppercase tracking-widest">
+                                        {formatDataLunga(selectedMinuta.data_incontro)}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}
+                                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2>
+
+                            {/* Presenti pills nel header */}
+                            {selectedMinuta.partecipanti && (
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    {selectedMinuta.partecipanti.split('; ').filter(Boolean).map((p: string, i: number) => (
+                                        <span key={i} className="bg-white/15 text-white/90 text-xs font-bold px-3 py-1 rounded-full">
+                                            {p}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                            <div className="flex gap-4 items-start border-b border-slate-100 pb-4"><Users className="text-blue-500 shrink-0 mt-1" size={20} /><div><h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Presenti</h4><p className="text-sm font-bold text-slate-700">{selectedMinuta.partecipanti?.split('; ').join(', ') || 'Nessuno specificato'}</p></div></div>
-                            <div className="flex gap-4 items-start border-b border-slate-100 pb-4"><MessageSquare className="text-blue-500 shrink-0 mt-1" size={20} /><div><h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Discussione</h4><p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{selectedMinuta.argomenti || 'Nessun dettaglio inserito'}</p></div></div>
-                            <div className="bg-emerald-500 p-6 rounded-[2rem] text-white flex gap-4 shadow-lg shadow-emerald-200"><CheckCircle className="shrink-0 mt-1" size={22} /><div><h4 className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">Decisioni Finali</h4><p className="font-black text-xl leading-tight">{selectedMinuta.decisioni || 'Nessuna decisione'}</p></div></div>
+
+                        {/* Modal body */}
+                        <div className="overflow-y-auto max-h-[60vh] p-7 space-y-5">
+
+                            {/* Discussione */}
+                            {selectedMinuta.argomenti && (
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MessageSquare size={15} className="text-blue-500" />
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Discussione</h4>
+                                    </div>
+                                    <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-2xl">
+                                        {selectedMinuta.argomenti}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Decisioni */}
+                            <div className="bg-emerald-500 p-6 rounded-3xl text-white shadow-lg shadow-emerald-100">
+                                <div className="flex items-center gap-2 mb-2 opacity-80">
+                                    <CheckCircle size={15} />
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest">Decisioni Finali</h4>
+                                </div>
+                                <p className="font-black text-xl leading-snug">
+                                    {selectedMinuta.decisioni || 'Nessuna decisione registrata'}
+                                </p>
+                            </div>
+
+                            {/* Prossimi passi */}
                             {selectedMinuta.prossimi_passi?.length > 0 && (
-                                <div className="space-y-4 pt-2"><h4 className="text-xs font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2"><ListTodo size={18} className="text-blue-600"/> Prossimi Passi</h4>
-                                    <div className="grid gap-3">
-                                        {selectedMinuta.prossimi_passi.map((passo: any) => (
-                                            <div key={passo.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
-                                                <p className="font-black text-slate-800 text-sm">{passo.titolo}</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {passo.scadenza && <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-lg flex items-center gap-1"><Clock size={10}/> {new Date(passo.scadenza).toLocaleDateString('it-IT')}</span>}
-                                                    {passo.responsabili && <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg flex items-center gap-1"><Users size={10}/> {passo.responsabili}</span>}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <ListTodo size={15} className="text-blue-500" />
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prossimi Passi</h4>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {selectedMinuta.prossimi_passi.map((passo: any, i: number) => (
+                                            <div key={passo.id} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3">
+                                                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                                                    {i + 1}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-black text-slate-800 text-sm mb-1.5">{passo.titolo}</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {passo.scadenza && (
+                                                            <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                                                <Clock size={10} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
+                                                            </span>
+                                                        )}
+                                                        {passo.responsabili && (
+                                                            <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                                                <Users size={10} /> {passo.responsabili}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
