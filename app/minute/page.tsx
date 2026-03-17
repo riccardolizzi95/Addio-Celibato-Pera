@@ -403,14 +403,12 @@ export default function MinutePage() {
                         style={{ maxHeight: '92dvh' }}
                         onClick={e => e.stopPropagation()}>
 
-                        {/* Handle pill — segnale visivo che si può chiudere trascinando */}
-                        <div className="flex justify-center pt-3 pb-1 shrink-0 bg-gradient-to-br from-slate-800 to-slate-900">
-                            <div className="w-10 h-1 bg-white/20 rounded-full" />
-                        </div>
-
-                        {/* Modal header */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-7 pb-7 pt-3 shrink-0">
-                            <div className="flex items-start justify-between mb-3">
+                        {/* Handle pill + Modal header — tutto compatto */}
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-6 pb-5 pt-2 shrink-0">
+                            <div className="flex justify-center mb-3">
+                                <div className="w-10 h-1 bg-white/20 rounded-full" />
+                            </div>
+                            <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2 text-white/50">
                                     <Calendar size={13} />
                                     <p className="text-xs font-black uppercase tracking-widest">
@@ -423,11 +421,11 @@ export default function MinutePage() {
                                     <X size={20} />
                                 </button>
                             </div>
-                            <h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2>
+                            <h2 className="text-xl font-black leading-snug tracking-tight">{selectedMinuta.titolo}</h2>
 
                             {/* Presenti — riga singola scorrevole, compatta */}
                             {selectedMinuta.partecipanti && (
-                                <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar">
+                                <div className="flex items-center gap-2 mt-2 overflow-x-auto no-scrollbar">
                                     <Users size={12} className="text-white/40 shrink-0" />
                                     <p className="text-white/70 text-xs font-bold whitespace-nowrap">
                                         {selectedMinuta.partecipanti.split('; ').filter(Boolean).join(' · ')}
