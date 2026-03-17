@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Safe area per iPhone (notch / home indicator) */
+.pb-safe {
+  padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
+}
+
+/* Nasconde la scrollbar mantenendo lo scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

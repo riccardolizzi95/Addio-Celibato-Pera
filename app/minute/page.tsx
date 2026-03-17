@@ -384,13 +384,19 @@ export default function MinutePage() {
 
             {/* MODAL DETTAGLIO */}
             {selectedMinuta && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-4"
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end justify-center"
                     onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}>
-                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300"
+                    <div className="bg-white w-full max-w-lg rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-8 duration-300"
+                        style={{ maxHeight: '92dvh' }}
                         onClick={e => e.stopPropagation()}>
 
+                        {/* Handle pill — segnale visivo che si può chiudere trascinando */}
+                        <div className="flex justify-center pt-3 pb-1 shrink-0 bg-gradient-to-br from-slate-800 to-slate-900">
+                            <div className="w-10 h-1 bg-white/20 rounded-full" />
+                        </div>
+
                         {/* Modal header */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-7">
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-7 pb-7 pt-3 shrink-0">
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-2 text-white/50">
                                     <Calendar size={13} />
@@ -418,8 +424,8 @@ export default function MinutePage() {
                             )}
                         </div>
 
-                        {/* Modal body */}
-                        <div className="overflow-y-auto max-h-[60vh] p-7 space-y-5">
+                        {/* Modal body — scrollabile, occupa lo spazio disponibile */}
+                        <div className="flex-1 overflow-y-auto p-7 space-y-5 pb-safe">
 
                             {/* Discussione */}
                             {selectedMinuta.argomenti && (
