@@ -29,6 +29,9 @@ body {
 .pb-safe {
   padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
 }
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
 
 /* Nasconde la scrollbar mantenendo lo scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
