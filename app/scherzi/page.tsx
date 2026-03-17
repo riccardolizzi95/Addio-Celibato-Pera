@@ -37,6 +37,7 @@ export default function ScherziPage() {
     const [responsabili, setResponsabili] = useState('');
     const [noteSegrete, setNoteSegrete] = useState('');
     const [stato, setStato] = useState<'idea' | 'approvata' | 'in_corso' | 'completata'>('idea');
+    const [quando, setQuando] = useState('');
 
     const scaricaDati = async () => {
         const { data, error } = await supabase
@@ -74,7 +75,7 @@ export default function ScherziPage() {
     const resetForm = () => {
         setIsFormOpen(false); setEditingId(null);
         setTitolo(''); setDescrizione(''); setDifficolta('media');
-        setMateriali(''); setResponsabili(''); setNoteSegrete(''); setStato('idea');
+        setMateriali(''); setResponsabili(''); setNoteSegrete(''); setStato('idea'); setQuando('');
     };
 
     const apriModifica = (item: any, e: React.MouseEvent) => {
@@ -83,7 +84,7 @@ export default function ScherziPage() {
         setTitolo(item.titolo); setDescrizione(item.descrizione || '');
         setDifficolta(item.difficolta || 'media'); setMateriali(item.materiali || '');
         setResponsabili(item.responsabili || ''); setNoteSegrete(item.note_segrete || '');
-        setStato(item.stato || 'idea');
+        setStato(item.stato || 'idea'); setQuando(item.quando || '');
         setIsFormOpen(true); setExpandedId(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -97,6 +98,7 @@ export default function ScherziPage() {
             responsabili: responsabili.trim() || null,
             note_segrete: noteSegrete.trim() || null,
             stato,
+            quando: quando.trim() || null,
         };
         if (editingId) {
             const { error } = await supabase.from('scherzi').update(payload).eq('id', editingId);
@@ -211,6 +213,14 @@ export default function ScherziPage() {
                                 className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
                         </div>
 
+                        {/* Quando */}
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Quando farlo</label>
+                            <input type="text" placeholder="Es: Sabato sera dopo cena, durante il trasferimento..." value={quando}
+                                onChange={e => setQuando(e.target.value)}
+                                className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
+                        </div>
+
                         {/* Note segrete (solo admin vede) */}
                         <div>
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block flex items-center gap-1">
@@ -300,6 +310,11 @@ export default function ScherziPage() {
                                     <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${statoConf.color}`}>
                                         {statoConf.label}
                                     </span>
+                                    {item.quando && (
+                                        <span className="text-[11px] font-black px-2.5 py-1 rounded-full border bg-purple-50 text-purple-600 border-purple-100 flex items-center gap-1">
+                                            <Clock size={10} /> {item.quando.length > 20 ? item.quando.slice(0, 20) + '...' : item.quando}
+                                        </span>
+                                    )}
                                     <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${votiSu.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
                                         👍 {votiSu.length}
                                     </span>
@@ -318,6 +333,17 @@ export default function ScherziPage() {
                                         <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl whitespace-pre-wrap">
                                             {item.descrizione}
                                         </p>
+                                    )}
+
+                                    {/* Quando */}
+                                    {item.quando && (
+                                        <div className="flex items-start gap-3 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                            <Clock size={16} className="text-purple-500 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-[10px] font-black text-purple-600 uppercase tracking-wider mb-1">Quando farlo</p>
+                                                <p className="text-sm font-bold text-purple-900">{item.quando}</p>
+                                            </div>
+                                        </div>
                                     )}
 
                                     {/* Materiali + Responsabili */}
