@@ -103,7 +103,7 @@ export default function ScherziPage() {
             if (error) mostraFeedback('Errore durante la modifica.', 'error');
             else { mostraFeedback('Scherzo aggiornato! ✅', 'success'); resetForm(); scaricaDati(); }
         } else {
-            const { error } = await supabase.from('scherzi').insert([{ ...payload, creatore: myUsername || 'Anonimo', user_id: userId }]);
+            const { error } = await supabase.from('scherzi').insert([{ ...payload, creatore: myUsername || 'Anonimo' }]);
             if (error) mostraFeedback("Errore durante l'invio.", 'error');
             else { mostraFeedback('Scherzo aggiunto! 😈', 'success'); resetForm(); scaricaDati(); }
         }
@@ -112,8 +112,9 @@ export default function ScherziPage() {
 
     const elimina = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        await supabase.from('scherzi').delete().eq('id', id);
-        scaricaDati();
+        const { error } = await supabase.from('scherzi').delete().eq('id', id);
+        if (error) mostraFeedback("Errore durante l'eliminazione.", 'error');
+        else scaricaDati();
     };
 
     const aggiornaStato = async (id: number, nuovoStato: string, e: React.MouseEvent) => {
