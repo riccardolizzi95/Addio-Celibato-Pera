@@ -47,11 +47,7 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center bg-slate-50 text-slate-900 p-6">
       <div className="flex flex-col items-center w-full max-w-sm text-center pt-4">
-        <span className="text-8xl mb-6 drop-shadow-sm font-normal">🍐</span>
-        <h1 className="text-4xl font-black tracking-tight mb-2">Missione Pera</h1>
-        <p className="text-slate-500 mb-10 text-lg text-center leading-relaxed font-normal">
-          Il centro di comando per l'addio al celibato più epico di sempre.
-        </p>
+        <span className="text-8xl mb-10 drop-shadow-sm font-normal">🍐</span>
 
         <div className="w-full space-y-4">
           <Link href="/voli" className="w-full block">
