@@ -23,6 +23,9 @@ export default function AttivitaPage() {
     const [pianoOraFine, setPianoOraFine] = useState('');
     const [pianoLuogo, setPianoLuogo] = useState('');
     const [pianoNote, setPianoNote] = useState('');
+    const [luogoRisultati, setLuogoRisultati] = useState<any[]>([]);
+    const [luogoLoading, setLuogoLoading] = useState(false);
+    const [luogoQuery, setLuogoQuery] = useState('');
     const [loadingTratte, setLoadingTratte] = useState<Record<string, boolean>>({});
     const [tratte, setTratte] = useState<Record<string, any>>({});
     const [listaProposte, setListaProposte] = useState<any[]>([]);
@@ -175,6 +178,8 @@ export default function AttivitaPage() {
         setPianoOraFine('');
         setPianoLuogo('');
         setPianoNote('');
+        setLuogoRisultati([]);
+        setLuogoQuery('');
         scaricaPiano();
     };
 
@@ -194,6 +199,26 @@ export default function AttivitaPage() {
             }
         } catch {}
         setLoadingTratte(prev => ({ ...prev, [key]: false }));
+    };
+
+    const cercaLuogo = async (query: string) => {
+        if (!query.trim()) { setLuogoRisultati([]); return; }
+        setLuogoLoading(true);
+        try {
+            const res = await fetch(`/api/cerca-luogo?q=${encodeURIComponent(query + ' Amsterdam')}`);
+            if (res.ok) {
+                const dati = await res.json();
+                setLuogoRisultati(dati);
+            }
+        } catch {}
+        setLuogoLoading(false);
+    };
+
+    const avviaCercaLuogoAuto = (titoloAttivita: string) => {
+        const q = titoloAttivita.trim();
+        setLuogoQuery(q);
+        setLuogoRisultati([]);
+        if (q) cercaLuogo(q);
     };
 
     const giorni = ['2026-04-18', '2026-04-19', '2026-04-20'];
@@ -450,6 +475,7 @@ export default function AttivitaPage() {
                                                         setPianoNote('');
                                                         setPianoGiorno('2026-04-18');
                                                         setAddingToPiano(item.id);
+                                                        avviaCercaLuogoAuto(item.titolo);
                                                     }}
                                                     className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
                                                     <Calendar size={13} /> Aggiungi al Piano
@@ -634,10 +660,90 @@ export default function AttivitaPage() {
 
                             {/* Luogo */}
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Luogo / Indirizzo</label>
-                                <input type="text" placeholder="Es: Vondelpark, Amsterdam"
-                                    value={pianoLuogo} onChange={e => setPianoLuogo(e.target.value)}
-                                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base outline-none focus:ring-2 ring-emerald-400" />
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                    <MapPin size={10} className="inline -mt-0.5 mr-0.5" /> Luogo / Indirizzo
+                                </label>
+
+                                {/* Campo già compilato — mostra il valore con possibilità di cambiare */}
+                                {pianoLuogo ? (
+                                    <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                        <MapPin size={14} className="text-emerald-600 shrink-0" />
+                                        <p className="text-sm font-bold text-emerald-800 flex-1 leading-tight">{pianoLuogo}</p>
+                                        <button onClick={() => { setPianoLuogo(''); setLuogoQuery(''); setLuogoRisultati([]); }}
+                                            className="p-1 text-emerald-400 hover:text-red-500 transition-colors shrink-0">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Barra di ricerca */}
+                                        <div className="flex gap-2">
+                                            <input type="text" placeholder="Cerca un luogo ad Amsterdam..."
+                                                value={luogoQuery}
+                                                onChange={e => setLuogoQuery(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter') cercaLuogo(luogoQuery); }}
+                                                className="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base outline-none focus:ring-2 ring-emerald-400" />
+                                            <button onClick={() => cercaLuogo(luogoQuery)}
+                                                disabled={!luogoQuery.trim() || luogoLoading}
+                                                className="px-3 bg-emerald-600 text-white rounded-xl font-bold text-sm disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all shrink-0">
+                                                {luogoLoading ? '...' : <Search size={16} />}
+                                            </button>
+                                        </div>
+
+                                        {/* Risultati ricerca */}
+                                        {luogoLoading && (
+                                            <div className="flex items-center justify-center gap-2 py-3">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500" />
+                                                <span className="text-xs text-slate-400 font-bold">Cerco su mappa...</span>
+                                            </div>
+                                        )}
+
+                                        {!luogoLoading && luogoRisultati.length > 0 && (
+                                            <div className="mt-2 space-y-1.5 max-h-[180px] overflow-y-auto rounded-xl">
+                                                {luogoRisultati.map((r: any, i: number) => (
+                                                    <button key={i}
+                                                        onClick={() => {
+                                                            const indirizzo = r.nome ? `${r.nome}, ${r.indirizzo.split(',').slice(1, 3).join(',').trim()}` : r.indirizzo.split(',').slice(0, 3).join(',').trim();
+                                                            setPianoLuogo(indirizzo);
+                                                            setLuogoRisultati([]);
+                                                        }}
+                                                        className="w-full text-left p-2.5 bg-white border border-slate-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition-all active:scale-[0.98]">
+                                                        <p className="text-sm font-bold text-slate-800 leading-tight">{r.nome || r.indirizzo.split(',')[0]}</p>
+                                                        <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{r.indirizzo.split(',').slice(1, 4).join(',').trim()}</p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {!luogoLoading && luogoRisultati.length === 0 && luogoQuery.trim() && (
+                                            <div className="mt-2 space-y-2">
+                                                <p className="text-xs text-slate-400 text-center py-1">Nessun risultato trovato</p>
+                                            </div>
+                                        )}
+
+                                        {/* Pulsante fallback Google Maps */}
+                                        <button
+                                            onClick={() => {
+                                                const q = luogoQuery.trim() || listaProposte.find(p => p.id === addingToPiano)?.titolo || '';
+                                                window.open(`https://www.google.com/maps/search/${encodeURIComponent(q + ' Amsterdam')}`, '_blank');
+                                            }}
+                                            className="w-full mt-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all">
+                                            <Navigation size={12} /> Cerca su Google Maps
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Input manuale sempre disponibile se vuole scrivere a mano */}
+                                {!pianoLuogo && (
+                                    <button
+                                        onClick={() => {
+                                            const addr = prompt('Inserisci indirizzo manualmente:');
+                                            if (addr?.trim()) setPianoLuogo(addr.trim());
+                                        }}
+                                        className="w-full mt-1.5 text-[11px] text-slate-400 hover:text-slate-600 transition-colors text-center">
+                                        ✏️ Oppure inserisci manualmente
+                                    </button>
+                                )}
                             </div>
 
                             {/* Bottoni */}
