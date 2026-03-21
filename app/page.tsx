@@ -143,16 +143,31 @@ export default function Home() {
         /* aereo SVG */
         .plane-wrap {
           position: absolute;
-          top: 28%; left: 0;
-          animation: fly 10s linear infinite 2s;
+          top: 26%; left: 0;
+          animation: fly 11s linear infinite 3s;
           display: flex; align-items: center;
         }
-        .plane-scia {
-          height: 1.5px;
-          background: linear-gradient(to left, rgba(148,163,184,0.55), transparent);
+        .plane-scie {
+          position: relative;
+          margin-right: 3px;
+          animation: scia 11s linear infinite 3s;
+        }
+        .plane-scie .s-main {
+          width: 100px; height: 1.5px;
+          background: linear-gradient(to left, rgba(148,163,184,0.5), transparent);
           border-radius: 2px;
-          margin-right: 2px;
-          animation: scia 10s linear infinite 2s;
+        }
+        .plane-scie .s-top {
+          width: 78px; height: 1px;
+          background: linear-gradient(to left, rgba(148,163,184,0.3), transparent);
+          border-radius: 1px;
+          margin-top: -12px;
+        }
+        .plane-scie .s-bot {
+          width: 78px; height: 1px;
+          background: linear-gradient(to left, rgba(148,163,184,0.3), transparent);
+          border-radius: 1px;
+          margin-top: 10px;
         }
 
         /* tulipani */
@@ -215,22 +230,43 @@ export default function Home() {
         <div className="cloud-group cg4"><div className="cloud c1"/><div className="cloud c2"/></div>
         <div className="cloud-group cg5"><div className="cloud c1"/><div className="cloud c2"/></div>
 
-        {/* Aereo SVG — stesso stile della skyline */}
+        {/* Aereo SVG — visto dall'alto, proporzionato */}
         <div className="plane-wrap">
-          <div className="plane-scia" style={{ width: "90px" }} />
-          <svg width="38" height="22" viewBox="0 0 38 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="19" cy="11" rx="17" ry="3.8" fill="#94a3b8" opacity="0.82"/>
-            <path d="M36 11 L38 11 L35 8.5 Z" fill="#64748b" opacity="0.9"/>
-            <path d="M17 11 L26 3 L28 4.5 L21 11 Z" fill="#94a3b8" opacity="0.78"/>
-            <path d="M17 11 L26 19 L28 17.5 L21 11 Z" fill="#94a3b8" opacity="0.78"/>
-            <path d="M4 11 L2 7 L6 8 L7 11 Z" fill="#94a3b8" opacity="0.72"/>
-            <path d="M4 11 L2 15 L6 14 L7 11 Z" fill="#94a3b8" opacity="0.72"/>
-            <path d="M4 11 L3 5.5 L7 8 L7 11 Z" fill="#64748b" opacity="0.65"/>
-            <rect x="15" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.5"/>
-            <rect x="19" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.45"/>
-            <rect x="23" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.4"/>
-            <ellipse cx="23" cy="12.8" rx="3.2" ry="1.3" fill="#64748b" opacity="0.68"/>
-            <ellipse cx="23" cy="9.2"  rx="3.2" ry="1.3" fill="#64748b" opacity="0.68"/>
+          <div className="plane-scie">
+            <div className="s-top" />
+            <div className="s-main" />
+            <div className="s-bot" />
+          </div>
+          <svg width="72" height="56" viewBox="-56 -28 112 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Fusoliera */}
+            <ellipse cx="0" cy="0" rx="48" ry="6.5" fill="#94a3b8" opacity="0.88"/>
+            <ellipse cx="44" cy="0" rx="8" ry="5" fill="#7c8fa3" opacity="0.92"/>
+            <ellipse cx="-42" cy="0" rx="9" ry="3.8" fill="#7c8fa3" opacity="0.88"/>
+            {/* Ala sinistra */}
+            <path d="M8,0 L-6,-1.5 L-26,-28 L-15,-28 L1,-3.5 Z" fill="#94a3b8" opacity="0.80"/>
+            <path d="M-15,-28 L-26,-28 L-28,-32 L-19,-31 Z" fill="#7c8fa3" opacity="0.72"/>
+            {/* Ala destra */}
+            <path d="M8,0 L-6,1.5 L-26,28 L-15,28 L1,3.5 Z" fill="#94a3b8" opacity="0.80"/>
+            <path d="M-15,28 L-26,28 L-28,32 L-19,31 Z" fill="#7c8fa3" opacity="0.72"/>
+            {/* Motore sinistro */}
+            <ellipse cx="-12" cy="-17" rx="8.5" ry="4" fill="#64748b" opacity="0.82"/>
+            <ellipse cx="-12" cy="-17" rx="6.5" ry="2.8" fill="#475569" opacity="0.68"/>
+            {/* Motore destro */}
+            <ellipse cx="-12" cy="17" rx="8.5" ry="4" fill="#64748b" opacity="0.82"/>
+            <ellipse cx="-12" cy="17" rx="6.5" ry="2.8" fill="#475569" opacity="0.68"/>
+            {/* Piano di coda sinistro */}
+            <path d="M-36,0 L-41,-1.5 L-50,-14 L-44,-13 L-38,-1 Z" fill="#7c8fa3" opacity="0.75"/>
+            {/* Piano di coda destro */}
+            <path d="M-36,0 L-41,1.5 L-50,14 L-44,13 L-38,1 Z" fill="#7c8fa3" opacity="0.75"/>
+            {/* Deriva verticale (accennata) */}
+            <ellipse cx="-40" cy="0" rx="5.5" ry="1.8" fill="#64748b" opacity="0.45"/>
+            {/* Finestrine */}
+            <rect x="10" y="-2.8" width="3.8" height="1.8" rx="0.9" fill="white" opacity="0.4"/>
+            <rect x="17" y="-2.8" width="3.8" height="1.8" rx="0.9" fill="white" opacity="0.38"/>
+            <rect x="24" y="-2.8" width="3.8" height="1.8" rx="0.9" fill="white" opacity="0.33"/>
+            <rect x="31" y="-2.8" width="3.5" height="1.8" rx="0.9" fill="white" opacity="0.28"/>
+            {/* Luce sul dorso */}
+            <ellipse cx="8" cy="-1.8" rx="28" ry="2.2" fill="white" opacity="0.12"/>
           </svg>
         </div>
 
