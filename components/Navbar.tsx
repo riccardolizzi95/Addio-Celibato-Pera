@@ -3,22 +3,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { User, Eye, ClipboardList } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
-  const pathname = usePathname();
-
-  // La navbar è trasparente solo sulla home, opaca sulle altre pagine
-  const isHome = pathname === '/';
 
   useEffect(() => {
     const initPresence = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUser(session.user);
-
         const { data: profilo } = await supabase
           .from('profili')
           .select('username')
@@ -53,79 +47,30 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav
-      className="flex items-center justify-between px-4 sticky top-0 z-50 transition-all duration-300"
-      style={{
-        // Home: trasparente sul cielo azzurro, fonde con l'hero
-        // Altre pagine: bianco con ombra leggera
-        background: isHome
-          ? 'linear-gradient(to bottom, rgba(219,234,254,0.85) 0%, rgba(239,246,255,0.6) 100%)'
-          : 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: isHome
-          ? '1px solid rgba(147,197,253,0.2)'
-          : '1px solid rgba(226,232,240,0.8)',
-        boxShadow: isHome
-          ? 'none'
-          : '0 1px 12px rgba(0,0,0,0.06)',
-        paddingTop: '10px',
-        paddingBottom: '10px',
-      }}
-    >
-      {/* SINISTRA: Verbali + Logo */}
-      <div className="flex items-center gap-3">
+    <nav className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
+      <div className="flex items-center gap-4">
         <Link
           href="/minute"
+          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
           title="Verbali Incontri"
-          className="transition-all duration-200 rounded-xl p-2"
-          style={{
-            color: isHome ? 'rgba(71,85,105,0.7)' : '#64748b',
-          }}
         >
-          <ClipboardList size={22} />
+          <ClipboardList size={24} />
         </Link>
-
-        <Link
-          href="/"
-          className="font-black tracking-tight text-base transition-colors duration-200"
-          style={{ color: isHome ? '#1e40af' : '#2563eb' }}
-        >
+        <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
           Missione Pera 🍐
         </Link>
       </div>
 
-      {/* DESTRA: Online + Profilo */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         {onlineUsers.length >= 2 && (
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold animate-pulse"
-            style={{
-              background: 'rgba(209,250,229,0.8)',
-              color: '#059669',
-              border: '1px solid rgba(167,243,208,0.6)',
-            }}
-          >
-            <Eye size={13} />
-            <span>{onlineUsers.length} online</span>
+          <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-100 animate-pulse">
+            <Eye size={16} />
+            <span className="text-xs font-bold">{onlineUsers.length} online</span>
           </div>
         )}
-
-        <Link href="/profilo">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200"
-            style={{
-              background: isHome
-                ? 'rgba(255,255,255,0.6)'
-                : 'rgba(241,245,249,1)',
-              border: isHome
-                ? '1px solid rgba(147,197,253,0.4)'
-                : '1px solid rgba(203,213,225,0.8)',
-              color: '#64748b',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            <User size={18} />
+        <Link href="/profilo" className="group relative">
+          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 border border-slate-200 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+            <User size={20} />
           </div>
         </Link>
       </div>
