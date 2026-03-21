@@ -698,20 +698,20 @@ export default function AttivitaPage() {
                             </div>
 
                             {/* Orari */}
-                            <div className="flex gap-3">
-                                <div className="flex-1 min-w-0">
+                            <div className="flex gap-3 overflow-hidden">
+                                <div className="flex-1 min-w-0 overflow-hidden">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inizio</label>
                                     <input type="time" value={pianoOraInizio}
                                         onChange={e => setPianoOraInizio(e.target.value)}
                                         className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400"
-                                        style={{ maxWidth: '100%' }} />
+                                        style={{ maxWidth: '100%', boxSizing: 'border-box' }} />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 overflow-hidden">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fine (opz.)</label>
                                     <input type="time" value={pianoOraFine}
                                         onChange={e => setPianoOraFine(e.target.value)}
                                         className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400"
-                                        style={{ maxWidth: '100%' }} />
+                                        style={{ maxWidth: '100%', boxSizing: 'border-box' }} />
                                 </div>
                             </div>
 

@@ -36,3 +36,11 @@ body {
 /* Nasconde la scrollbar mantenendo lo scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Fix: input time su iOS Safari non deve debordare */
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 100%;
+  box-sizing: border-box;
+}
