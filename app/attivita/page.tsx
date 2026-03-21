@@ -214,24 +214,56 @@ export default function AttivitaPage() {
         setLuogoLoading(false);
     };
 
+    const isGetYourGuideLink = (url: string): boolean => {
+        try { return new URL(url).hostname.includes('getyourguide.com'); }
+        catch { return false; }
+    };
+
     const estraiNomeDaGetYourGuide = (url: string): string | null => {
         try {
             const u = new URL(url);
             if (!u.hostname.includes('getyourguide.com')) return null;
-            // URL tipo: /amsterdam-l36/amsterdam-catacombs-escape-t123456/
             const parts = u.pathname.split('/').filter(Boolean);
             const activitySlug = parts.find(p => /-t\d+$/.test(p));
             if (!activitySlug) return null;
-            // "amsterdam-catacombs-escape-t123456" → "amsterdam catacombs escape"
             return activitySlug.replace(/-t\d+$/, '').replace(/-/g, ' ');
         } catch {
             return null;
         }
     };
 
-    const avviaCercaLuogoAuto = (titoloAttivita: string, linkAttivita?: string | null) => {
+    const avviaCercaLuogoAuto = async (titoloAttivita: string, linkAttivita?: string | null) => {
         let q = titoloAttivita.trim();
-        // Se c'è un link GetYourGuide, prova a estrarre un nome più preciso dall'URL
+
+        // Se c'è un link GetYourGuide, prova prima a recuperare il punto di incontro
+        if (linkAttivita && isGetYourGuideLink(linkAttivita)) {
+            const nomeGYG = estraiNomeDaGetYourGuide(linkAttivita);
+            if (nomeGYG) q = nomeGYG;
+            setLuogoQuery(q);
+            setLuogoRisultati([]);
+            setLuogoLoading(true);
+
+            try {
+                // Cerca il meeting point specifico GYG
+                const res = await fetch(`/api/gyg-punto?url=${encodeURIComponent(linkAttivita)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.punto && data.punto.indirizzo) {
+                        // Trovato! Pre-popola direttamente
+                        setPianoLuogo(`${data.punto.nome}, ${data.punto.indirizzo}`);
+                        setLuogoLoading(false);
+                        return;
+                    }
+                }
+            } catch {}
+
+            // Fallback: cerca normalmente
+            setLuogoLoading(false);
+            cercaLuogo(q);
+            return;
+        }
+
+        // Nessun link GYG — ricerca normale
         if (linkAttivita) {
             const nomeGYG = estraiNomeDaGetYourGuide(linkAttivita);
             if (nomeGYG) q = nomeGYG;
