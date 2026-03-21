@@ -434,50 +434,7 @@ export default function AttivitaPage() {
 
                                     {/* Aggiungi al Piano */}
                                     <div className="mt-4 border-t border-slate-100 pt-4">
-                                        {addingToPiano === item.id ? (
-                                            <div className="space-y-2 animate-in fade-in duration-200 overflow-hidden">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">📅 Aggiungi al Piano</p>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {giorni.map(g => (
-                                                        <button key={g}
-                                                            onClick={() => setPianoGiorno(g)}
-                                                            className={`py-2 rounded-xl text-xs font-bold transition-all ${pianoGiorno === g ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                            {labelGiorno(g).split(' ').slice(0,2).join(' ')}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inizio</label>
-                                                        <input type="time" value={pianoOraInizio}
-                                                            onChange={e => setPianoOraInizio(e.target.value)}
-                                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-emerald-400"/>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fine (opz.)</label>
-                                                        <input type="time" value={pianoOraFine}
-                                                            onChange={e => setPianoOraFine(e.target.value)}
-                                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-emerald-400"/>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Luogo / Indirizzo</label>
-                                                    <input type="text" placeholder="Es: Vondelpark, Amsterdam"
-                                                        value={pianoLuogo} onChange={e => setPianoLuogo(e.target.value)}
-                                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-400"/>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => setAddingToPiano(null)}
-                                                        className="flex-1 py-2.5 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold">
-                                                        Annulla
-                                                    </button>
-                                                    <button onClick={() => aggiungiAPiano(item.id)}
-                                                        className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-100 active:scale-95 transition-all">
-                                                        ✅ Conferma
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (() => {
+                                        {(() => {
                                             const giaInPiano = pianoPieno.find(p => p.proposta_id === item.id);
                                             return giaInPiano ? (
                                                 <div className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-400 rounded-xl text-xs font-black flex items-center justify-center gap-2">
@@ -485,7 +442,15 @@ export default function AttivitaPage() {
                                                 </div>
                                             ) : (
                                                 <button
-                                                    onClick={e => { e.stopPropagation(); setAddingToPiano(item.id); }}
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setPianoOraInizio('10:00');
+                                                        setPianoOraFine('');
+                                                        setPianoLuogo('');
+                                                        setPianoNote('');
+                                                        setPianoGiorno('2026-04-18');
+                                                        setAddingToPiano(item.id);
+                                                    }}
                                                     className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
                                                     <Calendar size={13} /> Aggiungi al Piano
                                                 </button>
@@ -611,6 +576,82 @@ export default function AttivitaPage() {
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {/* BOTTOM-SHEET: Aggiungi al Piano */}
+            {addingToPiano !== null && (
+                <div className="fixed inset-0 z-[110]" onClick={() => setAddingToPiano(null)}>
+                    {/* Overlay scuro */}
+                    <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-200" />
+
+                    {/* Sheet dal basso */}
+                    <div
+                        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300"
+                        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Handle */}
+                        <div className="flex justify-center pt-3 pb-1">
+                            <div className="w-10 h-1 bg-slate-300 rounded-full" />
+                        </div>
+
+                        <div className="px-6 pb-4 space-y-3">
+                            <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">
+                                📅 Aggiungi al Piano
+                            </p>
+                            <p className="text-sm font-bold text-slate-700 -mt-1">
+                                {listaProposte.find(p => p.id === addingToPiano)?.titolo}
+                            </p>
+
+                            {/* Giorni */}
+                            <div className="grid grid-cols-3 gap-2">
+                                {giorni.map(g => (
+                                    <button key={g}
+                                        onClick={() => setPianoGiorno(g)}
+                                        className={`py-2.5 rounded-xl text-xs font-bold transition-all ${pianoGiorno === g ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                        {labelGiorno(g).split(' ').slice(0, 2).join(' ')}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Orari */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inizio</label>
+                                    <input type="time" value={pianoOraInizio}
+                                        onChange={e => setPianoOraInizio(e.target.value)}
+                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fine (opz.)</label>
+                                    <input type="time" value={pianoOraFine}
+                                        onChange={e => setPianoOraFine(e.target.value)}
+                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
+                                </div>
+                            </div>
+
+                            {/* Luogo */}
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Luogo / Indirizzo</label>
+                                <input type="text" placeholder="Es: Vondelpark, Amsterdam"
+                                    value={pianoLuogo} onChange={e => setPianoLuogo(e.target.value)}
+                                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base outline-none focus:ring-2 ring-emerald-400" />
+                            </div>
+
+                            {/* Bottoni */}
+                            <div className="flex gap-2 pt-1">
+                                <button onClick={() => setAddingToPiano(null)}
+                                    className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold">
+                                    Annulla
+                                </button>
+                                <button onClick={() => aggiungiAPiano(addingToPiano)}
+                                    className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-100 active:scale-95 transition-all">
+                                    ✅ Conferma
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
