@@ -1,51 +1,37 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: { headers: request.headers },
-  })
+  // Controlla solo il cookie di sessione Supabase — senza refreshare il token
+  // Il refresh avviene lato client tramite createBrowserClient in modo sicuro
+  const pathname = request.nextUrl.pathname;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
+  // Pagine pubbliche — sempre accessibili
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/api')
+  ) {
+    return NextResponse.next();
+  }
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // Cerca il cookie di sessione Supabase (può avere nomi diversi)
+  const cookies = request.cookies.getAll();
+  const hasSession = cookies.some(
+    c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+  );
 
-  // Se non c'è sessione e non siamo al login, reindirizza salvando l'URL originale
-  if (!session && !request.nextUrl.pathname.startsWith('/login')) {
+  if (!hasSession) {
     const url = request.nextUrl.clone();
-    const returnTo = url.pathname + url.search; // Prende percorso + parametri (es: /minute?id=123)
+    const returnTo = url.pathname + url.search;
     url.pathname = '/login';
-    url.searchParams.set('returnTo', returnTo); // Lo aggiunge come parametro al login
+    url.searchParams.set('returnTo', returnTo);
     return NextResponse.redirect(url);
   }
 
-  return response
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-}
+};

@@ -159,7 +159,7 @@ export default function AttivitaPage() {
         if (!pianoOraInizio) return;
         const { data: { user } } = await supabase.auth.getUser();
         const existing = pianoPieno.filter(p => p.giorno === pianoGiorno);
-        await supabase.from('piano_attivita').insert([{
+        await supabase.from('piano_attivita').upsert([{
             proposta_id: propostaId,
             giorno: pianoGiorno,
             ora_inizio: pianoOraInizio,
@@ -168,7 +168,7 @@ export default function AttivitaPage() {
             note: pianoNote || null,
             ordine: existing.length,
             user_id: user?.id,
-        }]);
+        }], { onConflict: 'proposta_id,giorno' });
         mostraFeedback('Aggiunta al piano! ✅', 'success');
         setAddingToPiano(null);
         setPianoOraInizio('10:00');
@@ -435,7 +435,7 @@ export default function AttivitaPage() {
                                     {/* Aggiungi al Piano */}
                                     <div className="mt-4 border-t border-slate-100 pt-4">
                                         {addingToPiano === item.id ? (
-                                            <div className="space-y-2 animate-in fade-in duration-200">
+                                            <div className="space-y-2 animate-in fade-in duration-200 overflow-hidden">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">📅 Aggiungi al Piano</p>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     {giorni.map(g => (
@@ -477,13 +477,20 @@ export default function AttivitaPage() {
                                                     </button>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <button
-                                                onClick={e => { e.stopPropagation(); setAddingToPiano(item.id); }}
-                                                className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
-                                                <Calendar size={13} /> Aggiungi al Piano
-                                            </button>
-                                        )}
+                                        ) : (() => {
+                                            const giaInPiano = pianoPieno.find(p => p.proposta_id === item.id);
+                                            return giaInPiano ? (
+                                                <div className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-400 rounded-xl text-xs font-black flex items-center justify-center gap-2">
+                                                    <Calendar size={13} /> In piano: {labelGiorno(giaInPiano.giorno)} alle {giaInPiano.ora_inizio.slice(0,5)}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); setAddingToPiano(item.id); }}
+                                                    className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
+                                                    <Calendar size={13} /> Aggiungi al Piano
+                                                </button>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             )}
