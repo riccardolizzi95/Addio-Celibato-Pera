@@ -648,13 +648,13 @@ export default function AttivitaPage() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inizio</label>
                                     <input type="time" value={pianoOraInizio}
                                         onChange={e => setPianoOraInizio(e.target.value)}
-                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
+                                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fine (opz.)</label>
                                     <input type="time" value={pianoOraFine}
                                         onChange={e => setPianoOraFine(e.target.value)}
-                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
+                                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base font-bold outline-none focus:ring-2 ring-emerald-400" />
                                 </div>
                             </div>
 
