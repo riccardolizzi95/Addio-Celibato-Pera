@@ -694,7 +694,7 @@ export default function AttivitaPage() {
                                         {luogoLoading && (
                                             <div className="flex items-center justify-center gap-2 py-3">
                                                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500" />
-                                                <span className="text-xs text-slate-400 font-bold">Cerco su mappa...</span>
+                                                <span className="text-xs text-slate-400 font-bold">Cerco su Google Maps...</span>
                                             </div>
                                         )}
 
@@ -703,13 +703,19 @@ export default function AttivitaPage() {
                                                 {luogoRisultati.map((r: any, i: number) => (
                                                     <button key={i}
                                                         onClick={() => {
-                                                            const indirizzo = r.nome ? `${r.nome}, ${r.indirizzo.split(',').slice(1, 3).join(',').trim()}` : r.indirizzo.split(',').slice(0, 3).join(',').trim();
-                                                            setPianoLuogo(indirizzo);
+                                                            setPianoLuogo(`${r.nome}, ${r.indirizzo}`);
                                                             setLuogoRisultati([]);
                                                         }}
                                                         className="w-full text-left p-2.5 bg-white border border-slate-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition-all active:scale-[0.98]">
-                                                        <p className="text-sm font-bold text-slate-800 leading-tight">{r.nome || r.indirizzo.split(',')[0]}</p>
-                                                        <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{r.indirizzo.split(',').slice(1, 4).join(',').trim()}</p>
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-bold text-slate-800 leading-tight">{r.nome}</p>
+                                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{r.indirizzo}</p>
+                                                            </div>
+                                                            {r.rating && (
+                                                                <span className="text-[10px] font-black bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-md shrink-0">⭐ {r.rating}</span>
+                                                            )}
+                                                        </div>
                                                     </button>
                                                 ))}
                                             </div>
