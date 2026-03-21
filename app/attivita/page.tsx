@@ -13,6 +13,7 @@ export default function AttivitaPage() {
     const [costoStimato, setCostoStimato] = useState("");
     const [maxPartecipanti, setMaxPartecipanti] = useState("");
     const [link, setLink] = useState("");
+    const [luogo, setLuogo] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [isPianoOpen, setIsPianoOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function AttivitaPage() {
         setCostoStimato("");
         setMaxPartecipanti("");
         setLink("");
+        setLuogo("");
     };
 
     const apriModifica = (item: any, e: React.MouseEvent) => {
@@ -96,6 +98,7 @@ export default function AttivitaPage() {
         setCostoStimato(item.costo_stimato != null ? String(item.costo_stimato) : "");
         setMaxPartecipanti(item.max_partecipanti != null ? String(item.max_partecipanti) : "");
         setLink(item.link || "");
+        setLuogo(item.luogo || "");
         setIsFormOpen(true);
         setExpandedId(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -119,6 +122,7 @@ export default function AttivitaPage() {
             costo_stimato: costo,
             max_partecipanti: maxPax,
             link: link.trim() || null,
+            luogo: luogo.trim() || null,
         };
         if (editingId) {
             const { error } = await supabase.from('proposte').update(payload).eq('id', editingId);
@@ -232,42 +236,24 @@ export default function AttivitaPage() {
         }
     };
 
-    const avviaCercaLuogoAuto = async (titoloAttivita: string, linkAttivita?: string | null) => {
-        let q = titoloAttivita.trim();
-
-        // Se c'è un link GetYourGuide, prova prima a recuperare il punto di incontro
-        if (linkAttivita && isGetYourGuideLink(linkAttivita)) {
-            const nomeGYG = estraiNomeDaGetYourGuide(linkAttivita);
-            if (nomeGYG) q = nomeGYG;
-            setLuogoQuery(q);
+    const avviaCercaLuogoAuto = async (titoloAttivita: string, linkAttivita?: string | null, luogoAttivita?: string | null) => {
+        // Se la proposta ha già un luogo inserito, pre-compila direttamente
+        if (luogoAttivita && luogoAttivita.trim()) {
+            setPianoLuogo(luogoAttivita.trim());
+            setLuogoQuery('');
             setLuogoRisultati([]);
-            setLuogoLoading(true);
-
-            try {
-                // Cerca il meeting point specifico GYG
-                const res = await fetch(`/api/gyg-punto?url=${encodeURIComponent(linkAttivita)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.punto && data.punto.indirizzo) {
-                        // Trovato! Pre-popola direttamente
-                        setPianoLuogo(`${data.punto.nome}, ${data.punto.indirizzo}`);
-                        setLuogoLoading(false);
-                        return;
-                    }
-                }
-            } catch {}
-
-            // Fallback: cerca normalmente
-            setLuogoLoading(false);
-            cercaLuogo(q);
             return;
         }
 
-        // Nessun link GYG — ricerca normale
-        if (linkAttivita) {
+        let q = titoloAttivita.trim();
+
+        // Se c'è un link GetYourGuide, usa il nome estratto dall'URL
+        if (linkAttivita && isGetYourGuideLink(linkAttivita)) {
             const nomeGYG = estraiNomeDaGetYourGuide(linkAttivita);
             if (nomeGYG) q = nomeGYG;
         }
+
+        // Ricerca normale
         setLuogoQuery(q);
         setLuogoRisultati([]);
         if (q) cercaLuogo(q);
@@ -372,6 +358,18 @@ export default function AttivitaPage() {
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm">🔗</span>
                         </div>
 
+                        {/* Luogo / Indirizzo */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Luogo / Indirizzo (opzionale)"
+                                className="w-full p-4 border rounded-xl bg-slate-50 font-medium outline-none focus:ring-2 ring-blue-500 pr-12"
+                                value={luogo}
+                                onChange={e => setLuogo(e.target.value)}
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm">📍</span>
+                        </div>
+
                         <div className="flex gap-2 pt-1">
                             <button onClick={resetForm} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold">
                                 Annulla
@@ -444,6 +442,11 @@ export default function AttivitaPage() {
                                     {item.max_partecipanti != null && (
                                         <span className="flex items-center gap-1 text-[11px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-2.5 py-1 rounded-full">
                                             <Users size={11} /> max {item.max_partecipanti}
+                                        </span>
+                                    )}
+                                    {item.luogo && (
+                                        <span className="flex items-center gap-1 text-[11px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full">
+                                            <MapPin size={11} /> {item.luogo.length > 25 ? item.luogo.slice(0, 25) + '...' : item.luogo}
                                         </span>
                                     )}
                                     <span className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full border ${votiSu.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
@@ -527,7 +530,7 @@ export default function AttivitaPage() {
                                                         setPianoNote('');
                                                         setPianoGiorno('2026-04-18');
                                                         setAddingToPiano(item.id);
-                                                        avviaCercaLuogoAuto(item.titolo, item.link);
+                                                        avviaCercaLuogoAuto(item.titolo, item.link, item.luogo);
                                                     }}
                                                     className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
                                                     <Calendar size={13} /> Aggiungi al Piano
