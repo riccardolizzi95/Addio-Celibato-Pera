@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Trash2, Pencil, Search, Euro, Users } from 'lucide-react';
+import { Trash2, Pencil, Search, Euro, Users, Calendar, Clock, MapPin, Navigation, X } from 'lucide-react';
 
 export default function AttivitaPage() {
     const [loading, setLoading] = useState(true);
@@ -12,6 +12,7 @@ export default function AttivitaPage() {
     const [descrizione, setDescrizione] = useState("");
     const [costoStimato, setCostoStimato] = useState("");
     const [maxPartecipanti, setMaxPartecipanti] = useState("");
+    const [link, setLink] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [isPianoOpen, setIsPianoOpen] = useState(false);
@@ -37,6 +38,14 @@ export default function AttivitaPage() {
         if (!error) setListaProposte(data || []);
     };
 
+    const scaricaPiano = async () => {
+        const { data } = await supabase
+            .from('piano_attivita')
+            .select('*, proposte(id, titolo, luogo)')
+            .order('giorno').order('ordine').order('ora_inizio');
+        if (data) setPianoPieno(data);
+    };
+
     useEffect(() => {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -47,8 +56,8 @@ export default function AttivitaPage() {
                 const { data: prof } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
                 if (prof) setMyUsername(prof.username);
                 setLoading(false);
-        scaricaPiano();
                 scaricaDati();
+                scaricaPiano();
             }
         };
         checkUser();
@@ -73,6 +82,7 @@ export default function AttivitaPage() {
         setDescrizione("");
         setCostoStimato("");
         setMaxPartecipanti("");
+        setLink("");
     };
 
     const apriModifica = (item: any, e: React.MouseEvent) => {
@@ -82,93 +92,31 @@ export default function AttivitaPage() {
         setDescrizione(item.descrizione || "");
         setCostoStimato(item.costo_stimato != null ? String(item.costo_stimato) : "");
         setMaxPartecipanti(item.max_partecipanti != null ? String(item.max_partecipanti) : "");
+        setLink(item.link || "");
         setIsFormOpen(true);
         setExpandedId(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const scaricaPiano = async () => {
-        const { data } = await supabase
-            .from('piano_attivita')
-            .select('*, proposte(id, titolo, luogo)')
-            .order('giorno').order('ordine').order('ora_inizio');
-        if (data) setPianoPieno(data);
-    };
-
-    const aggiungiAPiano = async (propostaId: number) => {
-        if (!pianoOraInizio) return;
-        const { data: { user } } = await supabase.auth.getUser();
-        const existing = pianoPieno.filter(p => p.giorno === pianoGiorno);
-        await supabase.from('piano_attivita').insert([{
-            proposta_id: propostaId,
-            giorno: pianoGiorno,
-            ora_inizio: pianoOraInizio,
-            ora_fine: pianoOraFine || null,
-            luogo: pianoLuogo || null,
-            note: pianoNote || null,
-            ordine: existing.length,
-            user_id: user?.id,
-        }]);
-        mostraFeedback('Aggiunta al piano! ✅', 'success');
-        setAddingToPiano(null);
-        setPianoOraInizio('10:00'); setPianoOraFine(''); setPianoLuogo(''); setPianoNote('');
-        scaricaPiano();
-    };
-
-    const rimuoviDaPiano = async (pianoId: number) => {
-        await supabase.from('piano_attivita').delete().eq('id', pianoId);
-        scaricaPiano();
-    };
-
-    const calcolaTratta = async (key: string, da: string, a: string) => {
-        if (!da || !a) return;
-        setLoadingTratte(prev => ({ ...prev, [key]: true }));
-        try {
-            const query = encodeURIComponent(`${da} Amsterdam`);
-            const dest = encodeURIComponent(`${a} Amsterdam`);
-            // Chiamiamo route.ts server-side per non esporre la key
-            const res = await fetch(`/api/tratta?da=${query}&a=${dest}`);
-            if (res.ok) {
-                const dati = await res.json();
-                setTratte(prev => ({ ...prev, [key]: dati }));
-            }
-        } catch {}
-        setLoadingTratte(prev => ({ ...prev, [key]: false }));
-    };
-
-    const giorni = ['2026-04-18', '2026-04-19', '2026-04-20'];
-    const labelGiorno = (d: string) => {
-        const map: Record<string, string> = {
-            '2026-04-18': 'Sab 18 Aprile',
-            '2026-04-19': 'Dom 19 Aprile',
-            '2026-04-20': 'Lun 20 Aprile',
-        };
-        return map[d] || d;
-    };
-
     const cercaSuGoogle = () => {
         if (!titolo.trim()) return;
-        const query = `${titolo.trim()} Amsterdam cosa fare`;
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(titolo.trim() + ' Amsterdam cosa fare')}`, '_blank');
     };
 
     const salvaProposte = async () => {
         if (!titolo.trim()) return mostraFeedback("Inserisci almeno un titolo!", 'error');
-
         const costo = costoStimato ? parseFloat(costoStimato) : null;
         const maxPax = maxPartecipanti ? parseInt(maxPartecipanti) : null;
-
         if (costoStimato && (isNaN(costo!) || costo! < 0)) return mostraFeedback("Costo non valido.", 'error');
         if (maxPartecipanti && (isNaN(maxPax!) || maxPax! < 1)) return mostraFeedback("Numero partecipanti non valido.", 'error');
-
         setIsLoadingAction(true);
         const payload = {
             titolo: titolo.trim(),
             descrizione: descrizione.trim(),
             costo_stimato: costo,
             max_partecipanti: maxPax,
+            link: link.trim() || null,
         };
-
         if (editingId) {
             const { error } = await supabase.from('proposte').update(payload).eq('id', editingId);
             if (error) mostraFeedback("Errore durante la modifica.", 'error');
@@ -177,7 +125,7 @@ export default function AttivitaPage() {
             const { error } = await supabase.from('proposte').insert([{
                 ...payload,
                 creatore: myUsername || 'Anonimo',
-                user_id: userId
+                user_id: userId,
             }]);
             if (error) mostraFeedback("Errore durante l'invio.", 'error');
             else { mostraFeedback("Proposta inviata! 🚀", 'success'); resetForm(); scaricaDati(); }
@@ -207,6 +155,54 @@ export default function AttivitaPage() {
         scaricaDati();
     };
 
+    const aggiungiAPiano = async (propostaId: number) => {
+        if (!pianoOraInizio) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        const existing = pianoPieno.filter(p => p.giorno === pianoGiorno);
+        await supabase.from('piano_attivita').insert([{
+            proposta_id: propostaId,
+            giorno: pianoGiorno,
+            ora_inizio: pianoOraInizio,
+            ora_fine: pianoOraFine || null,
+            luogo: pianoLuogo || null,
+            note: pianoNote || null,
+            ordine: existing.length,
+            user_id: user?.id,
+        }]);
+        mostraFeedback('Aggiunta al piano! ✅', 'success');
+        setAddingToPiano(null);
+        setPianoOraInizio('10:00');
+        setPianoOraFine('');
+        setPianoLuogo('');
+        setPianoNote('');
+        scaricaPiano();
+    };
+
+    const rimuoviDaPiano = async (pianoId: number) => {
+        await supabase.from('piano_attivita').delete().eq('id', pianoId);
+        scaricaPiano();
+    };
+
+    const calcolaTratta = async (key: string, da: string, a: string) => {
+        if (!da || !a) return;
+        setLoadingTratte(prev => ({ ...prev, [key]: true }));
+        try {
+            const res = await fetch(`/api/tratta?da=${encodeURIComponent(da + ' Amsterdam')}&a=${encodeURIComponent(a + ' Amsterdam')}`);
+            if (res.ok) {
+                const dati = await res.json();
+                setTratte(prev => ({ ...prev, [key]: dati }));
+            }
+        } catch {}
+        setLoadingTratte(prev => ({ ...prev, [key]: false }));
+    };
+
+    const giorni = ['2026-04-18', '2026-04-19', '2026-04-20'];
+    const labelGiorno = (d: string) => ({
+        '2026-04-18': 'Sab 18 Aprile',
+        '2026-04-19': 'Dom 19 Aprile',
+        '2026-04-20': 'Lun 20 Aprile',
+    } as Record<string, string>)[d] || d;
+
     if (loading) return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -216,19 +212,21 @@ export default function AttivitaPage() {
     return (
         <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900 pb-20">
 
-            {/* Feedback toast */}
+            {/* Toast feedback */}
             {feedback && (
-                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300 ${feedback.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300 whitespace-nowrap ${feedback.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                     {feedback.text}
                 </div>
             )}
 
+            {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <Link href="/" className="text-blue-600 font-semibold">← Home</Link>
                 <h1 className="text-2xl font-bold text-center">Proposte</h1>
+                <div className="w-12" />
             </div>
 
-            {/* Form nuova proposta / modifica */}
+            {/* Pulsanti / Form */}
             <div className="mb-8">
                 {isFormOpen ? (
                     <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-400 animate-in fade-in zoom-in-95 duration-200 space-y-3">
@@ -236,7 +234,7 @@ export default function AttivitaPage() {
                             {editingId ? '✏️ Modifica Proposta' : '🚀 Nuova Proposta'}
                         </p>
 
-                        {/* Titolo + bottone Google */}
+                        {/* Titolo + Google */}
                         <div className="relative">
                             <input
                                 type="text"
@@ -263,15 +261,12 @@ export default function AttivitaPage() {
                             onChange={e => setDescrizione(e.target.value)}
                         />
 
-                        {/* Costo + Max partecipanti */}
+                        {/* Costo + Max pax */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="relative">
                                 <Euro size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Costo (€)"
+                                    type="number" min="0" step="0.01" placeholder="Costo (€)"
                                     className="w-full pl-9 pr-3 py-4 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
                                     value={costoStimato}
                                     onChange={e => setCostoStimato(e.target.value)}
@@ -280,14 +275,24 @@ export default function AttivitaPage() {
                             <div className="relative">
                                 <Users size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="Max pax"
+                                    type="number" min="1" placeholder="Max pax"
                                     className="w-full pl-9 pr-3 py-4 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-blue-500"
                                     value={maxPartecipanti}
                                     onChange={e => setMaxPartecipanti(e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        {/* Link specifico */}
+                        <div className="relative">
+                            <input
+                                type="url"
+                                placeholder="Link specifico (opzionale)"
+                                className="w-full p-4 border rounded-xl bg-slate-50 font-medium outline-none focus:ring-2 ring-blue-500 pr-12"
+                                value={link}
+                                onChange={e => setLink(e.target.value)}
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm">🔗</span>
                         </div>
 
                         <div className="flex gap-2 pt-1">
@@ -312,7 +317,7 @@ export default function AttivitaPage() {
                             ➕ Aggiungi
                         </button>
                         <button
-                            onClick={() => setIsPianoOpen(true)}
+                            onClick={() => { setIsPianoOpen(true); scaricaPiano(); }}
                             className="flex-1 bg-emerald-600 text-white rounded-2xl py-4 font-bold shadow-xl shadow-emerald-100 active:scale-95 transition-all text-base flex items-center justify-center gap-2"
                         >
                             <Calendar size={18} /> Piano
@@ -333,11 +338,8 @@ export default function AttivitaPage() {
                     return (
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-                            {/* Header card — sempre visibile */}
-                            <div
-                                className="p-5 cursor-pointer"
-                                onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                            >
+                            {/* Header card */}
+                            <div className="p-5 cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : item.id)}>
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex-1 min-w-0 pr-2">
                                         <h3 className="font-bold text-xl text-slate-800 leading-tight">{item.titolo}</h3>
@@ -345,17 +347,17 @@ export default function AttivitaPage() {
                                     </div>
                                     {isMia && (
                                         <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                                            <button onClick={e => apriModifica(item, e)} className="text-slate-300 hover:text-blue-500 transition-colors p-1.5" title="Modifica">
+                                            <button onClick={e => apriModifica(item, e)} className="text-slate-300 hover:text-blue-500 transition-colors p-1.5">
                                                 <Pencil size={16} />
                                             </button>
-                                            <button onClick={e => eliminaProposta(item.id, e)} className="text-slate-300 hover:text-red-500 transition-colors p-1.5" title="Elimina">
+                                            <button onClick={e => eliminaProposta(item.id, e)} className="text-slate-300 hover:text-red-500 transition-colors p-1.5">
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Info rapide sempre visibili: costo, max pax, voti */}
+                                {/* Badge rapidi */}
                                 <div className="flex items-center gap-2 flex-wrap">
                                     {item.costo_stimato != null && (
                                         <span className="flex items-center gap-1 text-[11px] font-black bg-amber-50 text-amber-600 border border-amber-100 px-2.5 py-1 rounded-full">
@@ -367,7 +369,6 @@ export default function AttivitaPage() {
                                             <Users size={11} /> max {item.max_partecipanti}
                                         </span>
                                     )}
-                                    {/* Contatori voti sempre visibili nella miniatura */}
                                     <span className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full border ${votiSu.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
                                         👍 {votiSu.length}
                                     </span>
@@ -377,19 +378,22 @@ export default function AttivitaPage() {
                                 </div>
                             </div>
 
-                            {/* Sezione espansa: descrizione + voti dettagliati */}
+                            {/* Sezione espansa */}
                             {isExpanded && (
                                 <div className="px-5 pb-5 border-t border-slate-50 pt-4 animate-in slide-in-from-top-2 duration-200">
 
-                                    {/* Pulsante Google */}
+                                    {/* Bottone link o Google */}
                                     <a
-                                        href={`https://www.google.com/search?q=${encodeURIComponent(item.titolo + ' Amsterdam cosa fare')}`}
+                                        href={item.link || `https://www.google.com/search?q=${encodeURIComponent(item.titolo + ' Amsterdam cosa fare')}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full mb-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
                                         onClick={e => e.stopPropagation()}
                                     >
-                                        <Search size={14} /> Cerca su Google
+                                        {item.link
+                                            ? <><span>🔗</span> Apri link</>
+                                            : <><Search size={14} /> Cerca su Google</>
+                                        }
                                     </a>
 
                                     {item.descrizione?.trim() !== "" && (
@@ -398,7 +402,7 @@ export default function AttivitaPage() {
                                         </div>
                                     )}
 
-                                    {/* Voti con nomi */}
+                                    {/* Voti */}
                                     <div className="grid grid-cols-2 gap-4 items-start">
                                         <div className="flex flex-col gap-1">
                                             <button
@@ -427,6 +431,60 @@ export default function AttivitaPage() {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Aggiungi al Piano */}
+                                    <div className="mt-4 border-t border-slate-100 pt-4">
+                                        {addingToPiano === item.id ? (
+                                            <div className="space-y-2 animate-in fade-in duration-200">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">📅 Aggiungi al Piano</p>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {giorni.map(g => (
+                                                        <button key={g}
+                                                            onClick={() => setPianoGiorno(g)}
+                                                            className={`py-2 rounded-xl text-xs font-bold transition-all ${pianoGiorno === g ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {labelGiorno(g).split(' ').slice(0,2).join(' ')}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Inizio</label>
+                                                        <input type="time" value={pianoOraInizio}
+                                                            onChange={e => setPianoOraInizio(e.target.value)}
+                                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-emerald-400"/>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fine (opz.)</label>
+                                                        <input type="time" value={pianoOraFine}
+                                                            onChange={e => setPianoOraFine(e.target.value)}
+                                                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-emerald-400"/>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Luogo / Indirizzo</label>
+                                                    <input type="text" placeholder="Es: Vondelpark, Amsterdam"
+                                                        value={pianoLuogo} onChange={e => setPianoLuogo(e.target.value)}
+                                                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-400"/>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setAddingToPiano(null)}
+                                                        className="flex-1 py-2.5 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold">
+                                                        Annulla
+                                                    </button>
+                                                    <button onClick={() => aggiungiAPiano(item.id)}
+                                                        className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-100 active:scale-95 transition-all">
+                                                        ✅ Conferma
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={e => { e.stopPropagation(); setAddingToPiano(item.id); }}
+                                                className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
+                                                <Calendar size={13} /> Aggiungi al Piano
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -434,7 +492,7 @@ export default function AttivitaPage() {
                 })}
             </div>
 
-            {/* ── MODAL PIANO — fullscreen stile minute ── */}
+            {/* MODAL PIANO — fullscreen stile minute */}
             {isPianoOpen && (
                 <div className="fixed inset-0 z-[100] flex flex-col animate-in slide-in-from-bottom-6 duration-300">
                     <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white px-6 shrink-0"
@@ -451,20 +509,19 @@ export default function AttivitaPage() {
                         </div>
                         <h2 className="text-2xl font-black leading-snug tracking-tight pb-3">📅 Piano Viaggio</h2>
                         <div className="pb-4 border-t border-white/10 pt-3">
-                            <p className="text-white/60 text-xs">Trascina le attività per riordinarle. I tempi di percorrenza vengono calcolati automaticamente.</p>
+                            <p className="text-white/60 text-xs">Attività ordinate per orario. I tempi di percorrenza vengono calcolati su richiesta.</p>
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-6"
                         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-
                         {giorni.map(giorno => {
-                            const slotGiorno = pianoPieno.filter(p => p.giorno === giorno)
+                            const slotGiorno = pianoPieno
+                                .filter(p => p.giorno === giorno)
                                 .sort((a, b) => a.ora_inizio.localeCompare(b.ora_inizio));
 
                             return (
                                 <div key={giorno}>
-                                    {/* Header giorno */}
                                     <div className="flex items-center gap-3 mb-3">
                                         <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-black">
                                             {labelGiorno(giorno)}
@@ -487,7 +544,6 @@ export default function AttivitaPage() {
 
                                                 return (
                                                     <div key={slot.id}>
-                                                        {/* Card attività */}
                                                         <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
                                                             <div className="flex items-start justify-between gap-3">
                                                                 <div className="flex-1 min-w-0">
@@ -518,22 +574,13 @@ export default function AttivitaPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Tratta verso prossima attività */}
                                                         {next && (
-                                                            <div className="flex items-center gap-2 py-2 px-4">
-                                                                <div className="w-px h-full bg-slate-200 mx-2"/>
+                                                            <div className="flex items-center gap-2 py-2 px-2">
                                                                 {tratte[trattaKey!] ? (
                                                                     <div className="flex-1 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
                                                                         <div className="flex items-center gap-3 flex-wrap">
-                                                                            <span className="text-xs font-black text-blue-600 flex items-center gap-1">
-                                                                                🚶 {tratte[trattaKey!].piedi}
-                                                                            </span>
-                                                                            <span className="text-xs font-black text-indigo-600 flex items-center gap-1">
-                                                                                🚌 {tratte[trattaKey!].mezzi}
-                                                                            </span>
-                                                                            <span className="text-[10px] text-slate-400">
-                                                                                {tratte[trattaKey!].da} → {tratte[trattaKey!].a}
-                                                                            </span>
+                                                                            <span className="text-xs font-black text-blue-600">🚶 {tratte[trattaKey!].piedi}</span>
+                                                                            <span className="text-xs font-black text-indigo-600">🚌 {tratte[trattaKey!].mezzi}</span>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
@@ -542,7 +589,7 @@ export default function AttivitaPage() {
                                                                         disabled={loadingTratte[trattaKey!] || !daCercare || !aCercare}
                                                                         className="flex-1 py-2 bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl text-xs font-bold text-slate-500 hover:text-blue-600 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
                                                                         {loadingTratte[trattaKey!]
-                                                                            ? <span className="animate-spin">⏳</span>
+                                                                            ? <span className="animate-pulse">Calcolo...</span>
                                                                             : <><Navigation size={11}/> Calcola percorso</>
                                                                         }
                                                                     </button>
@@ -560,8 +607,6 @@ export default function AttivitaPage() {
                     </div>
                 </div>
             )}
-            </div>
-                </div>
         </main>
     );
 }
