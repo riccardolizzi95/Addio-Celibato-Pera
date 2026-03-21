@@ -214,8 +214,28 @@ export default function AttivitaPage() {
         setLuogoLoading(false);
     };
 
-    const avviaCercaLuogoAuto = (titoloAttivita: string) => {
-        const q = titoloAttivita.trim();
+    const estraiNomeDaGetYourGuide = (url: string): string | null => {
+        try {
+            const u = new URL(url);
+            if (!u.hostname.includes('getyourguide.com')) return null;
+            // URL tipo: /amsterdam-l36/amsterdam-catacombs-escape-t123456/
+            const parts = u.pathname.split('/').filter(Boolean);
+            const activitySlug = parts.find(p => /-t\d+$/.test(p));
+            if (!activitySlug) return null;
+            // "amsterdam-catacombs-escape-t123456" → "amsterdam catacombs escape"
+            return activitySlug.replace(/-t\d+$/, '').replace(/-/g, ' ');
+        } catch {
+            return null;
+        }
+    };
+
+    const avviaCercaLuogoAuto = (titoloAttivita: string, linkAttivita?: string | null) => {
+        let q = titoloAttivita.trim();
+        // Se c'è un link GetYourGuide, prova a estrarre un nome più preciso dall'URL
+        if (linkAttivita) {
+            const nomeGYG = estraiNomeDaGetYourGuide(linkAttivita);
+            if (nomeGYG) q = nomeGYG;
+        }
         setLuogoQuery(q);
         setLuogoRisultati([]);
         if (q) cercaLuogo(q);
@@ -475,7 +495,7 @@ export default function AttivitaPage() {
                                                         setPianoNote('');
                                                         setPianoGiorno('2026-04-18');
                                                         setAddingToPiano(item.id);
-                                                        avviaCercaLuogoAuto(item.titolo);
+                                                        avviaCercaLuogoAuto(item.titolo, item.link);
                                                     }}
                                                     className="w-full py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
                                                     <Calendar size={13} /> Aggiungi al Piano
