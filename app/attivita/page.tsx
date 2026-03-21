@@ -12,6 +12,7 @@ export default function AttivitaPage() {
     const [descrizione, setDescrizione] = useState("");
     const [costoStimato, setCostoStimato] = useState("");
     const [maxPartecipanti, setMaxPartecipanti] = useState("");
+    const [link, setLink] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [isLoadingAction, setIsLoadingAction] = useState(false);
     const [listaProposte, setListaProposte] = useState<any[]>([]);
@@ -62,6 +63,7 @@ export default function AttivitaPage() {
         setDescrizione("");
         setCostoStimato("");
         setMaxPartecipanti("");
+        setLink("");
     };
 
     const apriModifica = (item: any, e: React.MouseEvent) => {
@@ -71,6 +73,7 @@ export default function AttivitaPage() {
         setDescrizione(item.descrizione || "");
         setCostoStimato(item.costo_stimato != null ? String(item.costo_stimato) : "");
         setMaxPartecipanti(item.max_partecipanti != null ? String(item.max_partecipanti) : "");
+        setLink(item.link || "");
         setIsFormOpen(true);
         setExpandedId(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -97,6 +100,7 @@ export default function AttivitaPage() {
             descrizione: descrizione.trim(),
             costo_stimato: costo,
             max_partecipanti: maxPax,
+            link: link.trim() || null,
         };
 
         if (editingId) {
@@ -220,6 +224,18 @@ export default function AttivitaPage() {
                             </div>
                         </div>
 
+                        {/* Link specifico */}
+                        <div className="relative">
+                            <input
+                                type="url"
+                                placeholder="Link specifico (opzionale)"
+                                className="w-full p-4 border rounded-xl bg-slate-50 font-medium outline-none focus:ring-2 ring-blue-500 pr-12"
+                                value={link}
+                                onChange={e => setLink(e.target.value)}
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm">🔗</span>
+                        </div>
+
                         <div className="flex gap-2 pt-1">
                             <button onClick={resetForm} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold">
                                 Annulla
@@ -305,13 +321,16 @@ export default function AttivitaPage() {
 
                                     {/* Pulsante Google */}
                                     <a
-                                        href={`https://www.google.com/search?q=${encodeURIComponent(item.titolo + ' Amsterdam cosa fare')}`}
+                                        href={item.link || `https://www.google.com/search?q=${encodeURIComponent(item.titolo + ' Amsterdam cosa fare')}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full mb-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
                                         onClick={e => e.stopPropagation()}
                                     >
-                                        <Search size={14} /> Cerca su Google
+                                        {item.link
+                                            ? <><span>🔗</span> Apri link</>
+                                            : <><Search size={14} /> Cerca su Google</>
+                                        }
                                     </a>
 
                                     {item.descrizione?.trim() !== "" && (
