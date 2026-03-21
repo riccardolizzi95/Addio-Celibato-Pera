@@ -33,7 +33,7 @@ export default function VoliLogisticaPage() {
             <div className="bg-white border-b sticky top-0 z-20 p-4 shadow-sm">
                 <div className="max-w-2xl mx-auto flex items-center justify-between mb-4">
                     <Link href="/" className="text-blue-600 font-bold">← Home</Link>
-                    <h1 className="text-xl font-black uppercase italic tracking-tighter">Logistica</h1>
+                    <h1 className="text-xl font-black tracking-tight">Logistica</h1>
                     <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-blue-600"><RefreshCw size={20} /></button>
                 </div>
                 <div className="flex bg-slate-100 p-1 rounded-2xl max-w-xs mx-auto">

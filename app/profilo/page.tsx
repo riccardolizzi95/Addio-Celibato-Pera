@@ -83,8 +83,8 @@ export default function ProfiloPage() {
 
       {/* Modal conferma logout */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center animate-in zoom-in-95 duration-200">
             <p className="text-4xl mb-4">👋</p>
             <h2 className="text-xl font-black mb-2">Vuoi disconnetterti?</h2>
             <p className="text-slate-400 text-sm mb-8">Dovrai reinserire le credenziali al prossimo accesso.</p>
@@ -104,31 +104,31 @@ export default function ProfiloPage() {
           <h1 className="text-2xl font-black italic tracking-tight">Gestione Account</h1>
         </div>
 
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Account</label>
-            <input type="text" value={email} disabled className="w-full p-4 border rounded-2xl bg-slate-50 mt-1 text-slate-500 cursor-not-allowed border-slate-200" />
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1">Email Account</label>
+            <input type="text" value={email} disabled className="w-full p-4 border rounded-xl bg-slate-50 mt-1 text-slate-500 cursor-not-allowed border-slate-200" />
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Visualizzato</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1">Nome Visualizzato</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Come ti chiamano?"
-              className="w-full p-4 border rounded-2xl mt-1 outline-none focus:ring-2 ring-blue-500 transition-all bg-white"
+              className="w-full p-4 border rounded-xl mt-1 outline-none focus:ring-2 ring-blue-500 transition-all bg-white"
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nuova Password</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1">Nuova Password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Lascia vuoto per non cambiare"
-              className="w-full p-4 border rounded-2xl mt-1 outline-none focus:ring-2 ring-blue-500 transition-all bg-white"
+              className="w-full p-4 border rounded-xl mt-1 outline-none focus:ring-2 ring-blue-500 transition-all bg-white"
             />
             {showPasswordHints && (
               <div className="mt-3 grid grid-cols-2 gap-2">

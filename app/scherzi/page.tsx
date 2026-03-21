@@ -164,13 +164,13 @@ export default function ScherziPage() {
             <div className="mb-8">
                 {isFormOpen ? (
                     <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-purple-400 animate-in fade-in zoom-in-95 duration-200 space-y-4">
-                        <p className="text-xs font-black text-purple-600 uppercase tracking-widest">
+                        <p className="text-[11px] font-bold text-purple-600 uppercase tracking-wide">
                             {editingId ? '✏️ Modifica Scherzo' : '😈 Nuovo Scherzo'}
                         </p>
 
                         {/* Titolo */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Titolo</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Titolo</label>
                             <input type="text" placeholder="Es: Finto invito a fare un discorso..." value={titolo}
                                 onChange={e => setTitolo(e.target.value)}
                                 className="w-full p-4 border rounded-xl bg-slate-50 font-bold outline-none focus:ring-2 ring-purple-400" />
@@ -178,7 +178,7 @@ export default function ScherziPage() {
 
                         {/* Descrizione */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Descrizione</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Descrizione</label>
                             <textarea placeholder="Come funziona lo scherzo?" value={descrizione}
                                 onChange={e => setDescrizione(e.target.value)} rows={3}
                                 className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
@@ -186,7 +186,7 @@ export default function ScherziPage() {
 
                         {/* Difficoltà */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Difficoltà</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-2 block">Difficoltà</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {(['facile', 'media', 'difficile'] as const).map(d => (
                                     <button key={d} onClick={() => setDifficolta(d)}
@@ -199,7 +199,7 @@ export default function ScherziPage() {
 
                         {/* Materiali */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Materiali necessari</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Materiali necessari</label>
                             <input type="text" placeholder="Es: Cartello, pennarello..." value={materiali}
                                 onChange={e => setMateriali(e.target.value)}
                                 className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
@@ -207,7 +207,7 @@ export default function ScherziPage() {
 
                         {/* Responsabili */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Responsabili</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Responsabili</label>
                             <input type="text" placeholder="Chi si occupa di realizzarlo?" value={responsabili}
                                 onChange={e => setResponsabili(e.target.value)}
                                 className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
@@ -215,7 +215,7 @@ export default function ScherziPage() {
 
                         {/* Quando */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Quando farlo</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Quando farlo</label>
                             <input type="text" placeholder="Es: Sabato sera dopo cena, durante il trasferimento..." value={quando}
                                 onChange={e => setQuando(e.target.value)}
                                 className="w-full p-4 border rounded-xl bg-slate-50 outline-none focus:ring-2 ring-purple-400" />
@@ -223,7 +223,7 @@ export default function ScherziPage() {
 
                         {/* Note segrete (solo admin vede) */}
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block flex items-center gap-1">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block flex items-center gap-1">
                                 <Lock size={10} /> Note Segrete (solo admin)
                             </label>
                             <textarea placeholder="Dettagli riservati, coordinate segrete, piani segreti..." value={noteSegrete}
@@ -234,7 +234,7 @@ export default function ScherziPage() {
                         {/* Stato (solo admin) */}
                         {isAdmin && (
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Stato</label>
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-2 block">Stato</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {(['idea', 'approvata', 'in_corso', 'completata'] as const).map(s => (
                                         <button key={s} onClick={() => setStato(s)}
@@ -265,7 +265,7 @@ export default function ScherziPage() {
             {/* Lista scherzi */}
             <div className="space-y-4">
                 {lista.length === 0 && (
-                    <div className="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                    <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
                         <p className="text-5xl mb-3">😇</p>
                         <p className="text-slate-400 font-bold">Nessuno scherzo ancora proposto...</p>
                         <p className="text-slate-300 text-sm mt-1">Per ora siamo tutti bravi ragazzi.</p>
@@ -340,7 +340,7 @@ export default function ScherziPage() {
                                         <div className="flex items-start gap-3 bg-purple-50 p-4 rounded-xl border border-purple-100">
                                             <Clock size={16} className="text-purple-500 shrink-0 mt-0.5" />
                                             <div>
-                                                <p className="text-[10px] font-black text-purple-600 uppercase tracking-wider mb-1">Quando farlo</p>
+                                                <p className="text-[11px] font-bold text-purple-600 uppercase tracking-wide mb-1">Quando farlo</p>
                                                 <p className="text-sm font-bold text-purple-900">{item.quando}</p>
                                             </div>
                                         </div>
@@ -352,7 +352,7 @@ export default function ScherziPage() {
                                             <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-xl border border-amber-100">
                                                 <Package size={16} className="text-amber-500 shrink-0 mt-0.5" />
                                                 <div>
-                                                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-1">Materiali</p>
+                                                    <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wide mb-1">Materiali</p>
                                                     <p className="text-sm font-bold text-amber-900">{item.materiali}</p>
                                                 </div>
                                             </div>
@@ -361,7 +361,7 @@ export default function ScherziPage() {
                                             <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-xl border border-blue-100">
                                                 <Users size={16} className="text-blue-500 shrink-0 mt-0.5" />
                                                 <div>
-                                                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider mb-1">Responsabili</p>
+                                                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide mb-1">Responsabili</p>
                                                     <p className="text-sm font-bold text-blue-900">{item.responsabili}</p>
                                                 </div>
                                             </div>
@@ -371,7 +371,7 @@ export default function ScherziPage() {
                                             <div className="flex items-start gap-3 bg-purple-50 p-4 rounded-xl border border-purple-200">
                                                 <Lock size={16} className="text-purple-500 shrink-0 mt-0.5" />
                                                 <div>
-                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-wider mb-1">Note Segrete</p>
+                                                    <p className="text-[11px] font-bold text-purple-600 uppercase tracking-wide mb-1">Note Segrete</p>
                                                     <p className="text-sm font-bold text-purple-900">{item.note_segrete}</p>
                                                 </div>
                                             </div>
@@ -381,7 +381,7 @@ export default function ScherziPage() {
                                     {/* Cambio stato rapido (solo admin) */}
                                     {isAdmin && (
                                         <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cambia Stato</p>
+                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Cambia Stato</p>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {(['idea', 'approvata', 'in_corso', 'completata'] as const).map(s => (
                                                     <button key={s}

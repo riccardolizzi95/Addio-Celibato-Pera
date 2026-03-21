@@ -132,7 +132,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
             {!hoGiaUnAuto && (
                 <button
                     onClick={() => isFormOpen ? resetForm() : setIsFormOpen(true)}
-                    className="w-full bg-white border-2 border-dashed border-slate-300 p-5 rounded-[1.5rem] text-slate-500 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-all"
+                    className="w-full bg-white border-2 border-dashed border-slate-300 p-5 rounded-2xl text-slate-500 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-all"
                 >
                     {isFormOpen ? <ChevronUp size={20} /> : <Plus size={20} />}
                     {isFormOpen ? 'Annulla' : 'Aggiungi auto per la missione'}
@@ -149,58 +149,58 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
 
             {/* Form aggiungi / modifica */}
             {isFormOpen && (
-                <div className="bg-white p-6 rounded-[2rem] border-2 border-blue-400 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest">
+                <div className="bg-white p-6 rounded-2xl border-2 border-blue-400 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">
                         {editingId ? '✏️ Modifica Auto' : '🚗 Nuova Auto'}
                     </p>
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Nome Conducente</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Nome Conducente</label>
                         <input
                             type="text"
                             placeholder="Es: Marco"
-                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
+                            className="w-full p-4 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
                             value={conducente}
                             onChange={e => setConducente(e.target.value)}
                         />
                     </div>
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Posti Totali</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Posti Totali</label>
                         <input
                             type="number"
                             min="1"
                             max="9"
                             placeholder="5"
-                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
+                            className="w-full p-4 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
                             value={postiTotali}
                             onChange={e => setPostiTotali(e.target.value)}
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Data Ritrovo</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Data Ritrovo</label>
                             <input
                                 type="date"
-                                className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
+                                className="w-full p-4 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
                                 value={dataRitrovo}
                                 onChange={e => setDataRitrovo(e.target.value)}
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Orario Ritrovo</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Orario Ritrovo</label>
                             <input
                                 type="time"
-                                className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
+                                className="w-full p-4 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all text-slate-700"
                                 value={orarioRitrovo}
                                 onChange={e => setOrarioRitrovo(e.target.value)}
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Punto di Ritrovo</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Punto di Ritrovo</label>
                         <input
                             type="text"
                             placeholder="Es: Parcheggio Esselunga Via Roma"
-                            className="w-full p-4 bg-slate-50 rounded-2xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
+                            className="w-full p-4 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all"
                             value={puntoRitrovo}
                             onChange={e => setPuntoRitrovo(e.target.value)}
                         />
@@ -218,7 +218,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
 
             {/* Stato vuoto */}
             {macchine.length === 0 && !isFormOpen && (
-                <div className="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200">
                     <p className="text-4xl mb-3">🚗</p>
                     <p className="text-slate-400 font-bold">Nessuna auto ancora aggiunta.</p>
                 </div>
@@ -233,7 +233,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                 const possoGestire = isAdmin || auto.creato_da === currentUser?.id;
 
                 return (
-                    <div key={auto.id} className="bg-white rounded-[2rem] p-6 shadow-md border border-slate-100">
+                    <div key={auto.id} className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
                         {/* Header */}
                         <div className="flex justify-between items-start mb-5">
                             <div>
@@ -271,7 +271,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                                     <div className="flex items-center gap-3">
                                         <Clock size={16} className="text-blue-500 shrink-0" />
                                         <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ritrovo</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Ritrovo</p>
                                             <p className="font-black text-slate-800">
                                                 {auto.data_ritrovo && new Date(auto.data_ritrovo + 'T12:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
                                                 {auto.data_ritrovo && auto.orario_ritrovo && ' · '}
@@ -284,7 +284,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
                                     <div className="flex items-center gap-3">
                                         <MapPin size={16} className="text-blue-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Punto di ritrovo</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Punto di ritrovo</p>
                                             <p className="font-bold text-slate-700 text-sm truncate">{auto.punto_ritrovo}</p>
                                         </div>
                                         <a

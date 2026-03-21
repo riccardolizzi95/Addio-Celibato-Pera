@@ -188,10 +188,10 @@ export default function MinutePage() {
                         </button>
 
                         {isFormOpen && (
-                            <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                                 {/* Form header */}
                                 <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
-                                    <p className="text-white font-black text-sm uppercase tracking-widest">
+                                    <p className="text-white font-bold text-sm uppercase tracking-wide">
                                         {isEditing ? '✏️ Modifica Verbale' : '📋 Nuovo Verbale'}
                                     </p>
                                 </div>
@@ -200,13 +200,13 @@ export default function MinutePage() {
                                     {/* Data + Titolo */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Data</label>
+                                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">Data</label>
                                             <input type="date"
                                                 className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm font-bold"
                                                 value={dataIncontro} onChange={e => setDataIncontro(e.target.value)} />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Titolo</label>
+                                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">Titolo</label>
                                             <input type="text" placeholder="Es: Riunione voli"
                                                 className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm font-bold"
                                                 value={titolo} onChange={e => setTitolo(e.target.value)} />
@@ -215,7 +215,7 @@ export default function MinutePage() {
 
                                     {/* Partecipanti */}
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Partecipanti</label>
+                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2 block">Partecipanti</label>
                                         <div className="flex gap-2 mb-3">
                                             <input type="text" placeholder="Aggiungi nome..."
                                                 className="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 text-sm"
@@ -241,7 +241,7 @@ export default function MinutePage() {
 
                                     {/* Argomenti */}
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Discussione / Argomenti</label>
+                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">Discussione / Argomenti</label>
                                         <textarea placeholder="Di cosa avete parlato?"
                                             className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 min-h-[100px] text-sm leading-relaxed"
                                             value={argomenti} onChange={e => setArgomenti(e.target.value)} />
@@ -249,7 +249,7 @@ export default function MinutePage() {
 
                                     {/* Decisioni */}
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Decisioni Finali</label>
+                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">Decisioni Finali</label>
                                         <textarea placeholder="Cosa avete deciso?"
                                             className="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:ring-2 ring-emerald-400 min-h-[80px] font-bold text-emerald-900 text-sm"
                                             value={decisioni} onChange={e => setDecisioni(e.target.value)} />
@@ -258,7 +258,7 @@ export default function MinutePage() {
                                     {/* Prossimi passi */}
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-2">
                                                 <ListTodo size={13} /> Prossimi Passi
                                             </label>
                                             <button
@@ -305,7 +305,7 @@ export default function MinutePage() {
 
                 {/* Lista verbali */}
                 {listaMinute.length === 0 && (
-                    <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                    <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
                         <p className="text-5xl mb-3">📋</p>
                         <p className="text-slate-400 font-bold">Nessun verbale ancora scritto.</p>
                     </div>
@@ -363,7 +363,7 @@ export default function MinutePage() {
                                     {/* Decisione highlight */}
                                     {minuta.decisioni && (
                                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 mb-4">
-                                            <p className="text-xs text-emerald-600 font-black uppercase tracking-widest mb-1">Decisione</p>
+                                            <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-wide mb-1">Decisione</p>
                                             <p className="text-sm text-emerald-900 font-bold line-clamp-2">{minuta.decisioni}</p>
                                         </div>
                                     )}
@@ -397,103 +397,111 @@ export default function MinutePage() {
 
             {/* MODAL DETTAGLIO */}
             {selectedMinuta && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end justify-center"
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end justify-center"
                     onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}>
-                    <div className="bg-white w-full max-w-lg rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-8 duration-300"
-                        style={{ maxHeight: '92dvh' }}
+                    <div className="bg-white w-full max-w-lg rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-8 duration-300"
+                        style={{ maxHeight: '90dvh' }}
                         onClick={e => e.stopPropagation()}>
 
-                        {/* Modal header con pill */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-6 pt-2 pb-5 shrink-0">
-                            <div className="flex justify-center mb-2">
-                                <div className="w-10 h-1 bg-white/20 rounded-full" />
+                        {/* Header */}
+                        <div className="px-5 pt-3 pb-4 border-b border-slate-100 shrink-0">
+                            <div className="flex justify-center mb-3">
+                                <div className="w-9 h-1 bg-slate-200 rounded-full" />
                             </div>
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-2 text-white/50">
-                                    <Calendar size={13} />
-                                    <p className="text-xs font-black uppercase tracking-widest">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5 text-slate-400">
+                                    <Calendar size={12} />
+                                    <p className="text-[11px] font-bold uppercase tracking-wide">
                                         {formatDataLunga(selectedMinuta.data_incontro)}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}
-                                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all">
-                                    <X size={20} />
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                                    <X size={18} />
                                 </button>
                             </div>
-                            <h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2>
-
-                            {/* Presenti — riga singola scorrevole, compatta */}
+                            <h2 className="text-2xl font-black text-slate-900 leading-tight tracking-tight mb-2">
+                                {selectedMinuta.titolo}
+                            </h2>
                             {selectedMinuta.partecipanti && (
-                                <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar">
-                                    <Users size={12} className="text-white/40 shrink-0" />
-                                    <p className="text-white/70 text-xs font-bold whitespace-nowrap">
-                                        {selectedMinuta.partecipanti.split('; ').filter(Boolean).join(' · ')}
-                                    </p>
+                                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                                    {selectedMinuta.partecipanti.split('; ').filter(Boolean).map((nome: string, i: number) => (
+                                        <span key={i} className="inline-flex bg-slate-100 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
+                                            {nome}
+                                        </span>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* Modal body — scrollabile, occupa lo spazio disponibile */}
-                        <div className="flex-1 overflow-y-auto p-7 space-y-5 pb-safe">
-
-                            {/* Discussione */}
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto px-5 pt-5 space-y-4 pb-safe">
                             {selectedMinuta.argomenti && (
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MessageSquare size={15} className="text-blue-500" />
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Discussione</h4>
-                                    </div>
-                                    <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-2xl">
+                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                                        <MessageSquare size={13} className="text-slate-300" />
+                                        Discussione
+                                    </h4>
+                                    <p className="text-[13px] text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 px-4 py-3 rounded-xl">
                                         {selectedMinuta.argomenti}
                                     </p>
                                 </div>
                             )}
 
-                            {/* Decisioni */}
-                            <div className="bg-emerald-500/10 border border-emerald-200 px-4 py-3 rounded-2xl">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                    <CheckCircle size={13} className="text-emerald-600" />
-                                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Decisioni Finali</h4>
-                                </div>
-                                <p className="text-sm font-bold text-emerald-900 leading-relaxed">
+                            <div className="bg-emerald-50 border border-emerald-100 px-4 py-3.5 rounded-xl">
+                                <h4 className="text-[11px] font-bold text-emerald-600 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                                    <CheckCircle size={13} />
+                                    Decisioni Finali
+                                </h4>
+                                <p className="text-[13px] font-semibold text-emerald-800 leading-relaxed">
                                     {selectedMinuta.decisioni || 'Nessuna decisione registrata'}
                                 </p>
                             </div>
 
-                            {/* Prossimi passi */}
                             {selectedMinuta.prossimi_passi?.length > 0 && (
                                 <div>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <ListTodo size={15} className="text-blue-500" />
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prossimi Passi</h4>
-                                    </div>
-                                    <div className="space-y-2">
+                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
+                                        <ListTodo size={13} className="text-slate-300" />
+                                        Prossimi Passi
+                                    </h4>
+                                    <div className="space-y-1.5">
                                         {selectedMinuta.prossimi_passi.map((passo: any, i: number) => (
                                             <div key={passo.id}
-                                                className={`border p-3.5 rounded-2xl flex items-start gap-3 transition-all ${passo.completato ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                                {/* Spunta completato */}
+                                                className={`px-3.5 py-3 rounded-xl flex items-start gap-3 transition-all ${
+                                                    passo.completato ? 'bg-emerald-50/70 border border-emerald-100' : 'bg-slate-50 border border-slate-100'
+                                                }`}>
                                                 <button
                                                     onClick={() => toggleCompletato(passo.id, passo.completato)}
-                                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all active:scale-90 ${passo.completato ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'}`}>
-                                                    {passo.completato && <CheckCircle size={14} strokeWidth={3} />}
+                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all active:scale-90 ${
+                                                        passo.completato ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'
+                                                    }`}>
+                                                    {passo.completato && <CheckCircle size={12} strokeWidth={3} />}
                                                 </button>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`font-bold text-sm mb-1 transition-all ${passo.completato ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                                    <p className={`font-semibold text-[13px] transition-all ${
+                                                        passo.completato ? 'line-through text-slate-400' : 'text-slate-800'
+                                                    }`}>
                                                         {passo.titolo}
                                                     </p>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {passo.scadenza && (
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-700'}`}>
-                                                                <Clock size={9} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
-                                                            </span>
-                                                        )}
-                                                        {passo.responsabili && (
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-indigo-100 text-indigo-700'}`}>
-                                                                <Users size={9} /> {passo.responsabili}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    {(passo.scadenza || passo.responsabili) && (
+                                                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                            {passo.scadenza && (
+                                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                                                    passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-600'
+                                                                }`}>
+                                                                    <Clock size={9} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
+                                                                </span>
+                                                            )}
+                                                            {passo.responsabili && (
+                                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                                                    passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600'
+                                                                }`}>
+                                                                    <Users size={9} /> {passo.responsabili}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

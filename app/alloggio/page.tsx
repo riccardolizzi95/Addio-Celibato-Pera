@@ -188,8 +188,8 @@ export default function AlloggioPage() {
 
                 {/* FORM MODIFICA (solo admin) */}
                 {isEditing && (
-                    <div className="bg-white rounded-[2rem] p-6 shadow-xl border-2 border-blue-400 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                        <p className="text-xs font-black text-blue-600 uppercase tracking-widest">✏️ Modifica Alloggio</p>
+                    <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-blue-400 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                        <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">✏️ Modifica Alloggio</p>
 
                         {[
                             { label: 'Nome struttura', value: formNome, set: setFormNome, placeholder: 'Es: Travel Hotel Amsterdam' },
@@ -200,31 +200,31 @@ export default function AlloggioPage() {
                             { label: 'Ora Check-out', value: formCheckOutOra, set: setFormCheckOutOra, placeholder: '10:00' },
                         ].map(({ label, value, set, placeholder }) => (
                             <div key={label}>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">{label}</label>
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">{label}</label>
                                 <input type="text" value={value} onChange={e => set(e.target.value)} placeholder={placeholder}
                                     className="w-full p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium" />
                             </div>
                         ))}
 
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Descrizione</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Descrizione</label>
                             <textarea value={formDescrizione} onChange={e => setFormDescrizione(e.target.value)} rows={3}
                                 className="w-full p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Servizi (uno per riga)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Servizi (uno per riga)</label>
                             <textarea value={formServiziTxt} onChange={e => setFormServiziTxt(e.target.value)} rows={4}
                                 placeholder={"Wi-Fi gratuito\nBar\nReception 24h"}
                                 className="w-full p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono" />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Foto (url|didascalia, una per riga)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Foto (url|didascalia, una per riga)</label>
                             <textarea value={formFotoTxt} onChange={e => setFormFotoTxt(e.target.value)} rows={4}
                                 placeholder={"https://img.jpg|Esterni\nhttps://img2.jpg|Camera"}
                                 className="w-full p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono" />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Note importanti</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide ml-1 mb-1 block">Note importanti</label>
                             <textarea value={formNote} onChange={e => setFormNote(e.target.value)} rows={3}
                                 className="w-full p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
                         </div>
@@ -236,7 +236,7 @@ export default function AlloggioPage() {
                 )}
 
                 {/* NOME + STELLE + RATING */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <div className="flex items-start justify-between mb-3">
                         <div>
                             <h1 className="text-2xl font-black tracking-tight leading-tight">{alloggio.nome}</h1>
@@ -265,8 +265,8 @@ export default function AlloggioPage() {
 
                 {/* CHECK-IN / CHECK-OUT */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white p-5 rounded-[1.8rem] shadow-sm border border-slate-100">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Check-in</p>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Check-in</p>
                         <p className="font-black text-slate-800 text-sm leading-snug">{formatData(alloggio.check_in)}</p>
                         {alloggio.check_in_ora && (
                             <p className="text-blue-600 font-black text-lg mt-1 flex items-center gap-1">
@@ -274,8 +274,8 @@ export default function AlloggioPage() {
                             </p>
                         )}
                     </div>
-                    <div className="bg-white p-5 rounded-[1.8rem] shadow-sm border border-slate-100">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Check-out</p>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Check-out</p>
                         <p className="font-black text-slate-800 text-sm leading-snug">{formatData(alloggio.check_out)}</p>
                         {alloggio.check_out_ora && (
                             <p className="text-blue-600 font-black text-lg mt-1 flex items-center gap-1">
@@ -287,8 +287,8 @@ export default function AlloggioPage() {
 
                 {/* SERVIZI */}
                 {servizi.length > 0 && (
-                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
-                        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Servizi</h2>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Servizi</h2>
                         <div className="grid grid-cols-2 gap-2">
                             {servizi.map((s: string) => (
                                 <div key={s} className="flex items-center gap-2 bg-slate-50 px-3 py-2.5 rounded-xl">
@@ -302,10 +302,10 @@ export default function AlloggioPage() {
 
                 {/* NOTE IMPORTANTI */}
                 {alloggio.note && (
-                    <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100">
+                    <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100">
                         <div className="flex items-center gap-2 mb-3 text-amber-700">
                             <Info size={18} />
-                            <p className="font-black text-xs uppercase tracking-widest">Note Importanti</p>
+                            <p className="font-bold text-[11px] uppercase tracking-wide">Note Importanti</p>
                         </div>
                         <p className="text-amber-900 text-sm leading-relaxed">{alloggio.note}</p>
                     </div>

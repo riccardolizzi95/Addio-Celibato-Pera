@@ -53,20 +53,20 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     return (
         <div className="space-y-6">
             {isAdmin && (
-                <button onClick={() => setIsVoloFormOpen(!isVoloFormOpen)} className="w-full bg-slate-900 text-white p-5 rounded-[1.8rem] font-bold flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
+                <button onClick={() => setIsVoloFormOpen(!isVoloFormOpen)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
                     {isVoloFormOpen ? <X size={20}/> : <Plus size={20}/>} {isVoloFormOpen ? "Annulla" : "Aggiungi Volo Missione"}
                 </button>
             )}
 
             {isVoloFormOpen && (
-                <div className="bg-white p-6 rounded-[2.5rem] border-2 border-blue-500 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+                <div className="bg-white p-6 rounded-2xl border-2 border-blue-400 shadow-lg space-y-5 animate-in fade-in zoom-in-95">
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Codice Volo</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase ml-1 tracking-wide">Codice Volo</label>
                         <input type="text" placeholder="Es: HV5466" className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none text-lg font-bold" value={nuovoVolo.codice} onChange={e => setNuovoVolo({...nuovoVolo, codice: e.target.value})} />
                     </div>
                     
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Data Partenza</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase ml-1 tracking-wide">Data Partenza</label>
                         <div className="relative group">
                             {/* FIX CSS PER MOBILE DATA INPUT */}
                             <input 
@@ -81,11 +81,11 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-600 uppercase ml-2 tracking-widest">Etichetta Gruppo</label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase ml-1 tracking-wide">Etichetta Gruppo</label>
                         <input type="text" placeholder="Es: Da Verona" className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-2 ring-slate-100 focus:ring-blue-500 outline-none font-bold" value={nuovoVolo.gruppo} onChange={e => setNuovoVolo({...nuovoVolo, gruppo: e.target.value})} />
                     </div>
 
-                    <button onClick={handleAggiungiVolo} disabled={isVerifying} className="w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-lg active:scale-95 transition-all flex justify-center items-center">
+                    <button onClick={handleAggiungiVolo} disabled={isVerifying} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all flex justify-center items-center">
                         {isVerifying ? <RefreshCw className="animate-spin" /> : "VERIFICA E ATTIVA 🚀"}
                     </button>
                 </div>
@@ -108,8 +108,8 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                     const lastUpdate = api?.lastUpdatedUtc ? new Date(api.lastUpdatedUtc) : null;
 
                     return (
-                        <div key={v.id} onClick={() => setSelectedVolo(v)} className="bg-white rounded-[2.5rem] p-6 shadow-md border border-slate-100 relative overflow-hidden active:scale-[0.98] transition-all">
-                            <div className="absolute top-0 right-0 bg-blue-600 text-white px-5 py-2 rounded-bl-[1.5rem] text-[10px] font-black uppercase tracking-tighter shadow-sm">{v.gruppo || 'Missione'}</div>
+                        <div key={v.id} onClick={() => setSelectedVolo(v)} className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative overflow-hidden active:scale-[0.98] transition-all">
+                            <div className="absolute top-0 right-0 bg-blue-600 text-white px-5 py-2 rounded-bl-2xl text-[10px] font-black uppercase tracking-tighter shadow-sm">{v.gruppo || 'Missione'}</div>
                             
                             {/* DATA MIGLIORATA PER MOBILE */}
                             <div className="flex items-center gap-2 mb-6 px-1">
@@ -135,7 +135,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                                 <div className="flex-1 flex flex-col items-center px-2 relative">
                                     <Plane size={24} className="text-blue-500 mb-2" />
                                     <div className="w-full h-[2px] bg-slate-100 rounded-full"></div>
-                                    <p className="text-[10px] font-black text-blue-600 mt-2 tracking-widest uppercase">{v.codice_volo}</p>
+                                    <p className="text-[10px] font-black text-blue-600 mt-2 tracking-wide uppercase">{v.codice_volo}</p>
                                 </div>
 
                                 <div className="text-center w-1/3">
@@ -179,8 +179,8 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
 
             {/* POPUP SCHEDA TECNICA (Stesso di prima, ma con Maps link corretti) */}
             {selectedVolo && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedVolo(null)}>
-                    <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-300" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedVolo(null)}>
+                    <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-300" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <h3 className="text-3xl font-black italic tracking-tighter">Logistica Volo</h3>
@@ -190,24 +190,24 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                         </div>
                         
                         <div className="space-y-4">
-                            <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex justify-between items-center">
-                                <div><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Aeromobile</p><p className="font-bold text-slate-700">{selectedVolo.last_api_response?.aircraft?.model || "Boeing 737-800"}</p></div>
-                                <div className="text-right"><p className="text-[10px] font-black text-slate-400 uppercase mb-1">Distanza</p><p className="font-black text-blue-600">{Math.round(selectedVolo.last_api_response?.greatCircleDistance?.km || 0)} KM</p></div>
+                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex justify-between items-center">
+                                <div><p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Aeromobile</p><p className="font-bold text-slate-700">{selectedVolo.last_api_response?.aircraft?.model || "Boeing 737-800"}</p></div>
+                                <div className="text-right"><p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Distanza</p><p className="font-black text-blue-600">{Math.round(selectedVolo.last_api_response?.greatCircleDistance?.km || 0)} KM</p></div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase mb-3">Partenza</p>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase mb-3">Partenza</p>
                                     <a href={`https://www.google.com/maps/search/?api=1&query=${selectedVolo.last_api_response?.departure?.airport?.location?.lat},${selectedVolo.last_api_response?.departure?.airport?.location?.lon}`} target="_blank" className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border-2 border-blue-50 text-[10px] font-black text-blue-600 shadow-sm active:scale-95"><MapPin size={14}/> MAPS</a>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase mb-3">Arrivo</p>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase mb-3">Arrivo</p>
                                     <a href={`https://www.google.com/maps/search/?api=1&query=${selectedVolo.last_api_response?.arrival?.airport?.location?.lat},${selectedVolo.last_api_response?.arrival?.airport?.location?.lon}`} target="_blank" className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border-2 border-blue-50 text-[10px] font-black text-blue-600 shadow-sm active:scale-95"><MapPin size={14}/> MAPS</a>
                                 </div>
                             </div>
 
-                            <div className="bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center">
-                                <p className="text-[10px] font-black text-blue-400 uppercase mb-1 tracking-widest">Stato Operativo</p>
+                            <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 text-center">
+                                <p className="text-[11px] font-bold text-blue-400 uppercase mb-1 tracking-wide">Stato Operativo</p>
                                 <p className="font-black text-blue-700 uppercase text-xl">{selectedVolo.last_api_response?.status || 'Expected'}</p>
                             </div>
                         </div>

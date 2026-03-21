@@ -162,7 +162,7 @@ export default function AttivitaPage() {
             <div className="mb-8">
                 {isFormOpen ? (
                     <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-400 animate-in fade-in zoom-in-95 duration-200 space-y-3">
-                        <p className="text-xs font-black text-blue-600 uppercase tracking-widest">
+                        <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">
                             {editingId ? '✏️ Modifica Proposta' : '🚀 Nuova Proposta'}
                         </p>
 
