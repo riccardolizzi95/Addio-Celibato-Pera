@@ -140,21 +140,20 @@ export default function Home() {
         .cg5 .c1 { width:60px;  height:22px; top:12px; left:0;    background: rgba(255,255,255,0.75); border-radius:40px; filter:blur(2px); }
         .cg5 .c2 { width:42px;  height:32px; top:0;    left:10px; background: rgba(255,255,255,0.85); border-radius:50%; filter:blur(1px); }
 
-        /* aereo */
+        /* aereo SVG */
         .plane-wrap {
           position: absolute;
-          top: 30%; left: 0;
-          animation: fly 9s linear infinite 2s;
+          top: 28%; left: 0;
+          animation: fly 10s linear infinite 2s;
           display: flex; align-items: center;
         }
         .plane-scia {
-          width: 100px; height: 2px;
-          background: linear-gradient(to left, rgba(255,255,255,0.7), transparent);
+          height: 1.5px;
+          background: linear-gradient(to left, rgba(148,163,184,0.55), transparent);
           border-radius: 2px;
-          margin-right: 3px;
-          animation: scia 9s linear infinite 2s;
+          margin-right: 2px;
+          animation: scia 10s linear infinite 2s;
         }
-        .plane-emoji { font-size: 22px; line-height:1; }
 
         /* tulipani */
         .tulip { display: inline-block; font-size: 20px; }
@@ -216,10 +215,23 @@ export default function Home() {
         <div className="cloud-group cg4"><div className="cloud c1"/><div className="cloud c2"/></div>
         <div className="cloud-group cg5"><div className="cloud c1"/><div className="cloud c2"/></div>
 
-        {/* Aereo */}
+        {/* Aereo SVG — stesso stile della skyline */}
         <div className="plane-wrap">
-          <div className="plane-scia" />
-          <span className="plane-emoji">✈️</span>
+          <div className="plane-scia" style={{ width: "90px" }} />
+          <svg width="38" height="22" viewBox="0 0 38 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="19" cy="11" rx="17" ry="3.8" fill="#94a3b8" opacity="0.82"/>
+            <path d="M36 11 L38 11 L35 8.5 Z" fill="#64748b" opacity="0.9"/>
+            <path d="M17 11 L26 3 L28 4.5 L21 11 Z" fill="#94a3b8" opacity="0.78"/>
+            <path d="M17 11 L26 19 L28 17.5 L21 11 Z" fill="#94a3b8" opacity="0.78"/>
+            <path d="M4 11 L2 7 L6 8 L7 11 Z" fill="#94a3b8" opacity="0.72"/>
+            <path d="M4 11 L2 15 L6 14 L7 11 Z" fill="#94a3b8" opacity="0.72"/>
+            <path d="M4 11 L3 5.5 L7 8 L7 11 Z" fill="#64748b" opacity="0.65"/>
+            <rect x="15" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.5"/>
+            <rect x="19" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.45"/>
+            <rect x="23" y="9.5" width="2.2" height="1.6" rx="0.5" fill="white" opacity="0.4"/>
+            <ellipse cx="23" cy="12.8" rx="3.2" ry="1.3" fill="#64748b" opacity="0.68"/>
+            <ellipse cx="23" cy="9.2"  rx="3.2" ry="1.3" fill="#64748b" opacity="0.68"/>
+          </svg>
         </div>
 
         {/* Skyline Amsterdam — SVG inline, in basso */}
@@ -328,8 +340,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── PULSANTI — subito sotto, sfondo slate-50 ── */}
-      <div className="flex-1 bg-slate-50 px-5 pt-4 pb-10 space-y-3">
+      {/* ── WAVE di transizione ── */}
+      <div style={{ background: '#f8fafc', marginTop: '-2px' }}>
+        <svg viewBox="0 0 400 28" xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none" style={{ display:'block', width:'100%', height:'28px' }}>
+          <path d="M0,0 Q50,20 100,10 Q150,0 200,14 Q250,28 300,12 Q350,0 400,16 L400,0 Z"
+            fill="#f0f9ff"/>
+          <path d="M0,4 Q60,22 120,12 Q180,2 240,18 Q300,28 360,14 Q390,8 400,20 L400,4 Z"
+            fill="#eff6ff" opacity="0.7"/>
+        </svg>
+      </div>
+
+      {/* ── PULSANTI ── */}
+      <div className="flex-1 px-5 pt-3 pb-10 space-y-3" style={{ background: '#f8fafc' }}>
         <Link href="/voli" className="block fu1">
           <button className="btn-home" style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', boxShadow: '0 4px 20px rgba(37,99,235,0.35)' }}>
             <span style={{fontSize:'22px'}}>✈️</span>
