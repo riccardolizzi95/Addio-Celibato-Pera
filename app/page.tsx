@@ -10,8 +10,7 @@ export default function Home() {
     const checkUserAndStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        const currentUrl = window.location.pathname + window.location.search;
-        window.location.assign(`/login?returnTo=${encodeURIComponent(currentUrl)}`);
+        window.location.assign(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
         return;
       }
       const { data: profilo } = await supabase
@@ -30,334 +29,340 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
       </div>
     );
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-slate-950 text-white">
+    <main className="flex flex-col min-h-screen bg-slate-50">
       <style>{`
-        /* ── STELLE ── */
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50%       { opacity: 1;   transform: scale(1.4); }
-        }
-        @keyframes twinkle2 {
-          0%, 100% { opacity: 0.6; }
-          60%       { opacity: 0.05; }
-        }
 
-        /* ── AURORA ── */
-        @keyframes aurora1 {
-          0%   { transform: translateX(-10%) scaleY(1) rotate(-2deg); opacity: 0.18; }
-          33%  { transform: translateX(5%)  scaleY(1.3) rotate(1deg);  opacity: 0.28; }
-          66%  { transform: translateX(-5%) scaleY(0.9) rotate(-1deg); opacity: 0.22; }
-          100% { transform: translateX(-10%) scaleY(1) rotate(-2deg); opacity: 0.18; }
+        /* ── CIELO ── */
+        @keyframes drift1 {
+          0%   { transform: translateX(-8%) scaleX(1); }
+          50%  { transform: translateX(4%)  scaleX(1.04); }
+          100% { transform: translateX(-8%) scaleX(1); }
         }
-        @keyframes aurora2 {
-          0%   { transform: translateX(8%)  scaleY(0.8) rotate(1deg);  opacity: 0.12; }
-          50%  { transform: translateX(-8%) scaleY(1.4) rotate(-2deg); opacity: 0.24; }
-          100% { transform: translateX(8%)  scaleY(0.8) rotate(1deg);  opacity: 0.12; }
+        @keyframes drift2 {
+          0%   { transform: translateX(6%)  scaleX(1); }
+          50%  { transform: translateX(-5%) scaleX(1.06); }
+          100% { transform: translateX(6%)  scaleX(1); }
         }
-        @keyframes aurora3 {
-          0%   { transform: translateX(0%)  scaleY(1.1); opacity: 0.08; }
-          40%  { transform: translateX(12%) scaleY(0.7); opacity: 0.2; }
-          80%  { transform: translateX(-6%) scaleY(1.3); opacity: 0.14; }
-          100% { transform: translateX(0%)  scaleY(1.1); opacity: 0.08; }
+        @keyframes drift3 {
+          0%   { transform: translateX(-4%) scaleX(1.02); }
+          50%  { transform: translateX(7%)  scaleX(1); }
+          100% { transform: translateX(-4%) scaleX(1.02); }
+        }
+        @keyframes drift4 {
+          0%   { transform: translateX(3%)  scaleX(1); }
+          50%  { transform: translateX(-6%) scaleX(1.03); }
+          100% { transform: translateX(3%)  scaleX(1); }
         }
 
         /* ── AEREO ── */
-        @keyframes flight {
-          0%   { transform: translate(-80px, 60px) rotate(-6deg); opacity: 0; }
-          8%   { opacity: 1; }
-          88%  { opacity: 1; }
-          100% { transform: translate(calc(100vw + 80px), -20px) rotate(-6deg); opacity: 0; }
+        @keyframes fly {
+          0%   { transform: translate(-60px, 0px) rotate(-4deg); opacity: 0; }
+          6%   { opacity: 1; }
+          92%  { opacity: 1; }
+          100% { transform: translate(calc(100vw + 60px), -12px) rotate(-4deg); opacity: 0; }
         }
-        @keyframes contrail {
+        @keyframes scia {
           0%   { opacity: 0; width: 0; }
-          10%  { opacity: 0.5; }
-          80%  { opacity: 0.3; }
-          100% { opacity: 0; width: 180px; }
+          8%   { opacity: 1; }
+          85%  { opacity: 0.4; }
+          100% { opacity: 0; }
         }
 
-        /* ── GLOW PULSANTE ── */
-        @keyframes glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3), 0 4px 24px rgba(0,0,0,0.4); }
-          50%       { box-shadow: 0 0 40px rgba(59,130,246,0.5), 0 4px 24px rgba(0,0,0,0.4); }
+        /* ── TULIPANI ── */
+        @keyframes sway {
+          0%, 100% { transform: rotate(-2deg) translateY(0); }
+          50%       { transform: rotate(2deg)  translateY(-1px); }
         }
+        @keyframes sway2 {
+          0%, 100% { transform: rotate(1.5deg) translateY(0); }
+          50%       { transform: rotate(-2.5deg) translateY(-1px); }
+        }
+
+        /* ── MULINO ── */
+        @keyframes mulino {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+
+        /* ── WATER ── */
+        @keyframes ondulazione {
+          0%, 100% { d: path("M0,4 Q30,0 60,4 Q90,8 120,4 Q150,0 180,4 Q210,8 240,4 Q270,0 300,4 Q330,8 360,4 Q390,0 400,4 L400,12 L0,12 Z"); }
+          50%       { d: path("M0,8 Q30,4 60,8 Q90,12 120,8 Q150,4 180,8 Q210,12 240,8 Q270,4 300,8 Q330,12 360,8 Q390,4 400,8 L400,12 L0,12 Z"); }
+        }
+
+        /* ── PULSANTI ── */
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* stelle */
-        .star { position: absolute; border-radius: 50%; background: white; }
-        .s1  { width:2px; height:2px; top:8%;  left:12%; animation: twinkle  3.1s ease-in-out infinite; }
-        .s2  { width:1px; height:1px; top:15%; left:30%; animation: twinkle2 2.4s ease-in-out infinite 0.5s; }
-        .s3  { width:2px; height:2px; top:6%;  left:55%; animation: twinkle  4.2s ease-in-out infinite 1s; }
-        .s4  { width:1px; height:1px; top:20%; left:72%; animation: twinkle2 3.8s ease-in-out infinite 0.3s; }
-        .s5  { width:3px; height:3px; top:10%; left:85%; animation: twinkle  2.9s ease-in-out infinite 1.5s; }
-        .s6  { width:1px; height:1px; top:28%; left:8%;  animation: twinkle2 4.5s ease-in-out infinite 0.8s; }
-        .s7  { width:2px; height:2px; top:35%; left:45%; animation: twinkle  3.6s ease-in-out infinite 2s; }
-        .s8  { width:1px; height:1px; top:5%;  left:92%; animation: twinkle2 2.7s ease-in-out infinite 1.2s; }
-        .s9  { width:2px; height:2px; top:42%; left:22%; animation: twinkle  5s   ease-in-out infinite 0.2s; }
-        .s10 { width:1px; height:1px; top:18%; left:65%; animation: twinkle2 3.3s ease-in-out infinite 1.8s; }
-        .s11 { width:2px; height:2px; top:50%; left:78%; animation: twinkle  4.1s ease-in-out infinite 0.6s; }
-        .s12 { width:1px; height:1px; top:32%; left:90%; animation: twinkle2 2.2s ease-in-out infinite 2.5s; }
+        .cloud {
+          position: absolute;
+          border-radius: 50%;
+          background: white;
+          filter: blur(0px);
+        }
+        .cloud-group { position: absolute; }
 
-        /* aurora */
-        .aurora-wrap { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
-        .aurora-1 {
-          position: absolute;
-          top: -20%; left: -20%; width: 140%; height: 65%;
-          background: linear-gradient(180deg,
-            transparent 0%,
-            rgba(16,185,129,0.12) 30%,
-            rgba(59,130,246,0.18) 55%,
-            rgba(139,92,246,0.10) 75%,
-            transparent 100%
-          );
-          filter: blur(40px);
-          animation: aurora1 11s ease-in-out infinite;
-        }
-        .aurora-2 {
-          position: absolute;
-          top: -10%; left: -30%; width: 160%; height: 50%;
-          background: linear-gradient(175deg,
-            transparent 0%,
-            rgba(6,182,212,0.10) 25%,
-            rgba(99,102,241,0.14) 50%,
-            rgba(16,185,129,0.08) 75%,
-            transparent 100%
-          );
-          filter: blur(50px);
-          animation: aurora2 15s ease-in-out infinite 2s;
-        }
-        .aurora-3 {
-          position: absolute;
-          top: 5%; left: -10%; width: 120%; height: 40%;
-          background: linear-gradient(185deg,
-            transparent 0%,
-            rgba(236,72,153,0.06) 20%,
-            rgba(59,130,246,0.10) 50%,
-            rgba(16,185,129,0.06) 80%,
-            transparent 100%
-          );
-          filter: blur(60px);
-          animation: aurora3 19s ease-in-out infinite 1s;
-        }
+        /* Nuvola 1 */
+        .cg1 { top: 18%; left: -5%; animation: drift1 22s ease-in-out infinite; }
+        .cg1 .c1 { width:90px; height:36px; top:16px; left:0; background: rgba(255,255,255,0.92); border-radius:50px; filter:blur(2px); }
+        .cg1 .c2 { width:60px; height:44px; top:0;   left:18px; background: rgba(255,255,255,0.95); border-radius:50%; filter:blur(1px); }
+        .cg1 .c3 { width:50px; height:36px; top:6px; left:44px; background: rgba(255,255,255,0.9);  border-radius:50%; filter:blur(2px); }
+
+        /* Nuvola 2 — più grande, centro */
+        .cg2 { top: 8%; left: 28%; animation: drift2 28s ease-in-out infinite 4s; }
+        .cg2 .c1 { width:130px; height:44px; top:22px; left:0; background: rgba(255,255,255,0.88); border-radius:60px; filter:blur(3px); }
+        .cg2 .c2 { width:80px;  height:60px; top:0;    left:22px; background: rgba(255,255,255,0.95); border-radius:50%; filter:blur(1px); }
+        .cg2 .c3 { width:70px;  height:50px; top:8px;  left:60px; background: rgba(255,255,255,0.9);  border-radius:50%; filter:blur(2px); }
+        .cg2 .c4 { width:55px;  height:40px; top:14px; left:90px; background: rgba(219,234,254,0.7);  border-radius:50%; filter:blur(3px); }
+
+        /* Nuvola 3 — destra */
+        .cg3 { top: 22%; right: -8%; animation: drift3 19s ease-in-out infinite 8s; }
+        .cg3 .c1 { width:100px; height:38px; top:18px; left:0;    background: rgba(255,255,255,0.85); border-radius:50px; filter:blur(2px); }
+        .cg3 .c2 { width:65px;  height:50px; top:0;    left:16px; background: rgba(255,255,255,0.92); border-radius:50%; filter:blur(1px); }
+        .cg3 .c3 { width:55px;  height:40px; top:8px;  left:48px; background: rgba(219,234,254,0.75); border-radius:50%; filter:blur(2px); }
+
+        /* Nuvola 4 — piccola sinistra */
+        .cg4 { top: 38%; left: 5%; animation: drift4 25s ease-in-out infinite 12s; }
+        .cg4 .c1 { width:70px;  height:28px; top:14px; left:0;    background: rgba(255,255,255,0.8);  border-radius:40px; filter:blur(3px); }
+        .cg4 .c2 { width:50px;  height:38px; top:0;    left:12px; background: rgba(255,255,255,0.88); border-radius:50%; filter:blur(2px); }
+
+        /* Nuvola 5 — piccola centro-dx */
+        .cg5 { top: 5%; left: 55%; animation: drift1 32s ease-in-out infinite 16s; }
+        .cg5 .c1 { width:60px;  height:22px; top:12px; left:0;    background: rgba(255,255,255,0.75); border-radius:40px; filter:blur(2px); }
+        .cg5 .c2 { width:42px;  height:32px; top:0;    left:10px; background: rgba(255,255,255,0.85); border-radius:50%; filter:blur(1px); }
 
         /* aereo */
-        .plane-container {
+        .plane-wrap {
           position: absolute;
-          top: 42%; left: 0;
-          animation: flight 8s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
-          animation-delay: 1s;
+          top: 30%; left: 0;
+          animation: fly 9s linear infinite 2s;
+          display: flex; align-items: center;
         }
-        .plane-emoji { font-size: 28px; line-height: 1; display: block; }
-        .contrail {
-          position: absolute;
-          right: 100%; top: 50%;
-          height: 2px;
-          margin-right: 4px;
-          transform: translateY(-50%);
-          background: linear-gradient(to left, rgba(255,255,255,0.6), transparent);
+        .plane-scia {
+          width: 100px; height: 2px;
+          background: linear-gradient(to left, rgba(255,255,255,0.7), transparent);
           border-radius: 2px;
-          animation: contrail 8s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
-          animation-delay: 1s;
+          margin-right: 3px;
+          animation: scia 9s linear infinite 2s;
+        }
+        .plane-emoji { font-size: 22px; line-height:1; }
+
+        /* tulipani */
+        .tulip { display: inline-block; font-size: 20px; }
+        .tulip:nth-child(odd)  { animation: sway  3.2s ease-in-out infinite; }
+        .tulip:nth-child(even) { animation: sway2 2.8s ease-in-out infinite 0.4s; }
+
+        /* mulino */
+        .windmill-blade {
+          transform-origin: 50% 50%;
+          animation: mulino 8s linear infinite;
         }
 
-        /* orizzonte */
-        .horizon {
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 35%;
-          background: linear-gradient(to top,
-            rgba(15,23,42,1) 0%,
-            rgba(15,23,42,0.85) 40%,
-            transparent 100%
-          );
-        }
-        /* skyline amsterdam stilizzata */
-        .skyline {
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 80px;
-          overflow: hidden;
-        }
-        .skyline svg { width: 100%; height: 100%; }
-
-        /* acqua riflessa */
-        @keyframes shimmer {
-          0%   { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        .water {
-          position: absolute;
-          bottom: 0; left: 0; right: 0; height: 18px;
-          background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(59,130,246,0.15) 20%,
-            rgba(99,102,241,0.2) 50%,
-            rgba(59,130,246,0.15) 80%,
-            transparent 100%
-          );
-          background-size: 200% 100%;
-          animation: shimmer 4s linear infinite;
+        /* acqua canale */
+        .canal-wave {
+          animation: ondulazione 3s ease-in-out infinite;
         }
 
-        /* pulsanti */
+        /* pulsanti home */
         .btn-home {
           width: 100%;
-          display: flex; align-items: center; gap: 12px;
-          padding: 18px 20px;
-          border-radius: 20px;
-          font-weight: 800;
-          font-size: 16px;
+          display: flex; align-items: center; gap: 14px;
+          padding: 16px 18px;
+          border-radius: 18px;
+          font-weight: 800; font-size: 15px;
           letter-spacing: -0.01em;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.05);
-          backdrop-filter: blur(12px);
           color: white;
-          transition: all 0.2s ease;
-          position: relative;
-          overflow: hidden;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+          position: relative; overflow: hidden;
         }
-        .btn-home::before {
+        .btn-home::after {
           content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
           pointer-events: none;
         }
         .btn-home:active { transform: scale(0.97); }
-        .btn-home .icon { font-size: 22px; line-height: 1; }
-        .btn-home .label { flex: 1; text-align: left; }
-        .btn-home .arrow { opacity: 0.3; font-size: 18px; transition: opacity 0.2s, transform 0.2s; }
-        .btn-home:active .arrow { opacity: 0.7; transform: translateX(3px); }
+        .btn-home .lbl { flex: 1; text-align: left; }
+        .btn-home .arr { opacity: 0.5; font-size: 20px; font-weight: 300; }
 
-        .btn-voli     { background: linear-gradient(135deg, rgba(37,99,235,0.4), rgba(29,78,216,0.2)); border-color: rgba(59,130,246,0.3); }
-        .btn-alloggio { background: linear-gradient(135deg, rgba(79,70,229,0.4), rgba(67,56,202,0.2)); border-color: rgba(99,102,241,0.3); }
-        .btn-attivita { background: linear-gradient(135deg, rgba(5,150,105,0.4), rgba(4,120,87,0.2));  border-color: rgba(16,185,129,0.3); }
-        .btn-spese    { background: linear-gradient(135deg, rgba(180,83,9,0.4),  rgba(146,64,14,0.2)); border-color: rgba(245,158,11,0.3); }
-        .btn-scherzi  { background: linear-gradient(135deg, rgba(109,40,217,0.4),rgba(88,28,135,0.2)); border-color: rgba(139,92,246,0.3); }
-
-        .fade-up-1 { animation: fadeUp 0.6s ease both 0.1s; }
-        .fade-up-2 { animation: fadeUp 0.6s ease both 0.2s; }
-        .fade-up-3 { animation: fadeUp 0.6s ease both 0.3s; }
-        .fade-up-4 { animation: fadeUp 0.6s ease both 0.4s; }
-        .fade-up-5 { animation: fadeUp 0.6s ease both 0.5s; }
+        .fu1 { animation: fadeUp 0.5s ease both 0.05s; }
+        .fu2 { animation: fadeUp 0.5s ease both 0.12s; }
+        .fu3 { animation: fadeUp 0.5s ease both 0.19s; }
+        .fu4 { animation: fadeUp 0.5s ease both 0.26s; }
+        .fu5 { animation: fadeUp 0.5s ease both 0.33s; }
       `}</style>
 
-      {/* ── HERO VISUALE — edge-to-edge senza margini ── */}
-      <div className="relative w-full" style={{ height: '42vh', minHeight: '220px', maxHeight: '340px' }}>
+      {/* ── HERO CIELO ── edge-to-edge, altezza contenuta */}
+      <div className="relative w-full overflow-hidden" style={{
+        height: '28vh',
+        minHeight: '160px',
+        maxHeight: '220px',
+        background: 'linear-gradient(180deg, #dbeafe 0%, #eff6ff 55%, #f0f9ff 80%, #f8fafc 100%)'
+      }}>
 
-        {/* Cielo notturno gradient */}
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at 50% 0%, #0f1f4a 0%, #060d1f 50%, #020508 100%)'
-        }} />
+        {/* Nuvole */}
+        <div className="cloud-group cg1"><div className="cloud c1"/><div className="cloud c2"/><div className="cloud c3"/></div>
+        <div className="cloud-group cg2"><div className="cloud c1"/><div className="cloud c2"/><div className="cloud c3"/><div className="cloud c4"/></div>
+        <div className="cloud-group cg3"><div className="cloud c1"/><div className="cloud c2"/><div className="cloud c3"/></div>
+        <div className="cloud-group cg4"><div className="cloud c1"/><div className="cloud c2"/></div>
+        <div className="cloud-group cg5"><div className="cloud c1"/><div className="cloud c2"/></div>
 
-        {/* Aurora boreale */}
-        <div className="aurora-wrap">
-          <div className="aurora-1" />
-          <div className="aurora-2" />
-          <div className="aurora-3" />
-        </div>
-
-        {/* Stelle */}
-        <div className="star s1" /><div className="star s2" /><div className="star s3" />
-        <div className="star s4" /><div className="star s5" /><div className="star s6" />
-        <div className="star s7" /><div className="star s8" /><div className="star s9" />
-        <div className="star s10" /><div className="star s11" /><div className="star s12" />
-
-        {/* Aereo con scia */}
-        <div className="plane-container">
-          <div className="contrail" style={{ width: '120px' }} />
+        {/* Aereo */}
+        <div className="plane-wrap">
+          <div className="plane-scia" />
           <span className="plane-emoji">✈️</span>
         </div>
 
-        {/* Skyline Amsterdam stilizzata */}
-        <div className="skyline">
-          <svg viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet">
-            <path d="
-              M0,80 L0,55 L8,55 L8,45 L10,42 L12,45 L12,50 L18,50 L18,40 L20,35 L22,40 L22,50
-              L30,50 L30,55 L35,55 L35,48 L38,45 L41,48 L41,55
-              L50,55 L50,42 L52,38 L52,32 L54,28 L56,32 L56,38 L58,42 L58,55
-              L65,55 L65,50 L68,47 L71,50 L71,55
-              L78,55 L78,45 L80,40 L82,45 L82,55
-              L90,55 L90,48 L92,44 L94,48 L94,55
-              L100,55 L100,52 L106,52 L106,42 L108,38 L108,28 L110,22 L112,28 L112,38 L114,42 L114,52 L120,52 L120,55
-              L128,55 L128,48 L132,44 L136,48 L136,55
-              L145,55 L145,50 L148,47 L151,50 L151,55
-              L158,55 L158,42 L160,36 L162,42 L162,55
-              L170,55 L170,52 L175,52 L175,45 L177,40 L179,45 L179,52 L184,52 L184,55
-              L192,55 L192,48 L195,44 L198,48 L198,55
-              L206,55 L206,52 L210,52 L210,44 L212,40 L212,32 L214,26 L216,32 L216,40 L218,44 L218,52 L222,52 L222,55
-              L230,55 L230,50 L234,46 L238,50 L238,55
-              L246,55 L246,48 L249,44 L252,48 L252,55
-              L260,55 L260,42 L262,36 L264,42 L264,55
-              L272,55 L272,50 L276,50 L276,42 L278,38 L280,42 L280,50 L284,50 L284,55
-              L292,55 L292,48 L295,44 L298,48 L298,55
-              L306,55 L306,42 L308,36 L308,26 L310,20 L312,26 L312,36 L314,42 L314,55
-              L322,55 L322,50 L326,46 L330,50 L330,55
-              L338,55 L338,48 L341,44 L344,48 L344,55
-              L352,55 L352,50 L358,50 L358,42 L360,38 L362,42 L362,50 L368,50 L368,55
-              L376,55 L376,48 L380,44 L384,48 L384,55
-              L392,55 L392,50 L396,50 L400,50 L400,80 Z
-            " fill="rgba(15,23,42,0.95)" />
-            {/* Finestrine illuminate */}
-            <rect x="109" y="30" width="2" height="2" fill="rgba(251,191,36,0.6)" rx="0.5" />
-            <rect x="213" y="34" width="2" height="2" fill="rgba(251,191,36,0.5)" rx="0.5" />
-            <rect x="309" y="28" width="2" height="2" fill="rgba(251,191,36,0.7)" rx="0.5" />
-            <rect x="53"  y="36" width="2" height="2" fill="rgba(251,191,36,0.4)" rx="0.5" />
+        {/* Skyline Amsterdam — SVG inline, in basso */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 400 68" xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMidYMax meet" style={{ display:'block', width:'100%', height:'68px' }}>
+
+            {/* Case olandesi + mulino */}
+            <g fill="#cbd5e1" opacity="0.6">
+              {/* fila case */}
+              <rect x="0"   y="44" width="22" height="24" rx="1"/>
+              <polygon points="0,44 11,32 22,44"/>
+
+              <rect x="25"  y="40" width="18" height="28" rx="1"/>
+              <polygon points="25,40 34,26 43,40"/>
+
+              <rect x="46"  y="46" width="20" height="22" rx="1"/>
+              <polygon points="46,46 56,35 66,46"/>
+              {/* finestrella */}
+              <rect x="52" y="50" width="4" height="4" rx="0.5" fill="#93c5fd" opacity="0.9"/>
+
+              {/* torre/campanile */}
+              <rect x="70"  y="28" width="16" height="40" rx="1"/>
+              <polygon points="70,28 78,14 86,28"/>
+              <rect x="75" y="42" width="6" height="8" rx="0.5" fill="#93c5fd" opacity="0.7"/>
+
+              <rect x="90"  y="44" width="22" height="24" rx="1"/>
+              <polygon points="90,44 101,30 112,44"/>
+
+              <rect x="116" y="40" width="18" height="28" rx="1"/>
+              <polygon points="116,40 125,27 134,40"/>
+
+              {/* mulino a vento */}
+              <rect x="148" y="36" width="12" height="32" rx="1"/>
+              {/* base mulino */}
+              <polygon points="144,68 152,54 160,68" fill="#cbd5e1" opacity="0.6"/>
+              {/* pale */}
+              <g className="windmill-blade" style={{transformOrigin: '154px 44px'}}>
+                <line x1="154" y1="44" x2="154" y2="28" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="154" y1="44" x2="168" y2="44" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="154" y1="44" x2="154" y2="60" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="154" y1="44" x2="140" y2="44" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round"/>
+              </g>
+              <circle cx="154" cy="44" r="3" fill="#64748b"/>
+
+              <rect x="168" y="42" width="20" height="26" rx="1"/>
+              <polygon points="168,42 178,28 188,42"/>
+
+              <rect x="192" y="46" width="18" height="22" rx="1"/>
+              <polygon points="192,46 201,34 210,46"/>
+              <rect x="197" y="50" width="4" height="4" rx="0.5" fill="#93c5fd" opacity="0.9"/>
+
+              {/* altro campanile */}
+              <rect x="215" y="24" width="14" height="44" rx="1"/>
+              <polygon points="215,24 222,10 229,24"/>
+
+              <rect x="233" y="44" width="22" height="24" rx="1"/>
+              <polygon points="233,44 244,30 255,44"/>
+
+              <rect x="258" y="40" width="18" height="28" rx="1"/>
+              <polygon points="258,40 267,27 276,40"/>
+
+              <rect x="280" y="46" width="20" height="22" rx="1"/>
+              <polygon points="280,46 290,34 300,46"/>
+
+              <rect x="304" y="38" width="22" height="30" rx="1"/>
+              <polygon points="304,38 315,24 326,38"/>
+              <rect x="310" y="48" width="4" height="4" rx="0.5" fill="#93c5fd" opacity="0.9"/>
+
+              <rect x="330" y="44" width="18" height="24" rx="1"/>
+              <polygon points="330,44 339,31 348,44"/>
+
+              <rect x="352" y="40" width="20" height="28" rx="1"/>
+              <polygon points="352,40 362,27 372,40"/>
+
+              <rect x="376" y="46" width="24" height="22" rx="1"/>
+              <polygon points="376,46 388,33 400,46"/>
+            </g>
+
+            {/* Canale — sottile striscia azzurra */}
+            <rect x="0" y="60" width="400" height="8" fill="#bfdbfe" opacity="0.55" rx="0"/>
+            {/* ondine */}
+            <path d="M0,62 Q50,60 100,62 Q150,64 200,62 Q250,60 300,62 Q350,64 400,62"
+              stroke="white" strokeWidth="1.2" fill="none" opacity="0.6"/>
+
+            {/* tulipani — fila in primo piano */}
+            <g>
+              {[12,24,36,48,60,72,84].map((x, i) => (
+                <g key={x}>
+                  <line x1={x} y1="68" x2={x} y2="58" stroke="#86efac" strokeWidth="1.5"/>
+                  <ellipse cx={x} cy="57" rx="4" ry="5"
+                    fill={['#f87171','#fb923c','#facc15','#f472b6','#c084fc','#34d399','#60a5fa'][i % 7]}
+                    opacity="0.85"/>
+                </g>
+              ))}
+              {[96,110,124,138,152,166,180,194,208,222,236,250,264,278,292,306,320,334,348,362,376,390].map((x, i) => (
+                <g key={x}>
+                  <line x1={x} y1="68" x2={x} y2="60" stroke="#86efac" strokeWidth="1.2"/>
+                  <ellipse cx={x} cy="59" rx="3" ry="4"
+                    fill={['#f87171','#facc15','#c084fc','#34d399','#fb923c','#60a5fa','#f472b6'][i % 7]}
+                    opacity="0.75"/>
+                </g>
+              ))}
+            </g>
           </svg>
         </div>
-
-        {/* Acqua riflessa */}
-        <div className="water" />
-
-        {/* Gradient fade verso il basso per unirsi ai pulsanti */}
-        <div className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: 'linear-gradient(to bottom, transparent, #020508)' }} />
       </div>
 
-      {/* ── PULSANTI ── */}
-      <div className="flex-1 px-5 pt-5 pb-10 space-y-3" style={{ background: '#020508' }}>
-        <Link href="/voli" className="block fade-up-1">
-          <button className="btn-home btn-voli">
-            <span className="icon">✈️</span>
-            <span className="label">Voli & Logistica</span>
-            <span className="arrow">›</span>
+      {/* ── PULSANTI — subito sotto, sfondo slate-50 ── */}
+      <div className="flex-1 bg-slate-50 px-5 pt-4 pb-10 space-y-3">
+        <Link href="/voli" className="block fu1">
+          <button className="btn-home" style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', boxShadow: '0 4px 20px rgba(37,99,235,0.35)' }}>
+            <span style={{fontSize:'22px'}}>✈️</span>
+            <span className="lbl">Voli & Logistica</span>
+            <span className="arr">›</span>
           </button>
         </Link>
-        <Link href="/alloggio" className="block fade-up-2">
-          <button className="btn-home btn-alloggio">
-            <span className="icon">🏠</span>
-            <span className="label">Alloggio</span>
-            <span className="arrow">›</span>
+        <Link href="/alloggio" className="block fu2">
+          <button className="btn-home" style={{ background: 'linear-gradient(135deg, #4f46e5, #4338ca)', boxShadow: '0 4px 20px rgba(79,70,229,0.35)' }}>
+            <span style={{fontSize:'22px'}}>🏠</span>
+            <span className="lbl">Alloggio</span>
+            <span className="arr">›</span>
           </button>
         </Link>
-        <Link href="/attivita" className="block fade-up-3">
-          <button className="btn-home btn-attivita">
-            <span className="icon">🎉</span>
-            <span className="label">Proponi Attività</span>
-            <span className="arrow">›</span>
+        <Link href="/attivita" className="block fu3">
+          <button className="btn-home" style={{ background: 'linear-gradient(135deg, #059669, #047857)', boxShadow: '0 4px 20px rgba(5,150,105,0.35)' }}>
+            <span style={{fontSize:'22px'}}>🎉</span>
+            <span className="lbl">Proponi Attività</span>
+            <span className="arr">›</span>
           </button>
         </Link>
-        <Link href="/spese" className="block fade-up-4">
-          <button className="btn-home btn-spese">
-            <span className="icon">💰</span>
-            <span className="label">Gestione Spese</span>
-            <span className="arrow">›</span>
+        <Link href="/spese" className="block fu4">
+          <button className="btn-home" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', boxShadow: '0 4px 20px rgba(217,119,6,0.35)' }}>
+            <span style={{fontSize:'22px'}}>💰</span>
+            <span className="lbl">Gestione Spese</span>
+            <span className="arr">›</span>
           </button>
         </Link>
-        <Link href="/scherzi" className="block fade-up-5">
-          <button className="btn-home btn-scherzi">
-            <span className="icon">😈</span>
-            <span className="label">Scherzi Matrimonio</span>
-            <span className="arrow">›</span>
+        <Link href="/scherzi" className="block fu5">
+          <button className="btn-home" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}>
+            <span style={{fontSize:'22px'}}>😈</span>
+            <span className="lbl">Scherzi Matrimonio</span>
+            <span className="arr">›</span>
           </button>
         </Link>
       </div>
