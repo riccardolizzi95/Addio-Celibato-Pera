@@ -135,14 +135,12 @@ export default function MinutePage() {
 
     const toggleCompletato = async (passoId: string, completato: boolean) => {
         await supabase.from('prossimi_passi').update({ completato: !completato }).eq('id', passoId);
-        // Aggiorno selectedMinuta localmente per risposta immediata
         setSelectedMinuta((prev: any) => ({
             ...prev,
             prossimi_passi: prev.prossimi_passi.map((p: any) =>
                 p.id === passoId ? { ...p, completato: !completato } : p
             )
         }));
-        // Ricarico anche la lista per aggiornare i contatori
         scaricaMinute();
     };
 
@@ -170,7 +168,7 @@ export default function MinutePage() {
                 <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="text-blue-600 font-bold text-sm">← Home</Link>
                     <h1 className="text-lg font-black tracking-tight">Verbali 🍐</h1>
-                    <div className="w-12" /> {/* spacer */}
+                    <div className="w-12" />
                 </div>
             </div>
 
@@ -189,15 +187,12 @@ export default function MinutePage() {
 
                         {isFormOpen && (
                             <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                                {/* Form header */}
                                 <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
                                     <p className="text-white font-black text-sm uppercase tracking-widest">
                                         {isEditing ? '✏️ Modifica Verbale' : '📋 Nuovo Verbale'}
                                     </p>
                                 </div>
-
                                 <div className="p-6 space-y-5">
-                                    {/* Data + Titolo */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Data</label>
@@ -212,8 +207,6 @@ export default function MinutePage() {
                                                 value={titolo} onChange={e => setTitolo(e.target.value)} />
                                         </div>
                                     </div>
-
-                                    {/* Partecipanti */}
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Partecipanti</label>
                                         <div className="flex gap-2 mb-3">
@@ -238,24 +231,18 @@ export default function MinutePage() {
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Argomenti */}
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Discussione / Argomenti</label>
                                         <textarea placeholder="Di cosa avete parlato?"
                                             className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 ring-blue-400 min-h-[100px] text-sm leading-relaxed"
                                             value={argomenti} onChange={e => setArgomenti(e.target.value)} />
                                     </div>
-
-                                    {/* Decisioni */}
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Decisioni Finali</label>
                                         <textarea placeholder="Cosa avete deciso?"
                                             className="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:ring-2 ring-emerald-400 min-h-[80px] font-bold text-emerald-900 text-sm"
                                             value={decisioni} onChange={e => setDecisioni(e.target.value)} />
                                     </div>
-
-                                    {/* Prossimi passi */}
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -292,7 +279,6 @@ export default function MinutePage() {
                                             ))}
                                         </div>
                                     </div>
-
                                     <button onClick={salvaMinuta}
                                         className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all">
                                         {isEditing ? "Aggiorna Verbale" : "Salva Verbale 🍐"}
@@ -322,11 +308,9 @@ export default function MinutePage() {
                                 onClick={() => setSelectedMinuta(minuta)}
                                 className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group overflow-hidden">
 
-                                {/* Striscia colorata top — colore alternato */}
                                 <div className={`h-1 w-full ${idx % 3 === 0 ? 'bg-blue-500' : idx % 3 === 1 ? 'bg-emerald-500' : 'bg-amber-400'}`} />
 
                                 <div className="p-5">
-                                    {/* Header riga */}
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1.5">
@@ -335,24 +319,22 @@ export default function MinutePage() {
                                             </div>
                                             <h2 className="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">{minuta.titolo}</h2>
                                         </div>
-
-                                        {/* Azioni admin */}
                                         <div className="flex items-center gap-0.5 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
                                             {isAdmin && (
                                                 <>
                                                     <button onClick={e => condividiWhatsApp(e, minuta)}
-                                                        className="p-2 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Condividi su WhatsApp">
+                                                        className="p-2 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all">
                                                         <Send size={16} />
                                                     </button>
                                                     <button onClick={e => avviaModifica(e, minuta)}
-                                                        className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="Modifica">
+                                                        className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all">
                                                         <Edit3 size={16} />
                                                     </button>
                                                     <button onClick={async e => {
                                                         e.stopPropagation();
                                                         await supabase.from('minute').delete().eq('id', minuta.id);
                                                         scaricaMinute();
-                                                    }} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Elimina">
+                                                    }} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                                                         <Trash2 size={16} />
                                                     </button>
                                                 </>
@@ -360,7 +342,6 @@ export default function MinutePage() {
                                         </div>
                                     </div>
 
-                                    {/* Decisione highlight */}
                                     {minuta.decisioni && (
                                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 mb-4">
                                             <p className="text-xs text-emerald-600 font-black uppercase tracking-widest mb-1">Decisione</p>
@@ -368,7 +349,6 @@ export default function MinutePage() {
                                         </div>
                                     )}
 
-                                    {/* Footer riga: presenti + task */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             {presenti.length > 0 && (
@@ -384,9 +364,7 @@ export default function MinutePage() {
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-xs text-slate-300 font-bold group-hover:text-blue-400 transition-colors">
-                                            Apri →
-                                        </span>
+                                        <span className="text-xs text-slate-300 font-bold group-hover:text-blue-400 transition-colors">Apri →</span>
                                     </div>
                                 </div>
                             </div>
@@ -395,112 +373,105 @@ export default function MinutePage() {
                 </div>
             </div>
 
-            {/* MODAL DETTAGLIO */}
+            {/* MODAL DETTAGLIO — fullscreen, parte dall'alto */}
             {selectedMinuta && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-end justify-center"
-                    onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}>
-                    <div className="bg-white w-full max-w-lg rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-8 duration-300"
-                        style={{ maxHeight: '92dvh' }}
-                        onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] flex flex-col animate-in slide-in-from-bottom-6 duration-300">
 
-                        {/* Modal header con pill */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-6 pt-2 pb-5 shrink-0">
-                            <div className="flex justify-center mb-2">
-                                <div className="w-10 h-1 bg-white/20 rounded-full" />
-                            </div>
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-2 text-white/50">
-                                    <Calendar size={13} />
-                                    <p className="text-xs font-black uppercase tracking-widest">
-                                        {formatDataLunga(selectedMinuta.data_incontro)}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}
-                                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all">
-                                    <X size={20} />
-                                </button>
-                            </div>
-                            <h2 className="text-3xl font-black leading-tight tracking-tight">{selectedMinuta.titolo}</h2>
-
-                            {/* Presenti — riga singola scorrevole, compatta */}
-                            {selectedMinuta.partecipanti && (
-                                <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar">
-                                    <Users size={12} className="text-white/40 shrink-0" />
-                                    <p className="text-white/70 text-xs font-bold whitespace-nowrap">
-                                        {selectedMinuta.partecipanti.split('; ').filter(Boolean).join(' · ')}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Modal body — scrollabile, occupa lo spazio disponibile */}
-                        <div className="flex-1 overflow-y-auto p-7 space-y-5 pb-safe">
-
-                            {/* Discussione */}
-                            {selectedMinuta.argomenti && (
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MessageSquare size={15} className="text-blue-500" />
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Discussione</h4>
-                                    </div>
-                                    <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-2xl">
-                                        {selectedMinuta.argomenti}
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Decisioni */}
-                            <div className="bg-emerald-500/10 border border-emerald-200 px-4 py-3 rounded-2xl">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                    <CheckCircle size={13} className="text-emerald-600" />
-                                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Decisioni Finali</h4>
-                                </div>
-                                <p className="text-sm font-bold text-emerald-900 leading-relaxed">
-                                    {selectedMinuta.decisioni || 'Nessuna decisione registrata'}
+                    {/* Header scuro — padding-top = safe area iPhone */}
+                    <div
+                        className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-6 shrink-0"
+                        style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+                    >
+                        <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center gap-2 text-white/50">
+                                <Calendar size={13} />
+                                <p className="text-xs font-black uppercase tracking-widest">
+                                    {formatDataLunga(selectedMinuta.data_incontro)}
                                 </p>
                             </div>
+                            <button
+                                onClick={() => { setSelectedMinuta(null); window.history.replaceState({}, '', '/minute'); }}
+                                className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-90">
+                                <X size={20} />
+                            </button>
+                        </div>
 
-                            {/* Prossimi passi */}
-                            {selectedMinuta.prossimi_passi?.length > 0 && (
-                                <div>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <ListTodo size={15} className="text-blue-500" />
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prossimi Passi</h4>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {selectedMinuta.prossimi_passi.map((passo: any, i: number) => (
-                                            <div key={passo.id}
-                                                className={`border p-3.5 rounded-2xl flex items-start gap-3 transition-all ${passo.completato ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                                {/* Spunta completato */}
-                                                <button
-                                                    onClick={() => toggleCompletato(passo.id, passo.completato)}
-                                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all active:scale-90 ${passo.completato ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'}`}>
-                                                    {passo.completato && <CheckCircle size={14} strokeWidth={3} />}
-                                                </button>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`font-bold text-sm mb-1 transition-all ${passo.completato ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                                                        {passo.titolo}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {passo.scadenza && (
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-700'}`}>
-                                                                <Clock size={9} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
-                                                            </span>
-                                                        )}
-                                                        {passo.responsabili && (
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-indigo-100 text-indigo-700'}`}>
-                                                                <Users size={9} /> {passo.responsabili}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                        <h2 className="text-2xl font-black leading-snug tracking-tight pb-3">{selectedMinuta.titolo}</h2>
+
+                        {selectedMinuta.partecipanti && (
+                            <div className="flex items-center gap-2 pb-4 overflow-x-auto no-scrollbar border-t border-white/10 pt-3">
+                                <Users size={12} className="text-white/40 shrink-0" />
+                                <p className="text-white/70 text-xs font-bold whitespace-nowrap">
+                                    {selectedMinuta.partecipanti.split('; ').filter(Boolean).join(' · ')}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Body scrollabile */}
+                    <div
+                        className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-5"
+                        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+                    >
+                        {selectedMinuta.argomenti && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare size={15} className="text-blue-500" />
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Discussione</h4>
+                                </div>
+                                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed bg-white p-4 rounded-2xl border border-slate-100">
+                                    {selectedMinuta.argomenti}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-2xl">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <CheckCircle size={13} className="text-emerald-600" />
+                                <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Decisioni Finali</h4>
+                            </div>
+                            <p className="text-sm font-bold text-emerald-900 leading-relaxed">
+                                {selectedMinuta.decisioni || 'Nessuna decisione registrata'}
+                            </p>
+                        </div>
+
+                        {selectedMinuta.prossimi_passi?.length > 0 && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <ListTodo size={15} className="text-blue-500" />
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prossimi Passi</h4>
+                                </div>
+                                <div className="space-y-2">
+                                    {selectedMinuta.prossimi_passi.map((passo: any) => (
+                                        <div key={passo.id}
+                                            className={`border p-3.5 rounded-2xl flex items-start gap-3 transition-all ${passo.completato ? 'bg-emerald-50/50 border-emerald-100' : 'bg-white border-slate-100'}`}>
+                                            <button
+                                                onClick={() => toggleCompletato(passo.id, passo.completato)}
+                                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all active:scale-90 ${passo.completato ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                {passo.completato && <CheckCircle size={14} strokeWidth={3} />}
+                                            </button>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-bold text-sm mb-1 transition-all ${passo.completato ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                                    {passo.titolo}
+                                                </p>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {passo.scadenza && (
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-700'}`}>
+                                                            <Clock size={9} /> {new Date(passo.scadenza).toLocaleDateString('it-IT')}
+                                                        </span>
+                                                    )}
+                                                    {passo.responsabili && (
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 ${passo.completato ? 'bg-slate-100 text-slate-400' : 'bg-indigo-100 text-indigo-700'}`}>
+                                                            <Users size={9} /> {passo.responsabili}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
