@@ -10,6 +10,10 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
+
+  // Nascondi la navbar su login e setup-account
+  if (pathname === '/login' || pathname === '/setup-account') return null;
+
   const isNub = pathname?.startsWith('/nubilato');
 
   useEffect(() => {
