@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2, UserPlus, Mail, X } from 'lucide-react';
+import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2, UserPlus, Mail, X, KeyRound } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -16,6 +16,8 @@ export default function AdminPage() {
     const [newEmail, setNewEmail] = useState('');
     const [newGruppo, setNewGruppo] = useState<'celibato' | 'nubilato'>('celibato');
     const [isCreating, setIsCreating] = useState(false);
+    const [resettingId, setResettingId] = useState<string | null>(null);
+    const [resetInfo, setResetInfo] = useState<{ email: string; link: string } | null>(null);
 
     const mostraFeedback = (text: string, type: 'success' | 'error') => {
         setFeedback({ text, type });
@@ -65,6 +67,28 @@ export default function AdminPage() {
         } catch { mostraFeedback('Errore di rete', 'error'); }
         setDeletingId(null);
         setConfirmDeleteId(null);
+    };
+
+    const resetPassword = async (userId: string) => {
+        setResettingId(userId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/reset-password`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                    body: JSON.stringify({ user_id: userId }),
+                }
+            );
+            const data = await res.json();
+            if (!res.ok) mostraFeedback(data.error || 'Errore reset', 'error');
+            else {
+                setResetInfo({ email: data.email || '', link: data.reset_link || '' });
+                mostraFeedback('Link reset generato! 🔑', 'success');
+            }
+        } catch { mostraFeedback('Errore di rete', 'error'); }
+        setResettingId(null);
     };
 
     const isOnline = (ua: string | null) => ua ? (Date.now() - new Date(ua).getTime()) < 300000 : false;
@@ -167,6 +191,31 @@ export default function AdminPage() {
                     </div>
                 )}
 
+                {/* Banner link reset password */}
+                {resetInfo && (
+                    <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 mb-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-black text-amber-700 uppercase tracking-widest">🔑 Link Reset Password</p>
+                            <button onClick={() => setResetInfo(null)} className="p-1 text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                        </div>
+                        <p className="text-sm text-slate-600">Manda questo link a <strong>{resetInfo.email}</strong> — cliccandolo potrà impostare una nuova password:</p>
+                        {resetInfo.link ? (
+                            <>
+                                <div className="bg-white rounded-xl p-3 text-xs font-mono break-all border border-amber-200 text-blue-600">{resetInfo.link}</div>
+                                <button onClick={() => {
+                                    const text = `Ciao! Clicca questo link per reimpostare la tua password:\n\n🔗 ${resetInfo.link}\n\nDopo aver cliccato, scegli una nuova password.`;
+                                    navigator.clipboard.writeText(text);
+                                    mostraFeedback('Copiato! Incollalo su WhatsApp 📋', 'success');
+                                }} className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold active:scale-95 transition-all">
+                                    📋 Copia messaggio per WhatsApp
+                                </button>
+                            </>
+                        ) : (
+                            <p className="text-sm text-red-500 font-bold">⚠️ Link non generato.</p>
+                        )}
+                    </div>
+                )}
+
                 {showAddForm ? (
                     <div className="bg-white p-5 rounded-2xl shadow-lg border-2 border-emerald-400 space-y-3">
                         <div className="flex items-center justify-between">
@@ -233,13 +282,21 @@ export default function AdminPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1 shrink-0">
                                         {online ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-slate-300" />}
                                         {!p.admin && (
-                                            <button onClick={() => setConfirmDeleteId(isConfirming ? null : p.id)}
-                                                className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
-                                                <Trash2 size={15} />
-                                            </button>
+                                            <>
+                                                <button onClick={() => resetPassword(p.id)} disabled={resettingId === p.id}
+                                                    className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-50"
+                                                    title="Reset password">
+                                                    <KeyRound size={15} />
+                                                </button>
+                                                <button onClick={() => setConfirmDeleteId(isConfirming ? null : p.id)}
+                                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Elimina utente">
+                                                    <Trash2 size={15} />
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>
