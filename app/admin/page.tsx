@@ -22,6 +22,8 @@ export default function AdminPage() {
         setTimeout(() => setFeedback(null), 3500);
     };
 
+    const [createdInfo, setCreatedInfo] = useState<{ email: string; link: string } | null>(null);
+
     const creaUtente = async () => {
         if (!newEmail.trim()) return mostraFeedback('Email obbligatoria', 'error');
         setIsCreating(true);
@@ -31,13 +33,16 @@ export default function AdminPage() {
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-user`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
                     body: JSON.stringify({ email: newEmail.trim(), gruppo: newGruppo }),
                 }
             );
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore nella creazione', 'error');
-            else { mostraFeedback(`Invito inviato a ${newEmail}! 📧`, 'success'); setNewEmail(''); setShowAddForm(false); scaricaDati(); }
+            else {
+                setCreatedInfo({ email: newEmail.trim(), link: data.magic_link || '' });
+                setNewEmail(''); setShowAddForm(false); scaricaDati();
+            }
         } catch { mostraFeedback('Errore di rete', 'error'); }
         setIsCreating(false);
     };
@@ -137,6 +142,31 @@ export default function AdminPage() {
 
             {/* Aggiungi utente */}
             <div className="mb-6">
+                {/* Banner link invito */}
+                {createdInfo && (
+                    <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-5 mb-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">✅ Utente Creato!</p>
+                            <button onClick={() => setCreatedInfo(null)} className="p-1 text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                        </div>
+                        <p className="text-sm text-slate-600">Manda questo link all'utente — cliccandolo entrerà direttamente e potrà scegliere nome e password:</p>
+                        {createdInfo.link ? (
+                            <>
+                                <div className="bg-white rounded-xl p-3 text-xs font-mono break-all border border-emerald-200 text-blue-600">{createdInfo.link}</div>
+                                <button onClick={() => {
+                                    const text = `Ciao! Clicca questo link per accedere e impostare il tuo account:\n\n🔗 ${createdInfo.link}\n\nDopo aver cliccato, scegli il tuo nome e una password.`;
+                                    navigator.clipboard.writeText(text);
+                                    mostraFeedback('Copiato! Incollalo su WhatsApp 📋', 'success');
+                                }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold active:scale-95 transition-all">
+                                    📋 Copia messaggio per WhatsApp
+                                </button>
+                            </>
+                        ) : (
+                            <p className="text-sm text-red-500 font-bold">⚠️ Link non generato. L'utente può usare "Password dimenticata" dal login.</p>
+                        )}
+                    </div>
+                )}
+
                 {showAddForm ? (
                     <div className="bg-white p-5 rounded-2xl shadow-lg border-2 border-emerald-400 space-y-3">
                         <div className="flex items-center justify-between">
@@ -163,13 +193,13 @@ export default function AdminPage() {
                         </div>
                         <button onClick={creaUtente} disabled={isCreating}
                             className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold disabled:bg-slate-300 active:scale-95 transition-all">
-                            {isCreating ? 'Invio in corso...' : '📧 Invia Invito'}
+                            {isCreating ? 'Creazione...' : '➕ Crea Utente'}
                         </button>
                     </div>
                 ) : (
                     <button onClick={() => setShowAddForm(true)}
                         className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-bold shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <UserPlus size={20} /> Invita Utente
+                        <UserPlus size={20} /> Aggiungi Utente
                     </button>
                 )}
             </div>
