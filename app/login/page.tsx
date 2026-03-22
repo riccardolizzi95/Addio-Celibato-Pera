@@ -38,7 +38,7 @@ function LoginForm() {
     }
 
     const { data: profilo } = await supabase.from('profili').select('primo_accesso').eq('id', data.user?.id).maybeSingle();
-    window.location.assign((!profilo || profilo.primo_accesso) ? '/setup-account' : returnTo);
+    window.location.assign(profilo?.primo_accesso === true ? '/setup-account' : '/');
   };
 
   const handleResetPassword = async () => {
@@ -67,7 +67,7 @@ function LoginForm() {
       // 2. Se è in lista, procediamo con l'invio della mail di reset
       const baseUrl = window.location.origin;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${baseUrl}/setup-account`,
+        redirectTo: `${baseUrl}/profilo`,
       });
 
       if (resetError) throw resetError;
