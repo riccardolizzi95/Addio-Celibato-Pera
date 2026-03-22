@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2, UserPlus, Mail, Lock, X } from 'lucide-react';
+import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2, UserPlus, Mail, X } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -14,7 +14,6 @@ export default function AdminPage() {
     const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newEmail, setNewEmail] = useState('');
-    const [newPassword, setNewPassword] = useState('');
     const [newGruppo, setNewGruppo] = useState<'celibato' | 'nubilato'>('celibato');
     const [isCreating, setIsCreating] = useState(false);
 
@@ -24,8 +23,7 @@ export default function AdminPage() {
     };
 
     const creaUtente = async () => {
-        if (!newEmail.trim() || !newPassword.trim()) return mostraFeedback('Email e password obbligatori', 'error');
-        if (newPassword.length < 6) return mostraFeedback('Password minimo 6 caratteri', 'error');
+        if (!newEmail.trim()) return mostraFeedback('Email obbligatoria', 'error');
         setIsCreating(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -34,12 +32,12 @@ export default function AdminPage() {
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
-                    body: JSON.stringify({ email: newEmail.trim(), password: newPassword, gruppo: newGruppo }),
+                    body: JSON.stringify({ email: newEmail.trim(), gruppo: newGruppo }),
                 }
             );
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore nella creazione', 'error');
-            else { mostraFeedback(`Utente creato! (${newGruppo}) ✅`, 'success'); setNewEmail(''); setNewPassword(''); setShowAddForm(false); scaricaDati(); }
+            else { mostraFeedback(`Invito inviato a ${newEmail}! 📧`, 'success'); setNewEmail(''); setShowAddForm(false); scaricaDati(); }
         } catch { mostraFeedback('Errore di rete', 'error'); }
         setIsCreating(false);
     };
@@ -150,11 +148,6 @@ export default function AdminPage() {
                             <input type="email" placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-emerald-400" />
                         </div>
-                        <div className="relative">
-                            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input type="text" placeholder="Password temporanea" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-emerald-400" />
-                        </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Gruppo</p>
                             <div className="grid grid-cols-2 gap-2">
@@ -170,13 +163,13 @@ export default function AdminPage() {
                         </div>
                         <button onClick={creaUtente} disabled={isCreating}
                             className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold disabled:bg-slate-300 active:scale-95 transition-all">
-                            {isCreating ? 'Creazione...' : '✅ Crea Utente'}
+                            {isCreating ? 'Invio in corso...' : '📧 Invia Invito'}
                         </button>
                     </div>
                 ) : (
                     <button onClick={() => setShowAddForm(true)}
                         className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-bold shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <UserPlus size={20} /> Aggiungi Utente
+                        <UserPlus size={20} /> Invita Utente
                     </button>
                 )}
             </div>
