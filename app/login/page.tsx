@@ -17,10 +17,13 @@ function LoginForm() {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) window.location.assign(returnTo);
+      if (session) {
+        const { data: profilo } = await supabase.from('profili').select('gruppo').eq('id', session.user.id).maybeSingle();
+        window.location.assign(profilo?.gruppo === 'nubilato' ? '/nubilato' : '/');
+      }
     };
     checkSession();
-  }, [returnTo]);
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) return setMessage({ text: "Inserisci email e password!", type: 'error' });
@@ -65,7 +68,7 @@ function LoginForm() {
       if (!invitato) {
         setIsLoading(false);
         return setMessage({
-          text: "Questa email non è autorizzata per la Missione Pera! 🍐 Contatta il Comandante.",
+          text: "Questa email non è autorizzata. Contatta l'organizzatore.",
           type: 'error'
         });
       }
@@ -92,9 +95,9 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
       <div className="text-center mb-8">
-        <span className="text-6xl mb-4 block">🍐</span>
-        <h1 className="text-3xl font-black tracking-tight">Missione Pera</h1>
-        <p className="text-slate-500 font-medium">Addio al Celibato</p>
+        <span className="text-6xl mb-4 block">🔐</span>
+        <h1 className="text-3xl font-black tracking-tight">Accedi</h1>
+        <p className="text-slate-500 font-medium">Inserisci le tue credenziali</p>
       </div>
 
       {message && (
@@ -130,7 +133,7 @@ function LoginForm() {
           disabled={isLoading}
           className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:bg-slate-300"
         >
-          {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (forgotMode ? "Invia Link Recupero" : "Accedi alla Missione")}
+          {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (forgotMode ? "Invia Link Recupero" : "Accedi")}
           {!isLoading && <ArrowRight size={20} />}
         </button>
 
