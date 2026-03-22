@@ -33,7 +33,7 @@ export default function AdminPage() {
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-user`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
                     body: JSON.stringify({ email: newEmail.trim(), password: newPassword, gruppo: newGruppo }),
                 }
             );
@@ -52,7 +52,7 @@ export default function AdminPage() {
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
                     body: JSON.stringify({ user_id: userId }),
                 }
             );
