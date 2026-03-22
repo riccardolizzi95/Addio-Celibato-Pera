@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  // Controlla solo il cookie di sessione Supabase — senza refreshare il token
-  // Il refresh avviene lato client tramite createBrowserClient in modo sicuro
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Pagine pubbliche — sempre accessibili

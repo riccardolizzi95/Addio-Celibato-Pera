@@ -46,8 +46,8 @@ export default function AdminPage() {
             setLoading(false);
             scaricaDati();
 
-            // Presenza realtime
-            const channel = supabase.channel('admin-presence', {
+            // Presenza realtime — usa lo stesso canale della Navbar
+            const channel = supabase.channel('global-presence', {
                 config: { presence: { key: 'user' } }
             });
             channel
