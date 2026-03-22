@@ -74,6 +74,65 @@ export default function NubilatoHome() {
           <div className="plane-scia" />
           <img src="/aereo.svg" alt="" className="plane-svg" />
         </div>
+
+        {/* Skyline Barcellona */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 400 68" xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMidYMax meet" style={{ display:'block', width:'100%', height:'68px' }}>
+            <g fill="#f9a8d4" opacity="0.5">
+              {/* Edifici bassi a sinistra */}
+              <rect x="0" y="48" width="20" height="20" rx="1"/>
+              <rect x="22" y="44" width="16" height="24" rx="1"/>
+              <rect x="40" y="50" width="18" height="18" rx="1"/>
+              {/* Torre Agbar */}
+              <ellipse cx="72" cy="46" rx="7" ry="22" />
+              <rect x="65" y="46" width="14" height="22" rx="1"/>
+              {/* Edifici centrali */}
+              <rect x="84" y="42" width="20" height="26" rx="1"/>
+              <rect x="106" y="46" width="16" height="22" rx="1"/>
+              <rect x="124" y="40" width="18" height="28" rx="1"/>
+              {/* Sagrada Familia */}
+              <rect x="152" y="30" width="20" height="38" rx="1"/>
+              <polygon points="155,30 158,8 161,30"/>
+              <polygon points="163,30 166,12 169,30"/>
+              <rect x="156" y="34" width="4" height="6" rx="1" fill="#f472b6" opacity="0.8"/>
+              <rect x="164" y="34" width="4" height="6" rx="1" fill="#f472b6" opacity="0.8"/>
+              <circle cx="162" cy="40" r="4" fill="#f472b6" opacity="0.6"/>
+              {/* Edifici dopo Sagrada */}
+              <rect x="180" y="44" width="22" height="24" rx="1"/>
+              <rect x="204" y="48" width="16" height="20" rx="1"/>
+              <rect x="222" y="42" width="20" height="26" rx="1"/>
+              {/* Hotel W / Torre a vela */}
+              <path d="M255,46 Q262,20 269,46 Z" />
+              <rect x="255" y="46" width="14" height="22" rx="1"/>
+              {/* Palme e Barceloneta */}
+              <rect x="278" y="50" width="18" height="18" rx="1"/>
+              <rect x="298" y="46" width="14" height="22" rx="1"/>
+              {/* Montjuïc / Castello */}
+              <rect x="318" y="42" width="24" height="26" rx="1"/>
+              <rect x="324" y="36" width="12" height="6" rx="1"/>
+              <rect x="328" y="28" width="4" height="8"/>
+              {/* Edifici a destra */}
+              <rect x="346" y="48" width="18" height="20" rx="1"/>
+              <rect x="366" y="44" width="16" height="24" rx="1"/>
+              <rect x="384" y="50" width="16" height="18" rx="1"/>
+            </g>
+            {/* Mare / spiaggia */}
+            <rect x="0" y="62" width="400" height="6" fill="#93c5fd" opacity="0.35"/>
+            <path d="M0,63 Q30,61 60,63 Q90,65 120,63 Q150,61 180,63 Q210,65 240,63 Q270,61 300,63 Q330,65 360,63 Q390,61 400,63" stroke="white" strokeWidth="1" fill="none" opacity="0.5"/>
+            {/* Palme lungo la spiaggia */}
+            <g>
+              {[20,80,150,250,320,380].map((x: number, i: number) => (
+                <g key={x}>
+                  <line x1={x} y1="68" x2={x} y2="58" stroke="#86efac" strokeWidth="1.8"/>
+                  <ellipse cx={x-3} cy="56" rx="5" ry="3" fill="#34d399" opacity="0.7" transform={`rotate(-20 ${x-3} 56)`}/>
+                  <ellipse cx={x+3} cy="56" rx="5" ry="3" fill="#34d399" opacity="0.7" transform={`rotate(20 ${x+3} 56)`}/>
+                </g>
+              ))}
+            </g>
+          </svg>
+        </div>
+
         <div className="absolute bottom-0 left-0 right-0 h-4" style={{ background: 'linear-gradient(to bottom, transparent, #f8fafc)' }} />
       </div>
 
