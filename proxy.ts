@@ -6,6 +6,9 @@ export async function proxy(request: NextRequest) {
   // Pagine pubbliche — sempre accessibili
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/invito') ||
+    pathname.startsWith('/setup-account') ||
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/api')
