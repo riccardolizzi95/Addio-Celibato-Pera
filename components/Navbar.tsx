@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Eye, ClipboardList } from 'lucide-react';
+import { User, Eye, ClipboardList, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const initPresence = async () => {
@@ -15,9 +16,17 @@ export default function Navbar() {
         setUser(session.user);
         const { data: profilo } = await supabase
           .from('profili')
-          .select('username')
+          .select('username, admin')
           .eq('id', session.user.id)
           .single();
+
+        if (profilo?.admin) setIsAdmin(true);
+
+        // Aggiorna ultimo_accesso
+        await supabase
+          .from('profili')
+          .update({ ultimo_accesso: new Date().toISOString() })
+          .eq('id', session.user.id);
 
         const channel = supabase.channel('global-presence', {
           config: { presence: { key: 'user' } }
@@ -48,7 +57,7 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Link
           href="/minute"
           className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
@@ -56,6 +65,15 @@ export default function Navbar() {
         >
           <ClipboardList size={24} />
         </Link>
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all"
+            title="Admin Panel"
+          >
+            <Shield size={22} />
+          </Link>
+        )}
         <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
           Missione Pera 🍐
         </Link>
