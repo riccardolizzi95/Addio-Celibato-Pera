@@ -64,7 +64,7 @@ export default function AdminPage() {
         setConfirmDeleteId(null);
     };
 
-    const isOnline = (ua: string | null) => ua ? (Date.now() - new Date(ua).getTime()) < 120000 : false;
+    const isOnline = (ua: string | null) => ua ? (Date.now() - new Date(ua).getTime()) < 300000 : false;
     const countOnline = profili.filter(p => isOnline(p.ultimo_accesso)).length;
     const countCelibato = profili.filter(p => p.gruppo === 'celibato').length;
     const countNubilato = profili.filter(p => p.gruppo === 'nubilato').length;
