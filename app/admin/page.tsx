@@ -2,13 +2,50 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [profili, setProfili] = useState<any[]>([]);
     const [logAccessi, setLogAccessi] = useState<any[]>([]);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+    const mostraFeedback = (text: string, type: 'success' | 'error') => {
+        setFeedback({ text, type });
+        setTimeout(() => setFeedback(null), 3500);
+    };
+
+    const eliminaUtente = async (userId: string) => {
+        setDeletingId(userId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`,
+                    },
+                    body: JSON.stringify({ user_id: userId }),
+                }
+            );
+            const data = await res.json();
+            if (!res.ok) {
+                mostraFeedback(data.error || 'Errore durante l\'eliminazione', 'error');
+            } else {
+                mostraFeedback('Utente eliminato! 🗑️', 'success');
+                scaricaDati();
+            }
+        } catch {
+            mostraFeedback('Errore di rete', 'error');
+        }
+        setDeletingId(null);
+        setConfirmDeleteId(null);
+    };
 
     // Un utente è "online" se ultimo_accesso è entro gli ultimi 2 minuti
     const isOnline = (ultimoAccesso: string | null) => {
@@ -88,6 +125,13 @@ export default function AdminPage() {
     return (
         <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900 pb-20">
 
+            {/* Toast feedback */}
+            {feedback && (
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl whitespace-nowrap ${feedback.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                    {feedback.text}
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <Link href="/" className="text-slate-600 font-semibold">← Home</Link>
@@ -120,6 +164,7 @@ export default function AdminPage() {
                 <div className="space-y-2">
                     {profili.map(p => {
                         const online = isOnline(p.ultimo_accesso);
+                        const isConfirming = confirmDeleteId === p.id;
                         return (
                             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                                 <div className="flex items-center justify-between">
@@ -139,14 +184,42 @@ export default function AdminPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="shrink-0">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         {online ? (
                                             <Wifi size={16} className="text-emerald-500" />
                                         ) : (
                                             <WifiOff size={16} className="text-slate-300" />
                                         )}
+                                        {!p.admin && (
+                                            <button
+                                                onClick={() => setConfirmDeleteId(isConfirming ? null : p.id)}
+                                                className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
+                                {/* Conferma eliminazione */}
+                                {isConfirming && (
+                                    <div className="mt-3 pt-3 border-t border-red-100 animate-in fade-in duration-200">
+                                        <p className="text-xs text-red-600 font-bold mb-2">
+                                            Eliminare {p.username || 'questo utente'}? L'account e tutti i dati verranno rimossi definitivamente.
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setConfirmDeleteId(null)}
+                                                className="flex-1 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold">
+                                                Annulla
+                                            </button>
+                                            <button
+                                                onClick={() => eliminaUtente(p.id)}
+                                                disabled={deletingId === p.id}
+                                                className="flex-1 py-2 bg-red-500 text-white rounded-xl text-xs font-bold disabled:bg-slate-300 active:scale-95 transition-all">
+                                                {deletingId === p.id ? 'Eliminando...' : '🗑️ Elimina definitivamente'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
