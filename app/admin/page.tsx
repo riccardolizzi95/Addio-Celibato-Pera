@@ -8,8 +8,14 @@ export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [profili, setProfili] = useState<any[]>([]);
-    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
     const [logAccessi, setLogAccessi] = useState<any[]>([]);
+
+    // Un utente è "online" se ultimo_accesso è entro gli ultimi 2 minuti
+    const isOnline = (ultimoAccesso: string | null) => {
+        if (!ultimoAccesso) return false;
+        return (Date.now() - new Date(ultimoAccesso).getTime()) < 2 * 60 * 1000;
+    };
+    const countOnline = profili.filter(p => isOnline(p.ultimo_accesso)).length;
 
     const scaricaDati = async () => {
         const { data: allProfili } = await supabase
@@ -33,12 +39,12 @@ export default function AdminPage() {
                 window.location.assign('/login?returnTo=/admin');
                 return;
             }
-            const { data: prof } = await supabase
+            const { data: profilo } = await supabase
                 .from('profili')
                 .select('admin')
                 .eq('id', session.user.id)
                 .single();
-            if (!prof?.admin) {
+            if (!profilo?.admin) {
                 window.location.assign('/');
                 return;
             }
@@ -46,21 +52,9 @@ export default function AdminPage() {
             setLoading(false);
             scaricaDati();
 
-            // Presenza realtime — usa lo stesso canale della Navbar
-            const channel = supabase.channel('global-presence', {
-                config: { presence: { key: 'user' } }
-            });
-            channel
-                .on('presence', { event: 'sync' }, () => {
-                    const state = channel.presenceState();
-                    const names = Object.values(state)
-                        .flat()
-                        .map((u: any) => u.user_name);
-                    setOnlineUsers([...new Set(names)]);
-                })
-                .subscribe();
-
-            return () => { channel.unsubscribe(); };
+            // Aggiorna i dati ogni 30 secondi per rilevare chi è online
+            const interval = setInterval(scaricaDati, 30000);
+            return () => clearInterval(interval);
         };
         init();
     }, []);
@@ -113,7 +107,7 @@ export default function AdminPage() {
                 </div>
                 <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm">
                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Online ora</p>
-                    <p className="text-3xl font-black text-emerald-600">{onlineUsers.length}</p>
+                    <p className="text-3xl font-black text-emerald-600">{countOnline}</p>
                 </div>
             </div>
 
@@ -125,19 +119,19 @@ export default function AdminPage() {
                 </div>
                 <div className="space-y-2">
                     {profili.map(p => {
-                        const isOnline = onlineUsers.includes(p.username);
+                        const online = isOnline(p.ultimo_accesso);
                         return (
                             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-3 h-3 rounded-full shrink-0 ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                                        <div className={`w-3 h-3 rounded-full shrink-0 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                                         <div>
                                             <p className="font-bold text-slate-800">
                                                 {p.username || 'Senza nome'}
                                                 {p.admin && <span className="ml-1.5 text-[10px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-md">ADMIN</span>}
                                             </p>
                                             <p className="text-[11px] text-slate-400">
-                                                {isOnline ? (
+                                                {online ? (
                                                     <span className="text-emerald-600 font-bold">Online ora</span>
                                                 ) : (
                                                     <>Ultimo accesso: {tempoFa(p.ultimo_accesso)}</>
@@ -146,7 +140,7 @@ export default function AdminPage() {
                                         </div>
                                     </div>
                                     <div className="shrink-0">
-                                        {isOnline ? (
+                                        {online ? (
                                             <Wifi size={16} className="text-emerald-500" />
                                         ) : (
                                             <WifiOff size={16} className="text-slate-300" />
