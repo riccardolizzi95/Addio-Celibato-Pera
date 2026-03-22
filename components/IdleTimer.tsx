@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function IdleTimer({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const timeoutInMinutes = 10;
+  const timeoutInMinutes = 60;
   const timeoutInMs = timeoutInMinutes * 60 * 1000;
 
   const logout = useCallback(async () => {
