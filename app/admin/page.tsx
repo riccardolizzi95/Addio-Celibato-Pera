@@ -40,7 +40,7 @@ export default function AdminPage() {
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore nella creazione', 'error');
             else {
-                setCreatedInfo({ email: newEmail.trim(), link: data.magic_link || '' });
+                setCreatedInfo({ email: newEmail.trim(), link: data.invite_link || '' });
                 setNewEmail(''); setShowAddForm(false); scaricaDati();
             }
         } catch { mostraFeedback('Errore di rete', 'error'); }

@@ -12,7 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   // Nascondi la navbar su login e setup-account
-  if (pathname === '/login' || pathname === '/setup-account') return null;
+  if (pathname === '/login' || pathname === '/setup-account' || pathname === '/auth/callback') return null;
 
   const isNub = pathname?.startsWith('/nubilato');
 
