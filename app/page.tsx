@@ -10,19 +10,23 @@ export default function Home() {
     const checkUserAndStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        window.location.assign(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
+        window.location.assign('/login');
         return;
       }
       const { data: profilo } = await supabase
         .from('profili')
-        .select('primo_accesso')
+        .select('primo_accesso, gruppo, admin')
         .eq('id', session.user.id)
         .maybeSingle();
       if (profilo?.primo_accesso === true) {
         window.location.assign('/setup-account');
-      } else {
-        setLoading(false);
+        return;
       }
+      if (profilo?.gruppo === 'nubilato' && !profilo?.admin) {
+        window.location.assign('/nubilato');
+        return;
+      }
+      setLoading(false);
     };
     checkUserAndStatus();
   }, []);

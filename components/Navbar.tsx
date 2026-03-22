@@ -1,13 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Eye, ClipboardList, Shield } from 'lucide-react';
+import { User, Eye, ClipboardList, Shield, ArrowLeftRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const pathname = usePathname();
+  const isNub = pathname?.startsWith('/nubilato');
 
   useEffect(() => {
     const initPresence = async () => {
@@ -16,7 +19,7 @@ export default function Navbar() {
         setUser(session.user);
         const { data: profilo } = await supabase
           .from('profili')
-          .select('username, admin')
+          .select('username, admin, gruppo')
           .eq('id', session.user.id)
           .single();
 
@@ -55,27 +58,35 @@ export default function Navbar() {
     initPresence();
   }, []);
 
+  const homeLink = isNub ? '/nubilato' : '/';
+  const brandName = isNub ? 'Missione Yas 💍' : 'Missione Pera 🍐';
+  const brandColor = isNub ? 'text-pink-600' : 'text-blue-600';
+  const switchLink = isNub ? '/' : '/nubilato';
+
   return (
     <nav className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-50">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/minute"
-          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-          title="Verbali Incontri"
-        >
-          <ClipboardList size={24} />
-        </Link>
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all"
-            title="Admin Panel"
-          >
-            <Shield size={22} />
+      <div className="flex items-center gap-2">
+        {/* Minute — solo celibato */}
+        {!isNub && (
+          <Link href="/minute" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Verbali Incontri">
+            <ClipboardList size={22} />
           </Link>
         )}
-        <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">
-          Missione Pera 🍐
+        {/* Admin */}
+        {isAdmin && (
+          <Link href="/admin" className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all" title="Admin Panel">
+            <Shield size={20} />
+          </Link>
+        )}
+        {/* Switch Celibato/Nubilato — solo admin */}
+        {isAdmin && (
+          <Link href={switchLink} className={`p-2 rounded-xl transition-all flex items-center gap-1 ${isNub ? 'text-pink-500 hover:bg-pink-50' : 'text-blue-500 hover:bg-blue-50'}`} title={isNub ? 'Vai al Celibato' : 'Vai al Nubilato'}>
+            <ArrowLeftRight size={18} />
+            <span className="text-[10px] font-black uppercase">{isNub ? '🍐' : '💍'}</span>
+          </Link>
+        )}
+        <Link href={homeLink} className={`text-lg font-bold tracking-tighter ${brandColor}`}>
+          {brandName}
         </Link>
       </div>
 

@@ -37,8 +37,14 @@ function LoginForm() {
       return setMessage({ text: "Credenziali errate o account non attivato.", type: 'error' });
     }
 
-    const { data: profilo } = await supabase.from('profili').select('primo_accesso').eq('id', data.user?.id).maybeSingle();
-    window.location.assign(profilo?.primo_accesso === true ? '/setup-account' : '/');
+    const { data: profilo } = await supabase.from('profili').select('primo_accesso, gruppo').eq('id', data.user?.id).maybeSingle();
+    if (profilo?.primo_accesso === true) {
+      window.location.assign('/setup-account');
+    } else if (profilo?.gruppo === 'nubilato') {
+      window.location.assign('/nubilato');
+    } else {
+      window.location.assign('/');
+    }
   };
 
   const handleResetPassword = async () => {
