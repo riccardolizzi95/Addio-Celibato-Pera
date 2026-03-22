@@ -85,13 +85,18 @@ export default function Home() {
         .cg5 .c1 { width:60px; height:22px; top:12px; left:0; background: rgba(255,255,255,0.75); border-radius:40px; filter:blur(2px); }
         .cg5 .c2 { width:42px; height:32px; top:0; left:10px; background: rgba(255,255,255,0.85); border-radius:50%; filter:blur(1px); }
 
-        /* aereo emoji */
+        /* aereo SVG */
         .plane-wrap {
           position: absolute;
           top: 30%; left: 0;
           animation: fly 9s linear infinite 0.5s;
           display: flex; align-items: center;
-          font-size: 36px;
+        }
+        .plane-svg {
+          width: 44px; height: 44px;
+          opacity: 0.55;
+          transform: scaleX(-1);
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
         }
         .plane-scia {
           width: 80px; height: 2px;
@@ -141,10 +146,10 @@ export default function Home() {
         <div className="cloud-group cg4"><div className="cloud c1"/><div className="cloud c2"/></div>
         <div className="cloud-group cg5"><div className="cloud c1"/><div className="cloud c2"/></div>
 
-        {/* Aereo emoji */}
+        {/* Aereo SVG */}
         <div className="plane-wrap">
           <div className="plane-scia" />
-          ✈️
+          <img src="/aereo.svg" alt="" className="plane-svg" />
         </div>
 
         {/* Skyline Amsterdam */}
