@@ -95,7 +95,6 @@ export default function Home() {
         .plane-svg {
           width: 44px; height: 44px;
           opacity: 0.55;
-          transform: scaleX(-1);
           filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
         }
         .plane-scia {
