@@ -21,29 +21,40 @@ export default function ProfiloPage() {
   const isPasswordValid = hasUpper && hasLower && hasNumber && isLongEnough;
   const showPasswordHints = newPassword.length > 0;
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      // Se ci sono token nell'hash (da recovery/reset password), scambiali per una sessione
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
-        const hashParams = new URLSearchParams(hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          // Pulisci l'hash dall'URL
-          window.history.replaceState(null, '', '/profilo');
-        }
-      }
+  const [isRecovery, setIsRecovery] = useState(false);
 
+  useEffect(() => {
+    // Ascolta i cambiamenti di sessione — Supabase processa automaticamente i token dall'hash
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // L'utente è arrivato da un link di reset password
+        setIsRecovery(true);
+        if (session) {
+          setEmail(session.user.email || '');
+          setLoading(false);
+        }
+      } else if (event === 'SIGNED_IN' && session) {
+        setEmail(session.user.email || '');
+        supabase.from('profili').select('username').eq('id', session.user.id).single()
+          .then(({ data }) => { if (data) setUsername(data.username); });
+        setLoading(false);
+      }
+    });
+
+    // Fallback: se non c'è evento entro 2 secondi, controlla manualmente
+    const timeout = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { window.location.assign('/login'); return; }
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
       setEmail(session.user.email || '');
       const { data } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
       if (data) setUsername(data.username);
       setLoading(false);
-    };
-    fetchProfile();
+    }, 2000);
+
+    return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
 
   const mostraFeedback = (text: string, type: 'success' | 'error') => {
@@ -135,6 +146,11 @@ export default function ProfiloPage() {
           </div>
 
           <div>
+            {isRecovery && (
+              <div className="mb-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                <p className="text-sm font-bold text-amber-700">🔑 Imposta la tua nuova password qui sotto e salva.</p>
+              </div>
+            )}
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nuova Password</label>
             <input
               type="password"
