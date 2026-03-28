@@ -1,57 +1,82 @@
 'use client';
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function IdleTimer({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  const pathname = usePathname();
   const timeoutInMinutes = 60;
   const timeoutInMs = timeoutInMinutes * 60 * 1000;
 
+  // Pagine pubbliche dove non serve controllare la sessione
+  const isPublicPage = pathname === '/login' || pathname === '/setup-account' || pathname === '/invito' || pathname?.startsWith('/auth');
+
   const logout = useCallback(async () => {
-    localStorage.removeItem('lastActivity'); // Pulisce il timestamp
-    await supabase.auth.signOut();
-    router.push('/login');
-  }, [router]);
+    try {
+      localStorage.removeItem('lastActivity');
+      await supabase.auth.signOut();
+    } catch {
+      // Ignora errori di signOut — la sessione potrebbe essere già scaduta
+    }
+    window.location.assign('/login');
+  }, []);
 
   const checkInactivity = useCallback(() => {
+    if (isPublicPage) return;
     const lastActivity = localStorage.getItem('lastActivity');
     if (lastActivity) {
-      const now = Date.now();
-      const diff = now - parseInt(lastActivity, 10);
-
-      // Se la differenza è maggiore di 10 minuti, slogga
+      const diff = Date.now() - parseInt(lastActivity, 10);
       if (diff > timeoutInMs) {
         logout();
       }
     }
-  }, [logout, timeoutInMs]);
+  }, [logout, timeoutInMs, isPublicPage]);
 
   const updateActivity = () => {
     localStorage.setItem('lastActivity', Date.now().toString());
   };
 
   useEffect(() => {
-    // 1. Controllo immediato al caricamento (fondamentale per il mobile)
+    if (isPublicPage) return;
+
+    // Controllo immediato al caricamento
     checkInactivity();
 
-    // 2. Eventi da monitorare per resettare l'attività
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
-    
-    events.forEach(event => {
-      window.addEventListener(event, updateActivity);
-    });
+    // Controlla anche la sessione Supabase — se è scaduta, manda al login
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          logout();
+        }
+      } catch {
+        // Se c'è un errore nel controllare la sessione, manda al login
+        logout();
+      }
+    };
+    checkSession();
 
-    // 3. Controllo periodico ogni 30 secondi mentre la pagina è aperta
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => window.addEventListener(event, updateActivity));
+
+    // Controllo periodico ogni 30 secondi
     const interval = setInterval(checkInactivity, 30000);
 
-    return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, updateActivity);
-      });
-      clearInterval(interval);
+    // Listener per quando la pagina torna in foreground (es. switch tab su mobile)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkInactivity();
+        checkSession();
+      }
     };
-  }, [checkInactivity]);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, updateActivity));
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [checkInactivity, isPublicPage, logout]);
 
   return <>{children}</>;
 }
