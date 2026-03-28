@@ -8,25 +8,36 @@ export default function Home() {
 
   useEffect(() => {
     const checkUserAndStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          await supabase.auth.signOut().catch(() => {});
+          window.location.assign('/login');
+          return;
+        }
+        const { data: profilo, error } = await supabase
+          .from('profili')
+          .select('primo_accesso, gruppo, admin')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (error || !profilo) {
+          await supabase.auth.signOut().catch(() => {});
+          window.location.assign('/login');
+          return;
+        }
+        if (profilo.primo_accesso === true) {
+          window.location.assign('/setup-account');
+          return;
+        }
+        if (profilo.gruppo === 'nubilato' && !profilo.admin) {
+          window.location.assign('/nubilato');
+          return;
+        }
+        setLoading(false);
+      } catch {
+        await supabase.auth.signOut().catch(() => {});
         window.location.assign('/login');
-        return;
       }
-      const { data: profilo } = await supabase
-        .from('profili')
-        .select('primo_accesso, gruppo, admin')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      if (profilo?.primo_accesso === true) {
-        window.location.assign('/setup-account');
-        return;
-      }
-      if (profilo?.gruppo === 'nubilato' && !profilo?.admin) {
-        window.location.assign('/nubilato');
-        return;
-      }
-      setLoading(false);
     };
     checkUserAndStatus();
   }, []);

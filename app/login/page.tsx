@@ -16,10 +16,19 @@ function LoginForm() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profilo } = await supabase.from('profili').select('gruppo').eq('id', session.user.id).maybeSingle();
-        window.location.assign(profilo?.gruppo === 'nubilato' ? '/nubilato' : '/');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profilo, error } = await supabase.from('profili').select('gruppo').eq('id', session.user.id).maybeSingle();
+          if (error || !profilo) {
+            // Sessione invalida — pulisci e resta sul login
+            await supabase.auth.signOut().catch(() => {});
+            return;
+          }
+          window.location.assign(profilo.gruppo === 'nubilato' ? '/nubilato' : '/');
+        }
+      } catch {
+        await supabase.auth.signOut().catch(() => {});
       }
     };
     checkSession();
