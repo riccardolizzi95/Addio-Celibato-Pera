@@ -24,16 +24,37 @@ export default function ProfiloPage() {
   const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
-    // Controlla se l'utente arriva da un link di recovery
-    if (window.location.hash.includes('type=recovery')) {
-      setIsRecovery(true);
-    }
-
     const fetchProfile = async () => {
-      // Con detectSessionInUrl: true, supabase-js processa automaticamente i token dall'hash
-      // Aspetta un momento per dare tempo al client di processarli
-      await new Promise(r => setTimeout(r, 500));
-      
+      // 1. Controlla se ci sono token nell'hash (recovery link)
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const at = params.get('access_token');
+        const rt = params.get('refresh_token');
+        const type = params.get('type');
+        
+        if (type === 'recovery') setIsRecovery(true);
+        
+        if (at && rt) {
+          // Scambia manualmente i token per una sessione
+          const { data, error } = await supabase.auth.setSession({
+            access_token: at,
+            refresh_token: rt,
+          });
+          // Pulisci hash dall'URL
+          window.history.replaceState(null, '', '/profilo');
+          
+          if (data?.session) {
+            setEmail(data.session.user.email || '');
+            const { data: prof } = await supabase.from('profili').select('username').eq('id', data.session.user.id).single();
+            if (prof) setUsername(prof.username);
+            setLoading(false);
+            return; // Tutto ok, non serve controllare altro
+          }
+        }
+      }
+
+      // 2. Nessun token nell'hash → controlla sessione normalmente
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { window.location.assign('/login'); return; }
       setEmail(session.user.email || '');
