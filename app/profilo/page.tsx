@@ -23,6 +23,19 @@ export default function ProfiloPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Se ci sono token nell'hash (da recovery/reset password), scambiali per una sessione
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          // Pulisci l'hash dall'URL
+          window.history.replaceState(null, '', '/profilo');
+        }
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { window.location.assign('/login'); return; }
       setEmail(session.user.email || '');
