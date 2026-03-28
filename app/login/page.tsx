@@ -76,7 +76,7 @@ function LoginForm() {
       // 2. Se è in lista, procediamo con l'invio della mail di reset
       const baseUrl = window.location.origin;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${baseUrl}/profilo`,
+        redirectTo: `${baseUrl}/auth/callback`,
       });
 
       if (resetError) throw resetError;
