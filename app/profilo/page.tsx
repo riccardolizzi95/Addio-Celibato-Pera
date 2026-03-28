@@ -24,37 +24,24 @@ export default function ProfiloPage() {
   const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
-    // Ascolta i cambiamenti di sessione — Supabase processa automaticamente i token dall'hash
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // L'utente è arrivato da un link di reset password
-        setIsRecovery(true);
-        if (session) {
-          setEmail(session.user.email || '');
-          setLoading(false);
-        }
-      } else if (event === 'SIGNED_IN' && session) {
-        setEmail(session.user.email || '');
-        supabase.from('profili').select('username').eq('id', session.user.id).single()
-          .then(({ data }) => { if (data) setUsername(data.username); });
-        setLoading(false);
-      }
-    });
+    // Controlla se l'utente arriva da un link di recovery
+    if (window.location.hash.includes('type=recovery')) {
+      setIsRecovery(true);
+    }
 
-    // Fallback: se non c'è evento entro 2 secondi, controlla manualmente
-    const timeout = setTimeout(async () => {
+    const fetchProfile = async () => {
+      // Con detectSessionInUrl: true, supabase-js processa automaticamente i token dall'hash
+      // Aspetta un momento per dare tempo al client di processarli
+      await new Promise(r => setTimeout(r, 500));
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.assign('/login');
-        return;
-      }
+      if (!session) { window.location.assign('/login'); return; }
       setEmail(session.user.email || '');
       const { data } = await supabase.from('profili').select('username').eq('id', session.user.id).single();
       if (data) setUsername(data.username);
       setLoading(false);
-    }, 2000);
-
-    return () => { subscription.unsubscribe(); clearTimeout(timeout); };
+    };
+    fetchProfile();
   }, []);
 
   const mostraFeedback = (text: string, type: 'success' | 'error') => {
