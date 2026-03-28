@@ -44,13 +44,15 @@ export default function IdleTimer({ children }: { children: React.ReactNode }) {
 
     // Controlla anche la sessione Supabase — se è scaduta, manda al login
     const checkSession = async () => {
+      // Non controllare su pagine pubbliche
+      const path = window.location.pathname;
+      if (path === '/login' || path === '/setup-account' || path === '/invito' || path.startsWith('/auth')) return;
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           logout();
         }
       } catch {
-        // Se c'è un errore nel controllare la sessione, manda al login
         logout();
       }
     };
