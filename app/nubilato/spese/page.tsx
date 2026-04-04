@@ -9,6 +9,13 @@ type Spesa = { id: string; descrizione: string; importo: number; categoria: stri
 
 const TUTTI_PARTECIPANTI = 8;
 
+// Helper: mostra username corto (se è un'email, prende solo la parte prima di @)
+const nomeBreve = (username: string) => {
+  if (!username) return 'Senza nome';
+  if (username.includes('@')) return username.split('@')[0];
+  return username;
+};
+
 export default function SpesePage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -208,7 +215,7 @@ export default function SpesePage() {
                 const rimborso = rimborsiPerPersona[p.username] || 0;
                 return (
                   <div key={p.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <span className="text-sm font-bold text-slate-700">{p.username}</span>
+                    <span className="text-sm font-bold text-slate-700">{nomeBreve(p.username)}</span>
                     <span className={`text-sm font-black ${rimborso >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                       {rimborso >= 0 ? '+' : ''}€{rimborso.toFixed(2)}
                     </span>
@@ -278,7 +285,7 @@ export default function SpesePage() {
             <div className="space-y-2">
               {profili.map(p => (
                 <div key={p.id} className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-700">{p.username}</span>
+                  <span className="text-sm font-bold text-slate-700">{nomeBreve(p.username)}</span>
                   <span className={`text-sm font-black ${(contributiPerPersona[p.username] || 0) > 0 ? 'text-emerald-600' : 'text-slate-300'}`}>
                     €{(contributiPerPersona[p.username] || 0).toFixed(2)}
                   </span>
@@ -301,7 +308,7 @@ export default function SpesePage() {
               <select value={cUserId} onChange={e => setCUserId(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-amber-400">
                 <option value="">Seleziona persona...</option>
-                {profili.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+                {profili.map(p => <option key={p.id} value={p.id}>{nomeBreve(p.username)}</option>)}
               </select>
               <input type="number" step="0.01" placeholder="Importo (€)" value={cImporto} onChange={e => setCImporto(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-amber-400" />
@@ -328,7 +335,7 @@ export default function SpesePage() {
                 <div key={c.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-slate-800">{c.username}</p>
+                      <p className="font-bold text-slate-800 truncate max-w-[180px]">{nomeBreve(c.username)}</p>
                       <p className="text-[11px] text-slate-400">{new Date(c.data).toLocaleDateString('it-IT')} {c.note && `· ${c.note}`}</p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -397,7 +404,7 @@ export default function SpesePage() {
                     return (
                       <button key={p.id} onClick={() => toggleEscluso(p.username)}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${escluso ? 'bg-red-50 text-red-400 border-red-200 line-through' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                        {p.username}
+                        {nomeBreve(p.username)}
                       </button>
                     );
                   })}
@@ -483,7 +490,7 @@ export default function SpesePage() {
                 return (
                   <div key={p.id} className="bg-slate-50 rounded-xl p-3">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-bold text-slate-700">{p.username}</span>
+                      <span className="text-sm font-bold text-slate-700">{nomeBreve(p.username)}</span>
                       <span className={`text-sm font-black ${rimborso >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                         {rimborso >= 0 ? '+' : ''}€{rimborso.toFixed(2)}
                       </span>
@@ -533,7 +540,7 @@ export default function SpesePage() {
               {s.note && ` · ${s.note}`}
             </p>
             {esclusi.length > 0 && (
-              <p className="text-[10px] text-red-400 mt-0.5">Esclusi: {esclusi.join(', ')}</p>
+              <p className="text-[10px] text-red-400 mt-0.5">Esclusi: {esclusi.map(e => nomeBreve(e)).join(', ')}</p>
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
