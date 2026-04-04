@@ -37,8 +37,9 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Fix: input time su iOS Safari non deve debordare */
-input[type="time"] {
+/* Fix: input time e date su iOS Safari non deve debordare */
+input[type="time"],
+input[type="date"] {
   -webkit-appearance: none;
   appearance: none;
   max-width: 100%;
