@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Car, Plus, Trash2, X, UserPlus, ChevronUp, MapPin, Clock, Pencil } from 'lucide-react';
 
-export default function MacchineTab({ currentUser, myUsername, isAdmin }: { currentUser: any, myUsername: string, isAdmin: boolean }) {
+export default function MacchineTab({ currentUser, myUsername, isAdmin, gruppo = 'celibato' }: { currentUser: any, myUsername: string, isAdmin: boolean, gruppo?: string }) {
     const [macchine, setMacchine] = useState<any[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null); // null = nuova auto, stringa = modifica
@@ -16,7 +16,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
     const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     const scaricaMacchine = async () => {
-        const { data, error } = await supabase.from('macchine').select('*, macchina_passeggeri(*)').order('creato_at', { ascending: true });
+        const { data, error } = await supabase.from('macchine').select('*, macchina_passeggeri(*)').eq('gruppo', gruppo).order('creato_at', { ascending: true });
         if (!error && data) setMacchine(data);
     };
 
@@ -71,7 +71,7 @@ export default function MacchineTab({ currentUser, myUsername, isAdmin }: { curr
             // Nuovo record: inserisco l'auto e aggiungo subito il conducente come passeggero
             const { data: nuovaAuto, error: insertError } = await supabase
                 .from('macchine')
-                .insert([{ ...payload, creato_da: currentUser?.id }])
+                .insert([{ ...payload, creato_da: currentUser?.id, gruppo }])
                 .select('id')
                 .single();
             error = insertError;

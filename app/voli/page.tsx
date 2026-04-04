@@ -42,7 +42,7 @@ export default function VoliLogisticaPage() {
                 </div>
             </div>
             <div className="max-w-2xl mx-auto p-6">
-                {activeTab === 'voli' ? <VoliTab isAdmin={isAdmin} /> : <MacchineTab isAdmin={isAdmin} currentUser={currentUser} myUsername={myUsername} />}
+                {activeTab === 'voli' ? <VoliTab isAdmin={isAdmin} gruppo="celibato" /> : <MacchineTab isAdmin={isAdmin} currentUser={currentUser} myUsername={myUsername} gruppo="celibato" />}
             </div>
         </main>
     );

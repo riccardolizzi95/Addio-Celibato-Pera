@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Plane, Plus, Trash2, Clock, AlertCircle, X, RefreshCw, Info, Activity, MapPin, CalendarDays, History } from 'lucide-react';
 
-export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
+export default function VoliTab({ isAdmin, gruppo = 'celibato' }: { isAdmin: boolean; gruppo?: string }) {
     const [voli, setVoli] = useState<any[]>([]);
     const [isVoloFormOpen, setIsVoloFormOpen] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -19,7 +19,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
     };
 
     const scaricaVoli = async () => {
-        const { data } = await supabase.from('voli').select('*').order('orario_partenza', { ascending: true });
+        const { data } = await supabase.from('voli').select('*').eq('sezione', gruppo).order('orario_partenza', { ascending: true });
         if (data) setVoli(data);
     };
 
@@ -40,6 +40,7 @@ export default function VoliTab({ isAdmin }: { isAdmin: boolean }) {
                 orario_partenza: standardizzaData(live.departure?.scheduledTime?.local),
                 orario_arrivo: standardizzaData(live.arrival?.scheduledTime?.local),
                 gruppo: nuovoVolo.gruppo || "Generale",
+                sezione: gruppo,
                 last_api_response: live
             }]);
 
