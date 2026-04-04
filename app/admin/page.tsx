@@ -273,6 +273,7 @@ export default function AdminPage() {
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                                 <p className="font-bold text-slate-800">{p.username || 'Senza nome'}</p>
                                                 {p.admin && <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-md">ADMIN</span>}
+                                                {p.admin_nubilato && <span className="text-[10px] font-black bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-md">ADMIN 💍</span>}
                                                 <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border ${isNub ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                                                     {isNub ? '💍' : '🍐'}
                                                 </span>
@@ -284,6 +285,18 @@ export default function AdminPage() {
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                         {online ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-slate-300" />}
+                                        {/* Toggle admin nubilato - solo per utenti nubilato non-admin */}
+                                        {!p.admin && p.gruppo === 'nubilato' && (
+                                            <button onClick={async () => {
+                                                await supabase.from('profili').update({ admin_nubilato: !p.admin_nubilato }).eq('id', p.id);
+                                                mostraFeedback(p.admin_nubilato ? 'Admin nubilato rimosso' : 'Admin nubilato assegnato! 💍', 'success');
+                                                scaricaDati();
+                                            }}
+                                                className={`p-1.5 rounded-lg transition-all ${p.admin_nubilato ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-500 hover:bg-pink-50'}`}
+                                                title={p.admin_nubilato ? 'Rimuovi admin nubilato' : 'Rendi admin nubilato'}>
+                                                <Shield size={15} />
+                                            </button>
+                                        )}
                                         {!p.admin && (
                                             <>
                                                 <button onClick={() => resetPassword(p.id)} disabled={resettingId === p.id}
