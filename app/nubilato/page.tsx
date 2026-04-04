@@ -6,6 +6,8 @@ import Link from 'next/link';
 export default function NubilatoHome() {
   const [loading, setLoading] = useState(true);
 
+  const [soloScherzi, setSoloScherzi] = useState(false);
+
   useEffect(() => {
     const check = async () => {
       try {
@@ -14,7 +16,8 @@ export default function NubilatoHome() {
         const { data: profilo, error } = await supabase.from('profili').select('primo_accesso, gruppo, admin').eq('id', session.user.id).maybeSingle();
         if (error || !profilo) { await supabase.auth.signOut().catch(() => {}); window.location.assign('/login'); return; }
         if (profilo.primo_accesso === true) { window.location.assign('/setup-account'); return; }
-        if (profilo.gruppo !== 'nubilato' && !profilo.admin) { window.location.assign('/'); return; }
+        if (profilo.gruppo !== 'nubilato' && profilo.gruppo !== 'scherzi_sposa' && !profilo.admin) { window.location.assign('/'); return; }
+        if (profilo.gruppo === 'scherzi_sposa') setSoloScherzi(true);
         setLoading(false);
       } catch { await supabase.auth.signOut().catch(() => {}); window.location.assign('/login'); }
     };
@@ -141,26 +144,30 @@ export default function NubilatoHome() {
 
       <div className="flex flex-col items-center bg-slate-50 px-6 pt-5 pb-10">
         <div className="w-full max-w-sm space-y-4">
-          <Link href="/nubilato/voli" className="w-full block fu1">
-            <button className="w-full bg-pink-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-pink-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              ✈️ Voli & Logistica
-            </button>
-          </Link>
-          <Link href="/nubilato/alloggio" className="w-full block fu2">
-            <button className="w-full bg-fuchsia-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-fuchsia-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              🏠 Alloggio
-            </button>
-          </Link>
-          <Link href="/nubilato/attivita" className="w-full block fu3">
-            <button className="w-full bg-rose-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-rose-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              🎉 Proponi Attività
-            </button>
-          </Link>
-          <Link href="/nubilato/spese" className="w-full block fu4">
-            <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              💰 Gestione Spese
-            </button>
-          </Link>
+          {!soloScherzi && (
+            <>
+              <Link href="/nubilato/voli" className="w-full block fu1">
+                <button className="w-full bg-pink-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-pink-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  ✈️ Voli & Logistica
+                </button>
+              </Link>
+              <Link href="/nubilato/alloggio" className="w-full block fu2">
+                <button className="w-full bg-fuchsia-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-fuchsia-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  🏠 Alloggio
+                </button>
+              </Link>
+              <Link href="/nubilato/attivita" className="w-full block fu3">
+                <button className="w-full bg-rose-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-rose-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  🎉 Proponi Attività
+                </button>
+              </Link>
+              <Link href="/nubilato/spese" className="w-full block fu4">
+                <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  💰 Gestione Spese
+                </button>
+              </Link>
+            </>
+          )}
           <Link href="/scherzi" className="w-full block fu5">
             <button className="w-full bg-purple-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-purple-100 active:scale-95 transition-all flex items-center justify-center gap-3">
               😈 Scherzi Matrimonio

@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
+  const [soloScherzi, setSoloScherzi] = useState(false);
 
   useEffect(() => {
     const checkUserAndStatus = async () => {
@@ -29,9 +30,12 @@ export default function Home() {
           window.location.assign('/setup-account');
           return;
         }
-        if (profilo.gruppo === 'nubilato' && !profilo.admin) {
+        if ((profilo.gruppo === 'nubilato' || profilo.gruppo === 'scherzi_sposa') && !profilo.admin) {
           window.location.assign('/nubilato');
           return;
+        }
+        if (profilo.gruppo === 'scherzi_sposo') {
+          setSoloScherzi(true);
         }
         setLoading(false);
       } catch {
@@ -245,26 +249,30 @@ export default function Home() {
       {/* ── PULSANTI — originali ── */}
       <div className="flex flex-col items-center bg-slate-50 px-6 pt-5 pb-10">
         <div className="w-full max-w-sm space-y-4">
-          <Link href="/voli" className="w-full block fu1">
-            <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              ✈️ Voli & Logistica
-            </button>
-          </Link>
-          <Link href="/alloggio" className="w-full block fu2">
-            <button className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              🏠 Alloggio
-            </button>
-          </Link>
-          <Link href="/attivita" className="w-full block fu3">
-            <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              🎉 Proponi Attività
-            </button>
-          </Link>
-          <Link href="/spese" className="w-full block fu4">
-            <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
-              💰 Gestione Spese
-            </button>
-          </Link>
+          {!soloScherzi && (
+            <>
+              <Link href="/voli" className="w-full block fu1">
+                <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  ✈️ Voli & Logistica
+                </button>
+              </Link>
+              <Link href="/alloggio" className="w-full block fu2">
+                <button className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  🏠 Alloggio
+                </button>
+              </Link>
+              <Link href="/attivita" className="w-full block fu3">
+                <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  🎉 Proponi Attività
+                </button>
+              </Link>
+              <Link href="/spese" className="w-full block fu4">
+                <button className="w-full bg-amber-500 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  💰 Gestione Spese
+                </button>
+              </Link>
+            </>
+          )}
           <Link href="/scherzi" className="w-full block fu5">
             <button className="w-full bg-purple-600 text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-purple-100 active:scale-95 transition-all flex items-center justify-center gap-3">
               😈 Scherzi Matrimonio

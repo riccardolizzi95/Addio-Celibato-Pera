@@ -25,7 +25,7 @@ function LoginForm() {
             await supabase.auth.signOut().catch(() => {});
             return;
           }
-          window.location.assign(profilo.gruppo === 'nubilato' ? '/nubilato' : '/');
+          window.location.assign(profilo.gruppo === 'nubilato' || profilo.gruppo === 'scherzi_sposa' ? '/nubilato' : '/');
         }
       } catch {
         await supabase.auth.signOut().catch(() => {});
@@ -52,7 +52,7 @@ function LoginForm() {
     const { data: profilo } = await supabase.from('profili').select('primo_accesso, gruppo').eq('id', data.user?.id).maybeSingle();
     if (profilo?.primo_accesso === true) {
       window.location.assign('/setup-account');
-    } else if (profilo?.gruppo === 'nubilato') {
+    } else if (profilo?.gruppo === 'nubilato' || profilo?.gruppo === 'scherzi_sposa') {
       window.location.assign('/nubilato');
     } else {
       window.location.assign('/');

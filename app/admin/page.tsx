@@ -4,28 +4,35 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { Shield, Users, Clock, Wifi, WifiOff, RefreshCw, Trash2, UserPlus, Mail, X, KeyRound } from 'lucide-react';
 
+const GRUPPI = ['celibato', 'nubilato', 'scherzi_sposo', 'scherzi_sposa'] as const;
+type Gruppo = typeof GRUPPI[number];
+const gruppoLabel = (g: string) => g === 'celibato' ? '🍐 Celibato' : g === 'nubilato' ? '💍 Nubilato' : g === 'scherzi_sposo' ? '🎭 Scherzi Sposo' : g === 'scherzi_sposa' ? '🎭 Scherzi Sposa' : g;
+const gruppoBadge = (g: string) => g === 'celibato' ? 'bg-blue-50 text-blue-600 border-blue-100' : g === 'nubilato' ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-amber-50 text-amber-600 border-amber-100';
+const gruppoIcon = (g: string) => g === 'celibato' ? '🍐' : g === 'nubilato' ? '💍' : '🎭';
+const nomeBreve = (u: string) => { if (!u) return 'Senza nome'; return u.includes('@') ? u.split('@')[0] : u; };
+
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [profili, setProfili] = useState<any[]>([]);
     const [logAccessi, setLogAccessi] = useState<any[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newEmail, setNewEmail] = useState('');
-    const [newGruppo, setNewGruppo] = useState<'celibato' | 'nubilato'>('celibato');
+    const [newGruppo, setNewGruppo] = useState<Gruppo>('celibato');
     const [isCreating, setIsCreating] = useState(false);
     const [resettingId, setResettingId] = useState<string | null>(null);
     const [resetInfo, setResetInfo] = useState<{ email: string; link: string } | null>(null);
-    const [filtroGruppo, setFiltroGruppo] = useState<'tutti' | 'celibato' | 'nubilato'>('tutti');
+    const [createdInfo, setCreatedInfo] = useState<{ email: string; link: string } | null>(null);
+    const [filtroGruppo, setFiltroGruppo] = useState<'tutti' | Gruppo>('tutti');
+    const [selectedUser, setSelectedUser] = useState<any | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const mostraFeedback = (text: string, type: 'success' | 'error') => {
         setFeedback({ text, type });
         setTimeout(() => setFeedback(null), 3500);
     };
-
-    const [createdInfo, setCreatedInfo] = useState<{ email: string; link: string } | null>(null);
 
     const creaUtente = async () => {
         if (!newEmail.trim()) return mostraFeedback('Email obbligatoria', 'error');
@@ -34,18 +41,11 @@ export default function AdminPage() {
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-user`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-                    body: JSON.stringify({ email: newEmail.trim(), gruppo: newGruppo }),
-                }
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` }, body: JSON.stringify({ email: newEmail.trim(), gruppo: newGruppo }) }
             );
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore nella creazione', 'error');
-            else {
-                setCreatedInfo({ email: newEmail.trim(), link: data.invite_link || '' });
-                setNewEmail(''); setShowAddForm(false); scaricaDati();
-            }
+            else { setCreatedInfo({ email: newEmail.trim(), link: data.invite_link || '' }); setNewEmail(''); setShowAddForm(false); scaricaDati(); }
         } catch { mostraFeedback('Errore di rete', 'error'); }
         setIsCreating(false);
     };
@@ -56,18 +56,13 @@ export default function AdminPage() {
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
-                    body: JSON.stringify({ user_id: userId }),
-                }
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' }, body: JSON.stringify({ user_id: userId }) }
             );
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore eliminazione', 'error');
-            else { mostraFeedback('Utente eliminato! 🗑️', 'success'); scaricaDati(); }
+            else { mostraFeedback('Utente eliminato! 🗑️', 'success'); setSelectedUser(null); scaricaDati(); }
         } catch { mostraFeedback('Errore di rete', 'error'); }
-        setDeletingId(null);
-        setConfirmDeleteId(null);
+        setDeletingId(null); setConfirmDelete(false);
     };
 
     const resetPassword = async (userId: string) => {
@@ -76,26 +71,42 @@ export default function AdminPage() {
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/reset-password`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-                    body: JSON.stringify({ user_id: userId }),
-                }
+                { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` }, body: JSON.stringify({ user_id: userId }) }
             );
             const data = await res.json();
             if (!res.ok) mostraFeedback(data.error || 'Errore reset', 'error');
-            else {
-                setResetInfo({ email: data.email || '', link: data.reset_link || '' });
-                mostraFeedback('Link reset generato! 🔑', 'success');
-            }
+            else { setResetInfo({ email: data.email || '', link: data.reset_link || '' }); setSelectedUser(null); mostraFeedback('Link reset generato! 🔑', 'success'); }
         } catch { mostraFeedback('Errore di rete', 'error'); }
         setResettingId(null);
+    };
+
+    const cambiaGruppo = async (userId: string, nuovoGruppo: Gruppo) => {
+        const { error } = await supabase.from('profili').update({ gruppo: nuovoGruppo }).eq('id', userId);
+        // Aggiorna anche invitati
+        const user = profili.find(p => p.id === userId);
+        if (user) {
+            const email = user.username?.includes('@') ? user.username : null;
+            if (email) await supabase.from('invitati').update({ gruppo: nuovoGruppo }).eq('email', email.toLowerCase());
+        }
+        if (!error) {
+            mostraFeedback(`Gruppo cambiato a ${gruppoLabel(nuovoGruppo)}`, 'success');
+            setSelectedUser((prev: any) => prev ? { ...prev, gruppo: nuovoGruppo } : null);
+            scaricaDati();
+        } else mostraFeedback('Errore nel cambio gruppo', 'error');
+    };
+
+    const toggleAdminNubilato = async (userId: string, current: boolean) => {
+        await supabase.from('profili').update({ admin_nubilato: !current }).eq('id', userId);
+        mostraFeedback(!current ? 'Admin nubilato assegnato! 💍' : 'Admin nubilato rimosso', 'success');
+        setSelectedUser((prev: any) => prev ? { ...prev, admin_nubilato: !current } : null);
+        scaricaDati();
     };
 
     const isOnline = (ua: string | null) => ua ? (Date.now() - new Date(ua).getTime()) < 300000 : false;
     const countOnline = profili.filter(p => isOnline(p.ultimo_accesso)).length;
     const countCelibato = profili.filter(p => p.gruppo === 'celibato').length;
     const countNubilato = profili.filter(p => p.gruppo === 'nubilato').length;
+    const countScherzi = profili.filter(p => p.gruppo === 'scherzi_sposo' || p.gruppo === 'scherzi_sposa').length;
 
     const scaricaDati = async () => {
         const { data: allProfili } = await supabase.from('profili').select('*').order('ultimo_accesso', { ascending: false, nullsFirst: false });
@@ -131,11 +142,95 @@ export default function AdminPage() {
     if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-500" /></div>;
     if (!isAdmin) return null;
 
+    const profiliFiltrati = profili.filter(p => {
+        if (filtroGruppo === 'tutti') return true;
+        if (filtroGruppo === 'scherzi_sposo') return p.gruppo === 'scherzi_sposo' || p.gruppo === 'scherzi_sposa';
+        return p.gruppo === filtroGruppo;
+    });
+
     return (
         <main className="flex min-h-screen flex-col p-6 bg-slate-50 text-slate-900 pb-20">
             {feedback && (
                 <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl whitespace-nowrap ${feedback.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
                     {feedback.text}
+                </div>
+            )}
+
+            {/* === POPUP DETTAGLIO UTENTE === */}
+            {selectedUser && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedUser(null); setConfirmDelete(false); }}>
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-black">👤 Dettaglio Utente</h2>
+                            <button onClick={() => { setSelectedUser(null); setConfirmDelete(false); }}><X size={20} className="text-slate-400" /></button>
+                        </div>
+
+                        {/* Info */}
+                        <div className="bg-slate-50 rounded-2xl p-4 space-y-1">
+                            <p className="text-lg font-black text-slate-800">{nomeBreve(selectedUser.username)}</p>
+                            {selectedUser.username?.includes('@') && <p className="text-[11px] text-slate-400">{selectedUser.username}</p>}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <span className={`text-[10px] font-black px-2 py-1 rounded-md border ${gruppoBadge(selectedUser.gruppo)}`}>{gruppoLabel(selectedUser.gruppo)}</span>
+                                {selectedUser.admin && <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-md">ADMIN</span>}
+                                {selectedUser.admin_nubilato && <span className="text-[10px] font-black bg-pink-100 text-pink-600 px-2 py-1 rounded-md">ADMIN 💍</span>}
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-2">
+                                {isOnline(selectedUser.ultimo_accesso) ? <span className="text-emerald-600 font-bold">● Online ora</span> : <>Ultimo accesso: {tempoFa(selectedUser.ultimo_accesso)}</>}
+                            </p>
+                        </div>
+
+                        {/* Cambio gruppo */}
+                        {!selectedUser.admin && (
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cambia Gruppo</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {GRUPPI.map(g => (
+                                        <button key={g} onClick={() => cambiaGruppo(selectedUser.id, g)}
+                                            className={`py-2.5 rounded-xl text-[11px] font-bold transition-all ${selectedUser.gruppo === g ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                                            {gruppoLabel(g)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Toggle admin nubilato */}
+                        {!selectedUser.admin && (selectedUser.gruppo === 'nubilato' || selectedUser.gruppo === 'scherzi_sposa') && (
+                            <button onClick={() => toggleAdminNubilato(selectedUser.id, selectedUser.admin_nubilato)}
+                                className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${selectedUser.admin_nubilato ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-600 border border-pink-200'}`}>
+                                <Shield size={14} className="inline mr-2" />
+                                {selectedUser.admin_nubilato ? 'Rimuovi Admin Nubilato' : 'Assegna Admin Nubilato'}
+                            </button>
+                        )}
+
+                        {/* Azioni */}
+                        {!selectedUser.admin && (
+                            <div className="space-y-2 pt-2 border-t border-slate-100">
+                                <button onClick={() => resetPassword(selectedUser.id)} disabled={resettingId === selectedUser.id}
+                                    className="w-full py-3 bg-amber-50 text-amber-700 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-amber-100 transition-all disabled:opacity-50">
+                                    <KeyRound size={16} /> Reset Password
+                                </button>
+
+                                {!confirmDelete ? (
+                                    <button onClick={() => setConfirmDelete(true)}
+                                        className="w-full py-3 bg-red-50 text-red-500 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all">
+                                        <Trash2 size={16} /> Elimina Utente
+                                    </button>
+                                ) : (
+                                    <div className="bg-red-50 rounded-xl p-4 border border-red-200 space-y-2">
+                                        <p className="text-xs text-red-600 font-bold">Eliminare {nomeBreve(selectedUser.username)}? Tutto verrà rimosso.</p>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2 bg-white text-slate-500 rounded-xl text-xs font-bold border">Annulla</button>
+                                            <button onClick={() => eliminaUtente(selectedUser.id)} disabled={deletingId === selectedUser.id}
+                                                className="flex-1 py-2 bg-red-500 text-white rounded-xl text-xs font-bold disabled:bg-slate-300">
+                                                {deletingId === selectedUser.id ? 'Eliminando...' : '🗑️ Elimina'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -156,74 +251,58 @@ export default function AdminPage() {
                     <p className="text-2xl font-black text-emerald-600">{countOnline}</p>
                 </div>
                 <div className="bg-white rounded-2xl p-3 border border-blue-100 shadow-sm">
-                    <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">🍐</p>
-                    <p className="text-2xl font-black text-blue-600">{countCelibato}</p>
+                    <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">🍐 + 💍</p>
+                    <p className="text-2xl font-black text-blue-600">{countCelibato + countNubilato}</p>
                 </div>
-                <div className="bg-white rounded-2xl p-3 border border-pink-100 shadow-sm">
-                    <p className="text-[9px] font-black text-pink-500 uppercase tracking-widest mb-1">💍</p>
-                    <p className="text-2xl font-black text-pink-600">{countNubilato}</p>
+                <div className="bg-white rounded-2xl p-3 border border-amber-100 shadow-sm">
+                    <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1">🎭</p>
+                    <p className="text-2xl font-black text-amber-600">{countScherzi}</p>
                 </div>
             </div>
 
             {/* Filtro gruppo */}
-            <div className="flex gap-2 mb-4">
-                {(['tutti', 'celibato', 'nubilato'] as const).map(f => (
+            <div className="flex gap-1.5 mb-4 overflow-x-auto no-scrollbar">
+                {(['tutti', 'celibato', 'nubilato', 'scherzi_sposo'] as const).map(f => (
                     <button key={f} onClick={() => setFiltroGruppo(f)}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${filtroGruppo === f ? (f === 'celibato' ? 'bg-blue-600 text-white' : f === 'nubilato' ? 'bg-pink-600 text-white' : 'bg-slate-700 text-white') : 'bg-white text-slate-400 border border-slate-100'}`}>
-                        {f === 'tutti' ? '👥 Tutti' : f === 'celibato' ? '🍐 Celibato' : '💍 Nubilato'}
+                        className={`shrink-0 px-3 py-2.5 rounded-xl text-[11px] font-bold transition-all ${filtroGruppo === f ? (f === 'celibato' ? 'bg-blue-600 text-white' : f === 'nubilato' ? 'bg-pink-600 text-white' : f === 'scherzi_sposo' ? 'bg-amber-500 text-white' : 'bg-slate-700 text-white') : 'bg-white text-slate-400 border border-slate-100'}`}>
+                        {f === 'tutti' ? '👥 Tutti' : f === 'celibato' ? '🍐 Celibato' : f === 'nubilato' ? '💍 Nubilato' : '🎭 Scherzi'}
                     </button>
                 ))}
             </div>
 
             {/* Aggiungi utente */}
             <div className="mb-6">
-                {/* Banner link invito */}
                 {createdInfo && (
                     <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-5 mb-4 space-y-3">
                         <div className="flex items-center justify-between">
                             <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">✅ Utente Creato!</p>
-                            <button onClick={() => setCreatedInfo(null)} className="p-1 text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                            <button onClick={() => setCreatedInfo(null)} className="p-1 text-slate-400"><X size={16} /></button>
                         </div>
-                        <p className="text-sm text-slate-600">Manda questo link all'utente — cliccandolo entrerà direttamente e potrà scegliere nome e password:</p>
+                        <p className="text-sm text-slate-600">Manda questo link all'utente:</p>
                         {createdInfo.link ? (
                             <>
                                 <div className="bg-white rounded-xl p-3 text-xs font-mono break-all border border-emerald-200 text-blue-600">{createdInfo.link}</div>
-                                <button onClick={() => {
-                                    const text = `Ciao! Clicca questo link per accedere e impostare il tuo account:\n\n🔗 ${createdInfo.link}\n\nDopo aver cliccato, scegli il tuo nome e una password.`;
-                                    navigator.clipboard.writeText(text);
-                                    mostraFeedback('Copiato! Incollalo su WhatsApp 📋', 'success');
-                                }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold active:scale-95 transition-all">
-                                    📋 Copia messaggio per WhatsApp
-                                </button>
+                                <button onClick={() => { navigator.clipboard.writeText(`Ciao! Clicca questo link per accedere:\n\n🔗 ${createdInfo.link}\n\nDopo aver cliccato, scegli il tuo nome e una password.`); mostraFeedback('Copiato! 📋', 'success'); }}
+                                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold active:scale-95 transition-all">📋 Copia messaggio per WhatsApp</button>
                             </>
-                        ) : (
-                            <p className="text-sm text-red-500 font-bold">⚠️ Link non generato. L'utente può usare "Password dimenticata" dal login.</p>
-                        )}
+                        ) : <p className="text-sm text-red-500 font-bold">⚠️ Link non generato.</p>}
                     </div>
                 )}
 
-                {/* Banner link reset password */}
                 {resetInfo && (
                     <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 mb-4 space-y-3">
                         <div className="flex items-center justify-between">
-                            <p className="text-xs font-black text-amber-700 uppercase tracking-widest">🔑 Link Reset Password</p>
-                            <button onClick={() => setResetInfo(null)} className="p-1 text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                            <p className="text-xs font-black text-amber-700 uppercase tracking-widest">🔑 Link Reset</p>
+                            <button onClick={() => setResetInfo(null)} className="p-1 text-slate-400"><X size={16} /></button>
                         </div>
-                        <p className="text-sm text-slate-600">Manda questo link a <strong>{resetInfo.email}</strong> — cliccandolo potrà impostare una nuova password:</p>
+                        <p className="text-sm text-slate-600">Per <strong>{resetInfo.email}</strong>:</p>
                         {resetInfo.link ? (
                             <>
                                 <div className="bg-white rounded-xl p-3 text-xs font-mono break-all border border-amber-200 text-blue-600">{resetInfo.link}</div>
-                                <button onClick={() => {
-                                    const text = `Ciao! Clicca questo link per reimpostare la tua password:\n\n🔗 ${resetInfo.link}\n\nDopo aver cliccato, scegli una nuova password.`;
-                                    navigator.clipboard.writeText(text);
-                                    mostraFeedback('Copiato! Incollalo su WhatsApp 📋', 'success');
-                                }} className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold active:scale-95 transition-all">
-                                    📋 Copia messaggio per WhatsApp
-                                </button>
+                                <button onClick={() => { navigator.clipboard.writeText(`Ciao! Clicca questo link per reimpostare la password:\n\n🔗 ${resetInfo.link}`); mostraFeedback('Copiato! 📋', 'success'); }}
+                                    className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold active:scale-95 transition-all">📋 Copia per WhatsApp</button>
                             </>
-                        ) : (
-                            <p className="text-sm text-red-500 font-bold">⚠️ Link non generato.</p>
-                        )}
+                        ) : <p className="text-sm text-red-500 font-bold">⚠️ Link non generato.</p>}
                     </div>
                 )}
 
@@ -231,29 +310,27 @@ export default function AdminPage() {
                     <div className="bg-white p-5 rounded-2xl shadow-lg border-2 border-emerald-400 space-y-3">
                         <div className="flex items-center justify-between">
                             <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">➕ Nuovo Utente</p>
-                            <button onClick={() => setShowAddForm(false)} className="p-1 text-slate-400 hover:text-slate-600"><X size={18} /></button>
+                            <button onClick={() => setShowAddForm(false)}><X size={18} className="text-slate-400" /></button>
                         </div>
                         <div className="relative">
                             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input type="email" placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-emerald-400" />
+                                className="w-full pl-10 p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-emerald-400" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Gruppo</p>
                             <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => setNewGruppo('celibato')}
-                                    className={`py-3 rounded-xl font-bold text-sm transition-all ${newGruppo === 'celibato' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                    🍐 Celibato
-                                </button>
-                                <button onClick={() => setNewGruppo('nubilato')}
-                                    className={`py-3 rounded-xl font-bold text-sm transition-all ${newGruppo === 'nubilato' ? 'bg-pink-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                    💍 Nubilato
-                                </button>
+                                {GRUPPI.map(g => (
+                                    <button key={g} onClick={() => setNewGruppo(g)}
+                                        className={`py-2.5 rounded-xl text-[11px] font-bold transition-all ${newGruppo === g ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                        {gruppoLabel(g)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                         <button onClick={creaUtente} disabled={isCreating}
-                            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold disabled:bg-slate-300 active:scale-95 transition-all">
-                            {isCreating ? 'Creazione...' : '➕ Crea Utente'}
+                            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold active:scale-95 transition-all disabled:bg-slate-300">
+                            {isCreating ? 'Creando...' : '✅ Crea Utente'}
                         </button>
                     </div>
                 ) : (
@@ -268,27 +345,24 @@ export default function AdminPage() {
             <div className="mb-8">
                 <div className="flex items-center gap-2 mb-3">
                     <Users size={16} className="text-slate-400" />
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Utenti</p>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Utenti ({profiliFiltrati.length})</p>
                 </div>
                 <div className="space-y-2">
-                    {profili.filter(p => filtroGruppo === 'tutti' || p.gruppo === filtroGruppo).map(p => {
+                    {profiliFiltrati.map(p => {
                         const online = isOnline(p.ultimo_accesso);
-                        const isConfirming = confirmDeleteId === p.id;
-                        const isNub = p.gruppo === 'nubilato';
                         return (
-                            <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                            <button key={p.id} onClick={() => { setSelectedUser(p); setConfirmDelete(false); }}
+                                className="w-full bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-left active:scale-[0.98] transition-all">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <div className={`w-3 h-3 rounded-full shrink-0 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <p className="font-bold text-slate-800 truncate max-w-[140px]" title={p.username || 'Senza nome'}>
-                                                    {p.username && p.username.includes('@') ? p.username.split('@')[0] : (p.username || 'Senza nome')}
-                                                </p>
+                                                <p className="font-bold text-slate-800 truncate max-w-[140px]">{nomeBreve(p.username)}</p>
                                                 {p.admin && <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-md shrink-0">ADMIN</span>}
                                                 {p.admin_nubilato && <span className="text-[10px] font-black bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-md shrink-0">ADMIN 💍</span>}
-                                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${isNub ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                    {isNub ? '💍' : '🍐'}
+                                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${gruppoBadge(p.gruppo)}`}>
+                                                    {gruppoIcon(p.gruppo)}
                                                 </span>
                                             </div>
                                             <p className="text-[11px] text-slate-400">
@@ -296,49 +370,9 @@ export default function AdminPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1 shrink-0 ml-1">
-                                        {online ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-slate-300" />}
-                                        {/* Toggle admin nubilato - solo per utenti nubilato non-admin */}
-                                        {!p.admin && p.gruppo === 'nubilato' && (
-                                            <button onClick={async () => {
-                                                await supabase.from('profili').update({ admin_nubilato: !p.admin_nubilato }).eq('id', p.id);
-                                                mostraFeedback(p.admin_nubilato ? 'Admin nubilato rimosso' : 'Admin nubilato assegnato! 💍', 'success');
-                                                scaricaDati();
-                                            }}
-                                                className={`p-1.5 rounded-lg transition-all ${p.admin_nubilato ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-500 hover:bg-pink-50'}`}
-                                                title={p.admin_nubilato ? 'Rimuovi admin nubilato' : 'Rendi admin nubilato'}>
-                                                <Shield size={15} />
-                                            </button>
-                                        )}
-                                        {!p.admin && (
-                                            <>
-                                                <button onClick={() => resetPassword(p.id)} disabled={resettingId === p.id}
-                                                    className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-50"
-                                                    title="Reset password">
-                                                    <KeyRound size={15} />
-                                                </button>
-                                                <button onClick={() => setConfirmDeleteId(isConfirming ? null : p.id)}
-                                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Elimina utente">
-                                                    <Trash2 size={15} />
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                                    <div className="text-slate-300 shrink-0">›</div>
                                 </div>
-                                {isConfirming && (
-                                    <div className="mt-3 pt-3 border-t border-red-100">
-                                        <p className="text-xs text-red-600 font-bold mb-2">Eliminare {p.username || 'questo utente'}? Tutto verrà rimosso.</p>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold">Annulla</button>
-                                            <button onClick={() => eliminaUtente(p.id)} disabled={deletingId === p.id}
-                                                className="flex-1 py-2 bg-red-500 text-white rounded-xl text-xs font-bold disabled:bg-slate-300 active:scale-95 transition-all">
-                                                {deletingId === p.id ? 'Eliminando...' : '🗑️ Elimina'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            </button>
                         );
                     })}
                 </div>
@@ -354,7 +388,7 @@ export default function AdminPage() {
                         {logAccessi.map((log, i) => (
                             <div key={log.id} className={`px-4 py-3 flex items-center justify-between ${i > 0 ? 'border-t border-slate-50' : ''}`}>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-700">{log.username || '—'}</p>
+                                    <p className="text-sm font-bold text-slate-700">{nomeBreve(log.username || '—')}</p>
                                     <p className="text-[11px] text-slate-400">{log.azione}</p>
                                 </div>
                                 <p className="text-[11px] text-slate-400 shrink-0">
