@@ -18,6 +18,7 @@ export default function AdminPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [resettingId, setResettingId] = useState<string | null>(null);
     const [resetInfo, setResetInfo] = useState<{ email: string; link: string } | null>(null);
+    const [filtroGruppo, setFiltroGruppo] = useState<'tutti' | 'celibato' | 'nubilato'>('tutti');
 
     const mostraFeedback = (text: string, type: 'success' | 'error') => {
         setFeedback({ text, type });
@@ -164,6 +165,16 @@ export default function AdminPage() {
                 </div>
             </div>
 
+            {/* Filtro gruppo */}
+            <div className="flex gap-2 mb-4">
+                {(['tutti', 'celibato', 'nubilato'] as const).map(f => (
+                    <button key={f} onClick={() => setFiltroGruppo(f)}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${filtroGruppo === f ? (f === 'celibato' ? 'bg-blue-600 text-white' : f === 'nubilato' ? 'bg-pink-600 text-white' : 'bg-slate-700 text-white') : 'bg-white text-slate-400 border border-slate-100'}`}>
+                        {f === 'tutti' ? '👥 Tutti' : f === 'celibato' ? '🍐 Celibato' : '💍 Nubilato'}
+                    </button>
+                ))}
+            </div>
+
             {/* Aggiungi utente */}
             <div className="mb-6">
                 {/* Banner link invito */}
@@ -260,7 +271,7 @@ export default function AdminPage() {
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Utenti</p>
                 </div>
                 <div className="space-y-2">
-                    {profili.map(p => {
+                    {profili.filter(p => filtroGruppo === 'tutti' || p.gruppo === filtroGruppo).map(p => {
                         const online = isOnline(p.ultimo_accesso);
                         const isConfirming = confirmDeleteId === p.id;
                         const isNub = p.gruppo === 'nubilato';
