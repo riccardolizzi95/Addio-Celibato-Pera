@@ -7,8 +7,7 @@ import { Plus, Trash2, X, TrendingUp, TrendingDown, Wallet, PiggyBank, ArrowLeft
 type Contributo = { id: string; user_id: string; username: string; importo: number; data: string; note: string | null };
 type Spesa = { id: string; descrizione: string; importo: number; categoria: string; data: string; pagata: boolean; note: string | null };
 
-const FESTEGGIATO = 'Roberto'; // Il festeggiato non partecipa al rimborso
-const NUM_PARTECIPANTI_RIMBORSO = 7; // 8 persone - 1 festeggiato
+const NUM_PARTECIPANTI_RIMBORSO = 8; // Tutti i partecipanti (il festeggiato non è nell'app)
 
 export default function SpesePage() {
   const [loading, setLoading] = useState(true);
@@ -176,7 +175,6 @@ export default function SpesePage() {
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 shadow-lg">
             <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest mb-1">🔄 Rimborso previsto a testa ({NUM_PARTECIPANTI_RIMBORSO} persone)</p>
             <p className="text-white text-3xl font-black">€{rimborsoPerPersona.toFixed(2)}</p>
-            <p className="text-blue-200 text-xs mt-1">(Escluso {FESTEGGIATO})</p>
           </div>
 
           {/* Contributi per persona */}
@@ -185,12 +183,9 @@ export default function SpesePage() {
             <div className="space-y-2">
               {profili.map(p => {
                 const versato = contributiPerPersona[p.username] || 0;
-                const isFesteggiato = p.username === FESTEGGIATO;
                 return (
                   <div key={p.id} className="flex items-center justify-between">
-                    <span className={`text-sm font-bold ${isFesteggiato ? 'text-purple-600' : 'text-slate-700'}`}>
-                      {p.username} {isFesteggiato && '👑'}
-                    </span>
+                    <span className="text-sm font-bold text-slate-700">{p.username}</span>
                     <span className={`text-sm font-black ${versato > 0 ? 'text-emerald-600' : 'text-slate-300'}`}>
                       €{versato.toFixed(2)}
                     </span>
@@ -441,14 +436,11 @@ export default function SpesePage() {
             <div className="space-y-2">
               {profili.map(p => {
                 const versato = contributiPerPersona[p.username] || 0;
-                const isFesteggiato = p.username === FESTEGGIATO;
                 const barWidth = totaleConto > 0 ? (versato / totaleConto) * 100 : 0;
                 return (
                   <div key={p.id}>
                     <div className="flex justify-between items-center mb-1">
-                      <span className={`text-xs font-bold ${isFesteggiato ? 'text-purple-600' : 'text-slate-600'}`}>
-                        {p.username} {isFesteggiato && '👑'}
-                      </span>
+                      <span className="text-xs font-bold text-slate-600">{p.username}</span>
                       <span className="text-xs font-black text-slate-800">€{versato.toFixed(2)}</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2">
