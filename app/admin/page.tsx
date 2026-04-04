@@ -278,14 +278,16 @@ export default function AdminPage() {
                         return (
                             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <div className={`w-3 h-3 rounded-full shrink-0 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                                        <div>
+                                        <div className="min-w-0">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <p className="font-bold text-slate-800">{p.username || 'Senza nome'}</p>
-                                                {p.admin && <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-md">ADMIN</span>}
-                                                {p.admin_nubilato && <span className="text-[10px] font-black bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-md">ADMIN 💍</span>}
-                                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border ${isNub ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                                <p className="font-bold text-slate-800 truncate max-w-[140px]" title={p.username || 'Senza nome'}>
+                                                    {p.username && p.username.includes('@') ? p.username.split('@')[0] : (p.username || 'Senza nome')}
+                                                </p>
+                                                {p.admin && <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-md shrink-0">ADMIN</span>}
+                                                {p.admin_nubilato && <span className="text-[10px] font-black bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-md shrink-0">ADMIN 💍</span>}
+                                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${isNub ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                                                     {isNub ? '💍' : '🍐'}
                                                 </span>
                                             </div>
@@ -294,7 +296,7 @@ export default function AdminPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1 shrink-0">
+                                    <div className="flex items-center gap-1 shrink-0 ml-1">
                                         {online ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-slate-300" />}
                                         {/* Toggle admin nubilato - solo per utenti nubilato non-admin */}
                                         {!p.admin && p.gruppo === 'nubilato' && (
