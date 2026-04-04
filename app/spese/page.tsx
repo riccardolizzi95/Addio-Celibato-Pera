@@ -12,6 +12,7 @@ const NUM_PARTECIPANTI_RIMBORSO = 7; // 8 persone - 1 festeggiato
 
 export default function SpesePage() {
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [tab, setTab] = useState<'dashboard' | 'contributi' | 'spese' | 'analisi'>('dashboard');
   const [contributi, setContributi] = useState<Contributo[]>([]);
   const [spese, setSpese] = useState<Spesa[]>([]);
@@ -56,6 +57,8 @@ export default function SpesePage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { await supabase.auth.signOut().catch(() => {}); window.location.assign('/login'); return; }
+        const { data: profilo } = await supabase.from('profili').select('admin').eq('id', session.user.id).single();
+        if (profilo?.admin) setIsAdmin(true);
         await caricaDati();
         setLoading(false);
       } catch { await supabase.auth.signOut().catch(() => {}); window.location.assign('/login'); }
@@ -200,7 +203,7 @@ export default function SpesePage() {
       {/* === CONTRIBUTI === */}
       {tab === 'contributi' && (
         <div className="space-y-3">
-          {showAddContributo ? (
+          {isAdmin && (showAddContributo ? (
             <div className="bg-white p-5 rounded-2xl shadow-lg border-2 border-amber-400 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-black text-amber-600 uppercase tracking-widest">💶 Nuovo Contributo</p>
@@ -224,7 +227,7 @@ export default function SpesePage() {
               className="w-full bg-amber-500 text-white rounded-2xl py-4 font-bold shadow-xl shadow-amber-100 active:scale-95 transition-all flex items-center justify-center gap-2">
               <Plus size={20} /> Aggiungi Contributo
             </button>
-          )}
+          ))}
 
           {contributi.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
@@ -242,7 +245,7 @@ export default function SpesePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-black text-emerald-600">+€{Number(c.importo).toFixed(2)}</span>
-                      {confirmDeleteId === c.id ? (
+                      {isAdmin && (confirmDeleteId === c.id ? (
                         <div className="flex gap-1">
                           <button onClick={() => elimina(c.id, 'contributo')} className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sì</button>
                           <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-bold">No</button>
@@ -250,7 +253,7 @@ export default function SpesePage() {
                       ) : (
                         <button onClick={() => { setConfirmDeleteId(c.id); setDeleteType('contributo'); }}
                           className="p-1 text-slate-300 hover:text-red-500"><Trash2 size={14} /></button>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -263,7 +266,7 @@ export default function SpesePage() {
       {/* === SPESE === */}
       {tab === 'spese' && (
         <div className="space-y-3">
-          {showAddSpesa ? (
+          {isAdmin && (showAddSpesa ? (
             <div className="bg-white p-5 rounded-2xl shadow-lg border-2 border-red-400 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-black text-red-600 uppercase tracking-widest">📝 Nuova Spesa</p>
@@ -308,7 +311,7 @@ export default function SpesePage() {
               className="w-full bg-red-500 text-white rounded-2xl py-4 font-bold shadow-xl shadow-red-100 active:scale-95 transition-all flex items-center justify-center gap-2">
               <Plus size={20} /> Aggiungi Spesa
             </button>
-          )}
+          ))}
 
           {/* Spese previste */}
           {spese.filter(s => !s.pagata).length > 0 && (
@@ -326,7 +329,7 @@ export default function SpesePage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       <span className="text-lg font-black text-orange-500">€{Number(s.importo).toFixed(2)}</span>
-                      {confirmDeleteId === s.id ? (
+                      {isAdmin && (confirmDeleteId === s.id ? (
                         <div className="flex gap-1">
                           <button onClick={() => elimina(s.id, 'spesa')} className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sì</button>
                           <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-bold">No</button>
@@ -334,7 +337,7 @@ export default function SpesePage() {
                       ) : (
                         <button onClick={() => { setConfirmDeleteId(s.id); setDeleteType('spesa'); }}
                           className="p-1 text-slate-300 hover:text-red-500"><Trash2 size={14} /></button>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -358,7 +361,7 @@ export default function SpesePage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       <span className="text-lg font-black text-red-600">-€{Number(s.importo).toFixed(2)}</span>
-                      {confirmDeleteId === s.id ? (
+                      {isAdmin && (confirmDeleteId === s.id ? (
                         <div className="flex gap-1">
                           <button onClick={() => elimina(s.id, 'spesa')} className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sì</button>
                           <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 bg-slate-200 text-slate-600 rounded-lg text-xs font-bold">No</button>
@@ -366,7 +369,7 @@ export default function SpesePage() {
                       ) : (
                         <button onClick={() => { setConfirmDeleteId(s.id); setDeleteType('spesa'); }}
                           className="p-1 text-slate-300 hover:text-red-500"><Trash2 size={14} /></button>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </div>
