@@ -23,12 +23,14 @@ export default function SpesePage() {
   const [showAddContributo, setShowAddContributo] = useState(false);
   const [cUserId, setCUserId] = useState('');
   const [cImporto, setCImporto] = useState('');
+  const [cData, setCData] = useState(new Date().toISOString().split('T')[0]);
   const [cNote, setCNote] = useState('');
 
   // Form spesa
   const [showAddSpesa, setShowAddSpesa] = useState(false);
   const [sDescrizione, setSDescrizione] = useState('');
   const [sImporto, setSImporto] = useState('');
+  const [sData, setSData] = useState(new Date().toISOString().split('T')[0]);
   const [sCategoria, setSCategoria] = useState<'alloggio' | 'voli_trasporti' | 'svago'>('svago');
   const [sPagata, setSPagata] = useState(true);
   const [sNote, setSNote] = useState('');
@@ -90,9 +92,9 @@ export default function SpesePage() {
     if (!cUserId || !cImporto) return mostraFeedback('Seleziona persona e importo', 'error');
     const profilo = profili.find(p => p.id === cUserId);
     await supabase.from('contributi').insert({
-      user_id: cUserId, username: profilo?.username || '', importo: parseFloat(cImporto), note: cNote || null, gruppo: 'celibato'
+      user_id: cUserId, username: profilo?.username || '', importo: parseFloat(cImporto), data: cData, note: cNote || null, gruppo: 'celibato'
     });
-    setCUserId(''); setCImporto(''); setCNote(''); setShowAddContributo(false);
+    setCUserId(''); setCImporto(''); setCData(new Date().toISOString().split('T')[0]); setCNote(''); setShowAddContributo(false);
     mostraFeedback('Contributo aggiunto! 💰', 'success');
     caricaDati();
   };
@@ -100,9 +102,9 @@ export default function SpesePage() {
   const aggiungiSpesa = async () => {
     if (!sDescrizione || !sImporto) return mostraFeedback('Descrizione e importo obbligatori', 'error');
     await supabase.from('spese').insert({
-      descrizione: sDescrizione, importo: parseFloat(sImporto), categoria: sCategoria, pagata: sPagata, note: sNote || null, gruppo: 'celibato'
+      descrizione: sDescrizione, importo: parseFloat(sImporto), data: sData, categoria: sCategoria, pagata: sPagata, note: sNote || null, gruppo: 'celibato'
     });
-    setSDescrizione(''); setSImporto(''); setSNote(''); setSCategoria('svago'); setSPagata(true); setShowAddSpesa(false);
+    setSDescrizione(''); setSImporto(''); setSData(new Date().toISOString().split('T')[0]); setSNote(''); setSCategoria('svago'); setSPagata(true); setShowAddSpesa(false);
     mostraFeedback('Spesa aggiunta! 📝', 'success');
     caricaDati();
   };
@@ -216,6 +218,8 @@ export default function SpesePage() {
               </select>
               <input type="number" step="0.01" placeholder="Importo (€)" value={cImporto} onChange={e => setCImporto(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-amber-400" />
+              <input type="date" value={cData} onChange={e => setCData(e.target.value)}
+                className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-amber-400" />
               <input type="text" placeholder="Note (opzionale)" value={cNote} onChange={e => setCNote(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-amber-400" />
               <button onClick={aggiungiContributo} className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold active:scale-95 transition-all">
@@ -275,6 +279,8 @@ export default function SpesePage() {
               <input type="text" placeholder="Descrizione" value={sDescrizione} onChange={e => setSDescrizione(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-red-400" />
               <input type="number" step="0.01" placeholder="Importo (€)" value={sImporto} onChange={e => setSImporto(e.target.value)}
+                className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-red-400" />
+              <input type="date" value={sData} onChange={e => setSData(e.target.value)}
                 className="w-full p-3 border rounded-xl bg-slate-50 text-base outline-none focus:ring-2 ring-red-400" />
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</p>
