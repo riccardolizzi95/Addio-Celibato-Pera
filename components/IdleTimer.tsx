@@ -8,7 +8,7 @@ export default function IdleTimer({ children }: { children: React.ReactNode }) {
 
     const isPublic = () => {
       const p = window.location.pathname;
-      return p === '/login' || p === '/setup-account' || p === '/invito' || p === '/profilo' || p.startsWith('/auth');
+      return p === '/login' || p === '/setup-account' || p === '/invito' || p === '/profilo' || p.startsWith('/auth') || p.startsWith('/contest-foto');
     };
 
     const updateActivity = () => {

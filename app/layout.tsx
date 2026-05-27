@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// 1. Importiamo i componenti necessari
-import Navbar from "@/components/Navbar"; 
+import NavbarWrapper from "@/components/NavbarWrapper";
 import IdleTimer from "@/components/IdleTimer"; 
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -39,10 +38,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ErrorBoundary>
-        <IdleTimer>
-          <Navbar /> 
-          {children}
-        </IdleTimer>
+          <IdleTimer>
+            <NavbarWrapper />
+            {children}
+          </IdleTimer>
         </ErrorBoundary>
       </body>
     </html>

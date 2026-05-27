@@ -6,6 +6,7 @@ import Link from 'next/link';
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [soloScherzi, setSoloScherzi] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkUserAndStatus = async () => {
@@ -34,6 +35,7 @@ export default function Home() {
           window.location.assign('/nubilato');
           return;
         }
+        if (profilo.admin) setIsAdmin(true);
         if (profilo.gruppo === 'scherzi_sposo') {
           setSoloScherzi(true);
         }
@@ -278,6 +280,13 @@ export default function Home() {
               😈 Scherzi Matrimonio
             </button>
           </Link>
+          {isAdmin && (
+            <Link href="/contest-foto/admin" className="w-full block" style={{animation: 'fadeUp 0.5s ease both 0.40s'}}>
+              <button className="w-full bg-stone-700 text-amber-200 py-5 rounded-2xl font-bold text-lg shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-3">
+                📸 Admin Contest Foto
+              </button>
+            </Link>
+          )}
         </div>
       </div>
     </main>
