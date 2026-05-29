@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Client con service role per verificare l'utente lato server
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+// Client anonimo per storage e query normali
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -10,9 +19,17 @@ async function checkAdmin(req: NextRequest) {
   const auth = req.headers.get('authorization')
   if (!auth) return null
   const token = auth.replace('Bearer ', '')
-  const { data: { user }, error } = await supabase.auth.getUser(token)
+
+  const serviceClient = getServiceClient()
+  const { data: { user }, error } = await serviceClient.auth.getUser(token)
   if (error || !user) return null
-  const { data: profilo } = await supabase.from('profili').select('admin').eq('id', user.id).single()
+
+  const { data: profilo } = await serviceClient
+    .from('profili')
+    .select('admin')
+    .eq('id', user.id)
+    .single()
+
   return profilo?.admin ? user : null
 }
 
