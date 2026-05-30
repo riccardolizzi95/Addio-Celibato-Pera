@@ -376,7 +376,7 @@ export default function ContestFotoPage() {
         <header className="cf-hero">
           <div className="cf-ornament">✦ ✦ ✦</div>
           <h1 className="cf-h1">Contest<br /><em>Fotografico</em></h1>
-          <p className="cf-sub">Yas &amp; Pera · Matrimonio 30 Maggio 2026</p>
+          <p className="cf-sub">Yas &amp; Pera · 30 Maggio 2026</p>
           {tavoloFromQR && (
             <div className="cf-badge">
               <span>✦</span>
