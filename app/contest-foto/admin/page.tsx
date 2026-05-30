@@ -297,6 +297,9 @@ export default function ContestFotoAdmin() {
 
           {/* Toolbar */}
           <div className="adm-toolbar">
+            <a href="/contest-foto/presentazione" target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+              <button className="adm-btn primary" style={{marginTop:0}}>▶ Presentazione</button>
+            </a>
             <button className="adm-btn ghost" onClick={selectAll}>
               {selected.size === fotos.length && fotos.length > 0 ? 'Deseleziona tutto' : 'Seleziona tutto'}
             </button>
