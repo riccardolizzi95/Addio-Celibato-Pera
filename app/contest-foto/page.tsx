@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-const TAVOLI = Array.from({ length: 9 }, (_, i) => i + 1)
-
 interface Foto {
   id: string
   tavolo: number
@@ -28,9 +26,10 @@ export default function ContestFotoPage() {
   const [fotoEsistente, setFotoEsistente] = useState<Foto | null>(null)
   const [loadingCheck, setLoadingCheck] = useState(false)
   const [confirmOverwrite, setConfirmOverwrite] = useState(false)
+  const [tavoloInvalido, setTavoloInvalido] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Leggi tavolo dal QR
+  // Leggi tavolo dal QR — obbligatorio
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tavolo')
@@ -38,6 +37,8 @@ export default function ContestFotoPage() {
       setTavolo(t)
       setTavoloFromQR(t)
       checkFotoEsistente(t)
+    } else {
+      setTavoloInvalido(true)
     }
   }, [])
 
@@ -59,14 +60,6 @@ export default function ContestFotoPage() {
     } finally {
       setLoadingCheck(false)
     }
-  }
-
-  function handleTavoloChange(t: string) {
-    setTavolo(t)
-    setFotoEsistente(null)
-    setConfirmOverwrite(false)
-    setMsg(null)
-    if (t) checkFotoEsistente(t)
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -137,19 +130,54 @@ export default function ContestFotoPage() {
     doUpload()
   }
 
+  // Schermata errore se URL senza tavolo valido
+  if (tavoloInvalido) return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #faf7f2; }
+      `}</style>
+      <div style={{ minHeight: '100vh', background: '#faf7f2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', fontFamily: 'Jost, sans-serif', textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 24 }}>💍</div>
+        <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 32, fontWeight: 300, color: '#1a1208', marginBottom: 12, letterSpacing: 2 }}>
+          Pagina non accessibile
+        </h1>
+        <p style={{ fontSize: 13, color: '#9b8860', lineHeight: 1.8, letterSpacing: 0.5, maxWidth: 300 }}>
+          Questa pagina è accessibile solo tramite il QR code del tuo tavolo.<br />
+          Chiedi al tuo referente il codice corretto.
+        </p>
+        <div style={{ marginTop: 32, width: 40, height: 1, background: '#c4a46e' }} />
+        <p style={{ marginTop: 16, fontFamily: 'Cormorant Garamond, serif', fontSize: 14, fontStyle: 'italic', color: '#c4a46e' }}>
+          Yas ♥ Pera · 2025
+        </p>
+      </div>
+    </>
+  )
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Jost:wght@300;400;500&display=swap');
+        /* Reset + base responsive */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
-        .cf { min-height: 100vh; background: #faf7f2; font-family: 'Jost', sans-serif; color: #2c2416; }
+        .cf {
+          min-height: 100vh;
+          min-height: 100dvh;
+          background: #faf7f2;
+          font-family: 'Jost', sans-serif;
+          color: #2c2416;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+        }
 
         /* Header */
         .cf-hero {
           position: relative;
           text-align: center;
-          padding: 52px 24px 40px;
+          padding: clamp(36px, 8vw, 60px) 24px clamp(28px, 6vw, 44px);
           background: linear-gradient(180deg, #f5efe6 0%, #faf7f2 100%);
           border-bottom: 1px solid rgba(196,164,110,0.2);
           overflow: hidden;
@@ -168,7 +196,8 @@ export default function ContestFotoPage() {
         .cf-ornament { color: #c4a46e; letter-spacing: 8px; font-size: 13px; margin-bottom: 16px; }
         .cf-h1 {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 44px; font-weight: 300;
+          font-size: clamp(34px, 9vw, 48px);
+          font-weight: 300;
           color: #1a1208; line-height: 1.1;
           letter-spacing: 2px;
         }
@@ -185,7 +214,12 @@ export default function ContestFotoPage() {
         }
 
         /* Body */
-        .cf-body { max-width: 460px; margin: 0 auto; padding: 36px 20px 60px; }
+        .cf-body {
+          max-width: 460px;
+          margin: 0 auto;
+          padding: clamp(24px, 6vw, 40px) clamp(16px, 5vw, 24px) 80px;
+          width: 100%;
+        }
 
         /* Alert */
         .cf-alert {
@@ -210,7 +244,7 @@ export default function ContestFotoPage() {
           font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
           color: #8b6914; display: flex; align-items: center; gap: 8px;
         }
-        .cf-existing img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .cf-existing img { width: 100%; height: clamp(160px, 45vw, 220px); object-fit: cover; display: block; }
         .cf-existing-info { padding: 12px 16px; }
         .cf-existing-title {
           font-family: 'Cormorant Garamond', serif;
@@ -219,10 +253,7 @@ export default function ContestFotoPage() {
         .cf-existing-meta { font-size: 11px; letter-spacing: 1px; color: #9b8860; text-transform: uppercase; }
 
         /* Divider */
-        .cf-divider {
-          display: flex; align-items: center; gap: 14px;
-          margin: 28px 0;
-        }
+        .cf-divider { display: flex; align-items: center; gap: 14px; margin: 28px 0; }
         .cf-divider-line { flex: 1; height: 1px; background: rgba(196,164,110,0.3); }
         .cf-divider-text { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #c4a46e; white-space: nowrap; }
 
@@ -232,19 +263,23 @@ export default function ContestFotoPage() {
           display: block; font-size: 10px; letter-spacing: 2.5px;
           text-transform: uppercase; color: #9b8860; margin-bottom: 8px;
         }
-        .cf-input, .cf-select {
-          width: 100%; padding: 12px 16px;
+        .cf-input {
+          width: 100%; padding: 14px 16px;
           background: white; border: 1px solid rgba(196,164,110,0.35);
-          font-family: 'Jost', sans-serif; font-size: 15px; color: #2c2416;
-          outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+          font-family: 'Jost', sans-serif;
+          font-size: 16px; /* 16px previene zoom automatico su iOS */
+          color: #2c2416;
+          outline: none; transition: border-color 0.2s;
+          -webkit-appearance: none;
+          border-radius: 0;
         }
-        .cf-input:focus, .cf-select:focus { border-color: #c4a46e; }
+        .cf-input:focus { border-color: #c4a46e; }
         .cf-input::placeholder { color: #c4b898; }
         .cf-tavolo-fixed {
-          width: 100%; padding: 12px 16px;
+          width: 100%; padding: 14px 16px;
           background: rgba(196,164,110,0.06); border: 1px solid rgba(196,164,110,0.35);
           display: flex; align-items: center; justify-content: space-between;
-          font-size: 15px; color: #2c2416;
+          font-size: 16px; color: #2c2416;
         }
         .cf-tavolo-fixed span.badge {
           font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #8b6914;
@@ -253,21 +288,23 @@ export default function ContestFotoPage() {
         /* File upload */
         .cf-upload-area {
           position: relative; border: 1px dashed rgba(196,164,110,0.5);
-          background: white; padding: 28px 20px; text-align: center;
+          background: white; padding: clamp(20px, 5vw, 32px) 20px; text-align: center;
           cursor: pointer; transition: background 0.2s;
+          -webkit-tap-highlight-color: transparent;
         }
-        .cf-upload-area:hover { background: rgba(196,164,110,0.04); }
+        .cf-upload-area:active { background: rgba(196,164,110,0.06); }
         .cf-upload-area input {
           position: absolute; inset: 0; opacity: 0;
           cursor: pointer; width: 100%; height: 100%;
+          font-size: 16px; /* previene zoom iOS */
         }
         .cf-upload-icon { font-size: 32px; margin-bottom: 10px; }
-        .cf-upload-text { font-size: 12px; letter-spacing: 1px; color: #9b8860; line-height: 1.6; }
-        .cf-upload-filename { font-size: 13px; color: #2c2416; margin-top: 4px; font-weight: 500; }
+        .cf-upload-text { font-size: 13px; letter-spacing: 0.5px; color: #9b8860; line-height: 1.6; }
+        .cf-upload-filename { font-size: 13px; color: #2c2416; margin-top: 4px; font-weight: 500; word-break: break-all; }
 
         /* Preview */
         .cf-preview { margin-top: 12px; position: relative; overflow: hidden; }
-        .cf-preview img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+        .cf-preview img { width: 100%; max-height: clamp(200px, 55vw, 280px); object-fit: cover; display: block; }
         .cf-preview-overlay {
           position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 14px;
           background: linear-gradient(transparent, rgba(26,18,8,0.65));
@@ -281,39 +318,41 @@ export default function ContestFotoPage() {
           background: rgba(196,164,110,0.08);
           padding: 18px 20px; margin-bottom: 4px;
         }
-        .cf-overwrite p {
-          font-size: 13px; line-height: 1.6; color: #5a3e00; margin-bottom: 16px;
-        }
+        .cf-overwrite p { font-size: 13px; line-height: 1.6; color: #5a3e00; margin-bottom: 16px; }
         .cf-overwrite-actions { display: flex; gap: 10px; }
 
         /* Buttons */
         .cf-btn {
-          width: 100%; padding: 14px; margin-top: 24px;
+          width: 100%; padding: 16px; margin-top: 24px;
           background: #1a1208; color: #c4a46e; border: none;
           font-family: 'Jost', sans-serif; font-size: 11px;
           letter-spacing: 4px; text-transform: uppercase;
-          cursor: pointer; transition: all 0.2s;
+          cursor: pointer; transition: background 0.2s;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          border-radius: 0;
+          min-height: 52px; /* tap target minimo 44px */
         }
-        .cf-btn:hover:not(:disabled) { background: #2c2416; }
+        .cf-btn:active:not(:disabled) { background: #2c2416; }
         .cf-btn:disabled { background: #c4b898; color: #9b8860; cursor: not-allowed; }
         .cf-btn-outline {
-          flex: 1; padding: 11px; background: white;
+          flex: 1; padding: 14px; background: white;
           border: 1px solid rgba(196,164,110,0.4); color: #8b6914;
           font-family: 'Jost', sans-serif; font-size: 10px;
           letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
-          transition: all 0.2s;
+          min-height: 48px; touch-action: manipulation; border-radius: 0;
         }
-        .cf-btn-outline:hover { border-color: #c4a46e; background: rgba(196,164,110,0.06); }
         .cf-btn-solid {
-          flex: 1; padding: 11px; background: #1a1208;
+          flex: 1; padding: 14px; background: #1a1208;
           border: 1px solid #1a1208; color: #c4a46e;
           font-family: 'Jost', sans-serif; font-size: 10px;
           letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+          min-height: 48px; touch-action: manipulation; border-radius: 0;
         }
 
         /* Footer */
         .cf-footer {
-          text-align: center; padding-bottom: 32px;
+          text-align: center; padding-bottom: clamp(24px, 8vw, 40px);
           font-family: 'Cormorant Garamond', serif;
           font-size: 15px; font-style: italic; color: #c4a46e; letter-spacing: 1px;
         }
@@ -371,25 +410,13 @@ export default function ContestFotoPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            {/* Tavolo */}
+            {/* Tavolo — sempre dal QR */}
             <div className="cf-field">
               <label className="cf-label">Numero tavolo</label>
-              {tavoloFromQR ? (
-                <div className="cf-tavolo-fixed">
-                  <span>Tavolo {tavoloFromQR}</span>
-                  <span className="badge">✓ dal QR</span>
-                </div>
-              ) : (
-                <select
-                  className="cf-select"
-                  value={tavolo}
-                  onChange={e => handleTavoloChange(e.target.value)}
-                  required
-                >
-                  <option value="">Seleziona tavolo</option>
-                  {TAVOLI.map(t => <option key={t} value={t}>Tavolo {t}</option>)}
-                </select>
-              )}
+              <div className="cf-tavolo-fixed">
+                <span>Tavolo {tavoloFromQR}</span>
+                <span className="badge">✓ dal QR</span>
+              </div>
             </div>
 
             {/* Nome */}
