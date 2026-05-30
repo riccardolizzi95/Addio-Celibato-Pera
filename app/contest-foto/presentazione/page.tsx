@@ -109,7 +109,9 @@ export default function PresentazionePage() {
   useEffect(() => {
     if (fase !== 'slideshow' || !fotos[currentIdx]) return
     const fotoId = fotos[currentIdx].id
-    const url = `${baseUrl}/contest-foto/vota?foto_id=${fotoId}`
+    const tavoloFoto = fotos[currentIdx].tavolo
+    // QR punta al link del bigliettino — contest-foto lo reindirizza alla pagina voto
+    const url = `${baseUrl}/contest-foto?tavolo=${tavoloFoto}`
     QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark: '#1a1208', light: '#faf7f2' } })
       .then(setQrUrl)
       .catch(() => setQrUrl(''))

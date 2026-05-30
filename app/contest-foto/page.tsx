@@ -46,8 +46,8 @@ export default function ContestFotoPage() {
       .then(r => r.json())
       .then(data => {
         if (data.attiva && data.foto_corrente_id) {
-          // Reindirizza alla pagina voto
-          window.location.href = `/contest-foto/vota?foto_id=${data.foto_corrente_id}`
+          // Reindirizza alla pagina voto mantenendo il numero del tavolo
+          window.location.href = `/contest-foto/vota?foto_id=${data.foto_corrente_id}&tavolo=${t}`
         } else {
           checkFotoEsistente(t)
         }

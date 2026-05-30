@@ -20,8 +20,10 @@ export default function VotaPage() {
   const [err, setErr] = useState<string | null>(null)
   const [fotoId, setFotoId] = useState<string | null>(null)
   const [transitioning, setTransitioning] = useState(false)
+  const [tavoloVotante, setTavoloVotante] = useState<number | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const currentFotoIdRef = useRef<string | null>(null)
+  const tavoloRef = useRef<number | null>(null)
 
   const loadFoto = useCallback(async (id: string) => {
     const r = await fetch('/api/contest-foto/voti')
@@ -55,9 +57,14 @@ export default function VotaPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const id = params.get('foto_id')
+    const t = parseInt(params.get('tavolo') ?? '0')
     if (!id) { setErr('QR code non valido.'); setLoading(false); return }
     setFotoId(id)
     currentFotoIdRef.current = id
+    if (t >= 1 && t <= 9) {
+      setTavoloVotante(t)
+      tavoloRef.current = t
+    }
 
     // Controlla se ha già votato
     const voted = localStorage.getItem(`voted_${id}`)
@@ -100,7 +107,8 @@ export default function VotaPage() {
           tavolo_foto: foto.tavolo,
           tipo: 'pubblico',
           valore: voto,
-          device_fingerprint: getFingerprint()
+          device_fingerprint: getFingerprint(),
+          tavolo_votante: tavoloVotante
         })
       })
       const data = await r.json()
@@ -171,6 +179,9 @@ export default function VotaPage() {
           <div style={s.ornament}>✦</div>
           <h1 style={s.title}>Vota la foto</h1>
           <div style={s.tavoloBadge}>Tavolo {foto?.tavolo}</div>
+          {tavoloVotante && (
+            <div style={s.tavoloVotanteBadge}>Stai votando dal Tavolo {tavoloVotante}</div>
+          )}
         </div>
 
         {/* Foto */}
@@ -237,6 +248,7 @@ const s: Record<string, React.CSSProperties> = {
   ornament: { color: '#c4a46e', fontSize: 18, marginBottom: 10 },
   title: { fontFamily: 'Cormorant Garamond, serif', fontSize: 32, fontWeight: 300, color: '#1a1208', letterSpacing: 2 },
   tavoloBadge: { display: 'inline-block', marginTop: 12, padding: '6px 20px', background: '#1a1208', color: '#c4a46e', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase' },
+  tavoloVotanteBadge: { display: 'inline-block', marginTop: 6, padding: '4px 14px', background: 'rgba(196,164,110,0.12)', border: '1px solid rgba(196,164,110,0.3)', color: '#8b6914', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const },
 
   photoWrap: { position: 'relative', overflow: 'hidden' },
   photo: { width: '100%', height: '45vw', maxHeight: 280, objectFit: 'cover', display: 'block' },
