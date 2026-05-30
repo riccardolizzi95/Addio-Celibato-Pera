@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface Foto {
   id: string
@@ -19,18 +19,51 @@ export default function VotaPage() {
   const [done, setDone] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [fotoId, setFotoId] = useState<string | null>(null)
+  const [transitioning, setTransitioning] = useState(false)
+  const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const currentFotoIdRef = useRef<string | null>(null)
+
+  const loadFoto = useCallback(async (id: string) => {
+    const r = await fetch('/api/contest-foto/voti')
+    const data = await r.json()
+    const f = data.fotos?.find((f: Foto) => f.id === id)
+    if (f) setFoto(f)
+  }, [])
+
+  // Polling: controlla se la foto corrente è cambiata nella presentazione
+  const pollStato = useCallback(async () => {
+    try {
+      const r = await fetch('/api/contest-foto/stato')
+      const data = await r.json()
+      if (!data.attiva) return // presentazione non attiva
+      const nuovaFotoId = data.foto_corrente_id
+      if (nuovaFotoId && nuovaFotoId !== currentFotoIdRef.current) {
+        // Foto cambiata! Aggiorna
+        currentFotoIdRef.current = nuovaFotoId
+        setTransitioning(true)
+        setFotoId(nuovaFotoId)
+        // Controlla se ha già votato questa nuova foto
+        const alreadyVoted = localStorage.getItem(`voted_${nuovaFotoId}`)
+        setDone(!!alreadyVoted)
+        setVoto(7)
+        await loadFoto(nuovaFotoId)
+        setTimeout(() => setTransitioning(false), 400)
+      }
+    } catch { /* ignora errori di polling */ }
+  }, [loadFoto])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const id = params.get('foto_id')
     if (!id) { setErr('QR code non valido.'); setLoading(false); return }
     setFotoId(id)
+    currentFotoIdRef.current = id
 
     // Controlla se ha già votato
     const voted = localStorage.getItem(`voted_${id}`)
     if (voted) { setDone(true) }
 
-    fetch(`/api/contest-foto/voti`)
+    fetch('/api/contest-foto/voti')
       .then(r => r.json())
       .then(data => {
         const f = data.fotos?.find((f: Foto) => f.id === id)
@@ -39,7 +72,11 @@ export default function VotaPage() {
       })
       .catch(() => setErr('Errore nel caricamento.'))
       .finally(() => setLoading(false))
-  }, [])
+
+    // Avvia polling stato ogni 3 secondi
+    pollRef.current = setInterval(pollStato, 3000)
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [pollStato])
 
   // Genera fingerprint dal device
   function getFingerprint(): string {
@@ -84,6 +121,13 @@ export default function VotaPage() {
 
   const stars = [1,2,3,4,5,6,7,8,9,10]
 
+  if (transitioning) return (
+    <div style={s.center}>
+      <div style={{ fontSize: 44, marginBottom: 20, animation: 'spin 0.5s linear' }}>✨</div>
+      <p style={s.loadText}>Prossima foto...</p>
+    </div>
+  )
+
   if (loading) return (
     <div style={s.center}>
       <div style={s.ring}>💍</div>
@@ -114,6 +158,9 @@ export default function VotaPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400;500&display=swap');
+        @keyframes spin { from { transform: scale(0.5) rotate(0deg); opacity: 0; } to { transform: scale(1) rotate(360deg); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .cf-photo-wrap { animation: fadeIn 0.4s ease; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { -webkit-text-size-adjust: 100%; }
         body { background: #faf7f2; }
@@ -128,7 +175,7 @@ export default function VotaPage() {
 
         {/* Foto */}
         {foto && (
-          <div style={s.photoWrap}>
+          <div style={s.photoWrap} className="cf-photo-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={foto.public_url} alt={foto.titolo} style={s.photo} />
             <div style={s.photoInfo}>
