@@ -118,9 +118,19 @@ export default function ContestFotoAdmin() {
       const data = await r.json()
       if (!r.ok) throw new Error(data.error)
       showMsg(`${data.deleted} foto eliminate`, 'success')
+      // Aggiorna stato locale immediatamente
+      const deletedIds = Array.from(selected)
+      setFotos(prev => prev.filter(f => !deletedIds.includes(f.id)))
+      setPerTavolo(prev => {
+        const updated = { ...prev }
+        for (const t in updated) {
+          updated[Number(t)] = updated[Number(t)].filter(f => !deletedIds.includes(f.id))
+        }
+        return updated
+      })
+      setTotFoto(prev => prev - deletedIds.length)
       setSelected(new Set())
       setConfirmDel(false)
-      loadFotos()
     } catch (e) {
       showMsg(e instanceof Error ? e.message : 'Errore', 'error')
     } finally {
