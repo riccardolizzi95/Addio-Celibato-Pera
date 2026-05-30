@@ -31,6 +31,9 @@ export default function PresentazionePage() {
   const [pareggi, setPareggi] = useState<number[][]>([])
   const [qrUrl, setQrUrl] = useState<string>('')
   const [msg, setMsg] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const baseUrl = typeof window !== 'undefined'
@@ -42,7 +45,7 @@ export default function PresentazionePage() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { setChecking(false); return }
       const { data: profilo } = await supabase.from('profili').select('admin').eq('id', session.user.id).single()
-      if (profilo?.admin) setIsAdmin(true)
+      if (profilo?.admin) { setIsAdmin(true); setToken(session.access_token) }
       setChecking(false)
     })
   }, [])
@@ -60,6 +63,7 @@ export default function PresentazionePage() {
     const r = await fetch('/api/contest-foto/voti')
     const data = await r.json()
     if (data.fotos) {
+      // Aggiorna sempre le foto (per gestire sostituzioni durante la presentazione)
       setFotos(data.fotos)
       setClassifica(data.classifica ?? [])
       setPareggi(data.pareggi ?? [])
@@ -68,10 +72,33 @@ export default function PresentazionePage() {
 
   // Avvia presentazione
   async function startPresentation() {
-    await loadVoti()
+    await loadVoti() // carica foto fresche
     setCurrentIdx(0)
     setFase('slideshow')
     pollRef.current = setInterval(loadVoti, 3000)
+  }
+
+  // Interrompi e resetta tutto
+  async function handleReset() {
+    setResetting(true)
+    try {
+      if (pollRef.current) clearInterval(pollRef.current)
+      await fetch('/api/contest-foto/reset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      })
+      // Torna alla schermata iniziale
+      setFase('loading')
+      setCurrentIdx(0)
+      setFotos([])
+      setClassifica([])
+      setPareggi([])
+      setVotoCorrente(7)
+      setConfirmReset(false)
+      setQrUrl('')
+    } finally {
+      setResetting(false)
+    }
   }
 
   useEffect(() => {
@@ -336,6 +363,21 @@ export default function PresentazionePage() {
             {currentIdx === fotos.length - 1 ? 'Classifica →' : 'Avanti →'}
           </button>
         </div>
+        {/* Aggiorna foto + Reset */}
+        <div style={{display:'flex', gap:4, padding:'4px 12px 8px', borderTop:'1px solid rgba(196,164,110,0.1)'}}>
+          <button style={s.navBtnSmall} onClick={loadVoti} title="Ricarica foto aggiornate">
+            ↻ Aggiorna foto
+          </button>
+          {!confirmReset ? (
+            <button style={s.navBtnDanger} onClick={() => setConfirmReset(true)}>
+              ✕ Interrompi
+            </button>
+          ) : (
+            <button style={s.navBtnDangerConfirm} onClick={handleReset} disabled={resetting}>
+              {resetting ? '...' : 'Conferma reset'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -421,4 +463,7 @@ const s: Record<string, React.CSSProperties> = {
   clasScoreValBig: { fontSize: 28, color: '#8b6914', fontFamily: 'Cormorant Garamond, serif', fontWeight: 400 },
   clasFooter: { padding: '16px 48px', borderTop: '1px solid rgba(196,164,110,0.2)', display: 'flex', justifyContent: 'flex-end' },
   backBtn: { padding: '10px 24px', background: '#1a1208', color: '#c4a46e', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer' },
+  navBtnSmall: { flex: 1, padding: '7px 0', background: 'white', border: '1px solid rgba(196,164,110,0.3)', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: '#9b8860', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
+  navBtnDanger: { flex: 1, padding: '7px 0', background: 'white', border: '1px solid rgba(160,60,50,0.3)', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: '#a03c32', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
+  navBtnDangerConfirm: { flex: 1, padding: '7px 0', background: '#a03c32', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: 'white', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
 }
