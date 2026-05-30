@@ -76,18 +76,24 @@ export default function VotaPage() {
       tavoloRef.current = t
     }
 
-    // Controlla se ha già votato
-    const voted = localStorage.getItem(`voted_${id}`)
-    if (voted) { setDone(true) }
-
-    // Carica stato iniziale per inizializzare lastResetRef
+    // Carica stato iniziale + verifica lato server se ha già votato
     fetch('/api/contest-foto/stato')
       .then(r => r.json())
       .then(data => {
-        // Inizializza con reset_at corrente — così non triggera un falso reset
         if (data.reset_at) lastResetRef.current = data.reset_at
+        // Se la presentazione NON è attiva, fidati del localStorage
+        // Se è attiva, verifica lato server tramite fingerprint
+        if (!data.attiva) {
+          const voted = localStorage.getItem(`voted_${id}`)
+          if (voted) setDone(true)
+        }
+        // Se attiva: il server blocca i doppi voti, non mostrare "già votato" solo dal localStorage
       })
-      .catch(() => {})
+      .catch(() => {
+        // Fallback: usa localStorage
+        const voted = localStorage.getItem(`voted_${id}`)
+        if (voted) setDone(true)
+      })
 
     fetch('/api/contest-foto/voti')
       .then(r => r.json())
@@ -178,15 +184,6 @@ export default function VotaPage() {
       {foto && (
         <div style={s.doneBadge}>Tavolo {foto.tavolo} · {foto.titolo}</div>
       )}
-      <button
-        onClick={() => {
-          Object.keys(localStorage).filter(k => k.startsWith('voted_')).forEach(k => localStorage.removeItem(k))
-          setDone(false)
-        }}
-        style={{ marginTop: 24, background: 'none', border: '1px solid rgba(196,164,110,0.4)', padding: '8px 20px', fontFamily: 'Jost, sans-serif', fontSize: 10, letterSpacing: 2, color: '#9b8860', cursor: 'pointer', textTransform: 'uppercase' as const }}
-      >
-        Non ho ancora votato — riprova
-      </button>
     </div>
   )
 

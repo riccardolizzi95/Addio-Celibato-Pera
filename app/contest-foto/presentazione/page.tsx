@@ -322,6 +322,12 @@ export default function PresentazionePage() {
           {msg && <div style={s.msgOk}>{msg}</div>}
         </div>
 
+        {/* Voti pubblico */}
+        <div style={{padding:'8px 20px', borderBottom:'1px solid rgba(196,164,110,0.2)', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <span style={{fontSize:9, letterSpacing:3, textTransform:'uppercase' as const, color:'#9b8860', fontFamily:'Jost, sans-serif'}}>Voti pubblico</span>
+          <span style={{fontSize:18, fontFamily:'Cormorant Garamond, serif', color:'#8b6914'}}>{foto?.n_voti_pubblico ?? 0}<span style={{fontSize:11, color:'#9b8860', marginLeft:4}}>/15</span></span>
+        </div>
+
         {/* Mini classifica */}
         <div style={{ ...s.panelSection, flex: 1 }}>
           <div style={s.panelLabel}>Classifica parziale</div>
