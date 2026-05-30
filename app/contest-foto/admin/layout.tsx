@@ -1,3 +1,7 @@
-export default function ContestFotoAdminLayout({ children }: { children: React.ReactNode }) {
+export default function ContestFotoLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return <>{children}</>
 }
