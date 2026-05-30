@@ -80,6 +80,15 @@ export default function VotaPage() {
     const voted = localStorage.getItem(`voted_${id}`)
     if (voted) { setDone(true) }
 
+    // Carica stato iniziale per inizializzare lastResetRef
+    fetch('/api/contest-foto/stato')
+      .then(r => r.json())
+      .then(data => {
+        // Inizializza con reset_at corrente — così non triggera un falso reset
+        if (data.reset_at) lastResetRef.current = data.reset_at
+      })
+      .catch(() => {})
+
     fetch('/api/contest-foto/voti')
       .then(r => r.json())
       .then(data => {
@@ -169,6 +178,15 @@ export default function VotaPage() {
       {foto && (
         <div style={s.doneBadge}>Tavolo {foto.tavolo} · {foto.titolo}</div>
       )}
+      <button
+        onClick={() => {
+          Object.keys(localStorage).filter(k => k.startsWith('voted_')).forEach(k => localStorage.removeItem(k))
+          setDone(false)
+        }}
+        style={{ marginTop: 24, background: 'none', border: '1px solid rgba(196,164,110,0.4)', padding: '8px 20px', fontFamily: 'Jost, sans-serif', fontSize: 10, letterSpacing: 2, color: '#9b8860', cursor: 'pointer', textTransform: 'uppercase' as const }}
+      >
+        Non ho ancora votato — riprova
+      </button>
     </div>
   )
 
