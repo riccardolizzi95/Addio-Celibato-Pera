@@ -261,7 +261,7 @@ export default function VotaPage() {
           <p style={s.hint}>Puoi votare una sola volta per questa foto.</p>
         </div>
 
-        <div style={s.footer}>Yas ♥ Pera · 30 Maggio 2026</div>
+        <div style={s.footer}>Yas ♥ Pera · <br />30 Maggio 2026</div>
       </div>
     </>
   )
