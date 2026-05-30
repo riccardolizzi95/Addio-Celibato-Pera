@@ -162,7 +162,7 @@ export default function ContestFotoPage() {
         </p>
         <div style={{ marginTop: 32, width: 40, height: 1, background: '#c4a46e' }} />
         <p style={{ marginTop: 16, fontFamily: 'Cormorant Garamond, serif', fontSize: 14, fontStyle: 'italic', color: '#c4a46e' }}>
-          Yas ♥ Pera · 30 Maggio 2026
+          Yas ♥ Pera · <br />30 Maggio 2026
         </p>
       </div>
     </>
