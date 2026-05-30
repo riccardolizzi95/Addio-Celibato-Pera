@@ -76,18 +76,27 @@ export default function VotaPage() {
       tavoloRef.current = t
     }
 
-    // Carica stato iniziale + verifica lato server se ha già votato
+    // Genera/recupera fingerprint
+    const fp = (() => {
+      const stored = localStorage.getItem('cf_device_id')
+      if (stored) return stored
+      const newId = Math.random().toString(36).slice(2) + Date.now().toString(36)
+      localStorage.setItem('cf_device_id', newId)
+      return newId
+    })()
+
+    // Carica stato iniziale + verifica lato server se ha già votato con questo device
     fetch('/api/contest-foto/stato')
       .then(r => r.json())
-      .then(data => {
+      .then(async data => {
         if (data.reset_at) lastResetRef.current = data.reset_at
-        // Se la presentazione NON è attiva, fidati del localStorage
-        // Se è attiva, verifica lato server tramite fingerprint
-        if (!data.attiva) {
-          const voted = localStorage.getItem(`voted_${id}`)
-          if (voted) setDone(true)
+        // Verifica sempre lato server se questo device ha già votato questa foto
+        const checkR = await fetch(`/api/contest-foto/check-voto?foto_id=${id}&fingerprint=${fp}`)
+        const checkData = await checkR.json()
+        if (checkData.hasVoted) {
+          setDone(true)
+          localStorage.setItem(`voted_${id}`, '1')
         }
-        // Se attiva: il server blocca i doppi voti, non mostrare "già votato" solo dal localStorage
       })
       .catch(() => {
         // Fallback: usa localStorage
