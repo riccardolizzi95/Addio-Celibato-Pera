@@ -24,6 +24,7 @@ export default function VotaPage() {
   const pollRef = useRef<NodeJS.Timeout | null>(null)
   const currentFotoIdRef = useRef<string | null>(null)
   const tavoloRef = useRef<number | null>(null)
+  const lastResetRef = useRef<string | null>(null)
 
   const loadFoto = useCallback(async (id: string) => {
     const r = await fetch('/api/contest-foto/voti')
@@ -37,6 +38,15 @@ export default function VotaPage() {
     try {
       const r = await fetch('/api/contest-foto/stato')
       const data = await r.json()
+      // Controlla se c'è stato un reset — pulisci localStorage
+      if (data.reset_at && data.reset_at !== lastResetRef.current) {
+        lastResetRef.current = data.reset_at
+        // Pulisci tutti i flag "voted_" dal localStorage
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('voted_'))
+          .forEach(k => localStorage.removeItem(k))
+        setDone(false)
+      }
       if (!data.attiva) return // presentazione non attiva
       const nuovaFotoId = data.foto_corrente_id
       if (nuovaFotoId && nuovaFotoId !== currentFotoIdRef.current) {

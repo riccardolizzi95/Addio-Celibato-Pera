@@ -37,10 +37,11 @@ export async function POST(req: NextRequest) {
 
     if (votiErr) throw new Error(`Voti: ${votiErr.message}`)
 
-    // 2. Resetta stato presentazione
+    // 2. Resetta stato presentazione + aggiorna reset_at
+    const resetAt = new Date().toISOString()
     const { error: statoErr } = await supabase
       .from('presentazione_stato')
-      .update({ attiva: false, foto_corrente_id: null, updated_at: new Date().toISOString() })
+      .update({ attiva: false, foto_corrente_id: null, updated_at: resetAt, reset_at: resetAt })
       .eq('id', 1)
 
     if (statoErr) throw new Error(`Stato: ${statoErr.message}`)

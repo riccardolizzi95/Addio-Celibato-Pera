@@ -292,20 +292,6 @@ export default function PresentazionePage() {
       {/* Pannello destra */}
       <div style={s.slidePanel}>
 
-        {/* QR code voto pubblico */}
-        <div style={s.panelSection}>
-          <div style={s.panelLabel}>Vota anche tu!</div>
-          {qrUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrUrl} alt="QR voto" style={s.qr} />
-          ) : (
-            <div style={s.qrPlaceholder}>Generazione QR...</div>
-          )}
-          <div style={s.qrSub}>
-            {foto?.n_voti_pubblico ?? 0} voti pubblico
-          </div>
-        </div>
-
         {/* Voto sposi */}
         <div style={s.panelSection}>
           <div style={s.panelLabel}>Voto degli Sposi</div>
