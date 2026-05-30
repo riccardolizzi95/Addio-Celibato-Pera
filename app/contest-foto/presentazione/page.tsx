@@ -34,6 +34,8 @@ export default function PresentazionePage() {
   const [token, setToken] = useState<string | null>(null)
   const [confirmReset, setConfirmReset] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [spareggio, setSpareggio] = useState(false)
+  const [vincitoreId, setVincitoreId] = useState<string | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const baseUrl = typeof window !== 'undefined'
@@ -162,6 +164,26 @@ export default function PresentazionePage() {
     }
   }
 
+  function scegliVincitore(fotoId: string) {
+    setVincitoreId(fotoId)
+    // Riordina classifica: metti il vincitore prima degli altri pareggiati
+    setClassifica(prev => {
+      const pareggiatiFotoIds = pareggi[0] ? 
+        prev.filter(f => {
+          const top = prev[0].punteggio_finale ?? 0
+          return Math.abs((f.punteggio_finale ?? 0) - top) < 0.001
+        }).map(f => f.id) : []
+      
+      const vincitore = prev.find(f => f.id === fotoId)
+      const altriPareggiati = prev.filter(f => pareggiatiFotoIds.includes(f.id) && f.id !== fotoId)
+      const resto = prev.filter(f => !pareggiatiFotoIds.includes(f.id))
+      
+      return vincitore ? [vincitore, ...altriPareggiati, ...resto] : prev
+    })
+    setPareggi([])
+    setSpareggio(false)
+  }
+
   function goNext() {
     if (currentIdx < fotos.length - 1) {
       setCurrentIdx(i => i + 1)
@@ -199,72 +221,129 @@ export default function PresentazionePage() {
     </div>
   )
 
-  if (fase === 'classifica') return (
-    <div style={s.clasScreen}>
-      <div style={s.clasHeader}>
-        <h1 style={s.clasTitle}>Classifica Finale</h1>
-        <p style={s.clasSub}>Sposi 70% · Pubblico 30%</p>
-        {pareggi.length > 0 && (
-          <div style={s.pareggioAlert}>
-            ⚠️ Pareggio rilevato tra Tavolo {pareggi[0].join(' e Tavolo ')} — spareggio necessario!
+  if (fase === 'classifica') {
+    // Trova foto pareggiate al primo posto
+    const fotePareggiate = pareggi.length > 0 && classifica.length >= 2
+      ? classifica.filter(f => {
+          const top = classifica[0].punteggio_finale ?? 0
+          return Math.abs((f.punteggio_finale ?? 0) - top) < 0.001
+        })
+      : []
+
+    return (
+      <div style={s.clasScreen}>
+        <div style={s.clasHeader}>
+          <h1 style={s.clasTitle}>
+            {spareggio ? '⚔️ Spareggio' : 'Classifica Finale'}
+          </h1>
+          <p style={s.clasSub}>Sposi 70% · Pubblico 30%</p>
+          {pareggi.length > 0 && !spareggio && (
+            <div style={s.pareggioAlert}>
+              ⚠️ Pareggio tra Tavolo {fotePareggiate.map(f => f.tavolo).join(' e Tavolo ')}
+            </div>
+          )}
+        </div>
+
+        {/* MODALITÀ SPAREGGIO */}
+        {spareggio ? (
+          <div style={s.spareggioWrap}>
+            <p style={s.spareggioSub}>Gli sposi scelgono il vincitore</p>
+            <div style={s.spareggioGrid}>
+              {fotePareggiate.map(f => (
+                <div key={f.id} style={s.spareggioCard}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.public_url} alt={f.titolo} style={s.spareggioImg} />
+                  <div style={s.spareggioInfo}>
+                    <div style={s.spareggioTavolo}>Tavolo {f.tavolo}</div>
+                    <div style={s.spareggioTitolo}>{f.titolo}</div>
+                    <div style={s.spareggioScore}>{f.punteggio_finale?.toFixed(2)}</div>
+                  </div>
+                  <button style={s.spareggioBtn} onClick={() => scegliVincitore(f.id)}>
+                    🏆 Vince questo
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button style={{ ...s.backBtn, marginTop: 24 }} onClick={() => setSpareggio(false)}>
+              ← Annulla
+            </button>
           </div>
+        ) : (
+          <>
+            <div style={s.clasList}>
+              {classifica.map((f, i) => {
+                const isPareggiatoTop = fotePareggiate.some(fp => fp.id === f.id)
+                const isVincitore = f.id === vincitoreId
+                return (
+                  <div key={f.id} style={{
+                    ...s.clasRow,
+                    ...(i === 0 && !isPareggiatoTop ? s.clasRow1 : {}),
+                    ...(i === 0 && isPareggiatoTop && !vincitoreId ? s.clasRowPari : {}),
+                    ...(isVincitore ? s.clasRow1 : {}),
+                    ...(i === 1 && !isPareggiatoTop ? s.clasRow2 : {}),
+                    ...(i === 2 && !isPareggiatoTop ? s.clasRow3 : {}),
+                  }}>
+                    <div style={s.clasPos}>
+                      {isVincitore ? '🏆' : i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
+                    </div>
+                    <div style={s.clasThumb}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={f.public_url} alt={f.titolo} style={s.clasImg} />
+                    </div>
+                    <div style={s.clasInfo}>
+                      <div style={s.clasTavolo}>Tavolo {f.tavolo}</div>
+                      <div style={s.clasTitolo}>{f.titolo}</div>
+                    </div>
+                    <div style={s.clasScores}>
+                      <div style={s.clasScore}>
+                        <span style={s.clasScoreLabel}>Sposi</span>
+                        <span style={s.clasScoreVal}>{f.voto_sposi?.toFixed(1) ?? '—'}</span>
+                      </div>
+                      <div style={s.clasScore}>
+                        <span style={s.clasScoreLabel}>Pubblico</span>
+                        <span style={s.clasScoreVal}>{f.voto_pubblico?.toFixed(1) ?? '—'}</span>
+                      </div>
+                      <div style={{ ...s.clasScore, ...s.clasScoreFinale }}>
+                        <span style={s.clasScoreLabel}>Totale</span>
+                        <span style={s.clasScoreValBig}>{f.punteggio_finale?.toFixed(2) ?? '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              {fotos.filter(f => f.punteggio_finale === null).map(f => (
+                <div key={f.id} style={{ ...s.clasRow, opacity: 0.4 }}>
+                  <div style={s.clasPos}>—</div>
+                  <div style={s.clasThumb}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={f.public_url} alt={f.titolo} style={s.clasImg} />
+                  </div>
+                  <div style={s.clasInfo}>
+                    <div style={s.clasTavolo}>Tavolo {f.tavolo}</div>
+                    <div style={s.clasTitolo}>{f.titolo}</div>
+                  </div>
+                  <div style={s.clasScores}>
+                    <div style={s.clasScore}><span style={s.clasScoreLabel}>Non votata</span></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={s.clasFooter}>
+              {pareggi.length > 0 && (
+                <button style={s.spareggioTriggerBtn} onClick={() => setSpareggio(true)}>
+                  ⚔️ Avvia Spareggio
+                </button>
+              )}
+              <button style={s.backBtn} onClick={() => { setFase('slideshow'); setCurrentIdx(fotos.length - 1) }}>
+                ← Torna al voto
+              </button>
+            </div>
+          </>
         )}
       </div>
-
-      <div style={s.clasList}>
-        {classifica.map((f, i) => (
-          <div key={f.id} style={{ ...s.clasRow, ...(i === 0 ? s.clasRow1 : i === 1 ? s.clasRow2 : i === 2 ? s.clasRow3 : {}) }}>
-            <div style={s.clasPos}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</div>
-            <div style={s.clasThumb}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={f.public_url} alt={f.titolo} style={s.clasImg} />
-            </div>
-            <div style={s.clasInfo}>
-              <div style={s.clasTavolo}>Tavolo {f.tavolo}</div>
-              <div style={s.clasTitolo}>{f.titolo}</div>
-            </div>
-            <div style={s.clasScores}>
-              <div style={s.clasScore}>
-                <span style={s.clasScoreLabel}>Sposi</span>
-                <span style={s.clasScoreVal}>{f.voto_sposi?.toFixed(1) ?? '—'}</span>
-              </div>
-              <div style={s.clasScore}>
-                <span style={s.clasScoreLabel}>Pubblico</span>
-                <span style={s.clasScoreVal}>{f.voto_pubblico?.toFixed(1) ?? '—'}</span>
-              </div>
-              <div style={{ ...s.clasScore, ...s.clasScoreFinale }}>
-                <span style={s.clasScoreLabel}>Totale</span>
-                <span style={s.clasScoreValBig}>{f.punteggio_finale?.toFixed(2) ?? '—'}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-        {/* Foto non ancora votate */}
-        {fotos.filter(f => f.punteggio_finale === null).map(f => (
-          <div key={f.id} style={{ ...s.clasRow, opacity: 0.4 }}>
-            <div style={s.clasPos}>—</div>
-            <div style={s.clasThumb}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={f.public_url} alt={f.titolo} style={s.clasImg} />
-            </div>
-            <div style={s.clasInfo}>
-              <div style={s.clasTavolo}>Tavolo {f.tavolo}</div>
-              <div style={s.clasTitolo}>{f.titolo}</div>
-            </div>
-            <div style={s.clasScores}>
-              <div style={s.clasScore}><span style={s.clasScoreLabel}>Non votata</span></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={s.clasFooter}>
-        <button style={s.backBtn} onClick={() => { setFase('slideshow'); setCurrentIdx(fotos.length - 1) }}>
-          ← Torna al voto
-        </button>
-      </div>
-    </div>
-  )
+    )
+  }
 
   // SLIDESHOW
   return (
@@ -457,6 +536,18 @@ const s: Record<string, React.CSSProperties> = {
   clasScoreValBig: { fontSize: 28, color: '#8b6914', fontFamily: 'Cormorant Garamond, serif', fontWeight: 400 },
   clasFooter: { padding: '16px 48px', borderTop: '1px solid rgba(196,164,110,0.2)', display: 'flex', justifyContent: 'flex-end' },
   backBtn: { padding: '10px 24px', background: '#1a1208', color: '#c4a46e', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer' },
+  clasRowPari: { border: '2px dashed #c4a46e', background: 'rgba(196,164,110,0.04)' },
+  spareggioWrap: { flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: '32px 48px', overflow: 'auto' },
+  spareggioSub: { fontSize: 13, letterSpacing: 3, color: '#9b8860', textTransform: 'uppercase' as const, marginBottom: 32 },
+  spareggioGrid: { display: 'flex', gap: 32, justifyContent: 'center', flexWrap: 'wrap' as const, width: '100%', maxWidth: 900 },
+  spareggioCard: { flex: 1, minWidth: 280, maxWidth: 400, background: 'white', border: '1px solid rgba(196,164,110,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' as const },
+  spareggioImg: { width: '100%', height: 280, objectFit: 'cover' as const, display: 'block' },
+  spareggioInfo: { padding: '16px 20px' },
+  spareggioTavolo: { fontFamily: 'Cormorant Garamond, serif', fontSize: 28, color: '#1a1208', fontWeight: 300 },
+  spareggioTitolo: { fontSize: 13, color: '#9b8860', letterSpacing: 1, marginTop: 4 },
+  spareggioScore: { fontFamily: 'Cormorant Garamond, serif', fontSize: 22, color: '#c4a46e', marginTop: 8 },
+  spareggioBtn: { margin: '0 20px 20px', padding: '16px', background: '#1a1208', color: '#c4a46e', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'background 0.2s' },
+  spareggioTriggerBtn: { padding: '10px 28px', background: '#c4a46e', color: '#1a1208', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase' as const, cursor: 'pointer', marginRight: 12, fontWeight: 500 },
   navBtnSmall: { flex: 1, padding: '7px 0', background: 'white', border: '1px solid rgba(196,164,110,0.3)', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: '#9b8860', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
   navBtnDanger: { flex: 1, padding: '7px 0', background: 'white', border: '1px solid rgba(160,60,50,0.3)', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: '#a03c32', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
   navBtnDangerConfirm: { flex: 1, padding: '7px 0', background: '#a03c32', border: 'none', fontFamily: 'Jost, sans-serif', fontSize: 9, letterSpacing: 1.5, color: 'white', cursor: 'pointer', borderRadius: 0, textTransform: 'uppercase' as const },
