@@ -162,7 +162,7 @@ export default function ContestFotoPage() {
         </p>
         <div style={{ marginTop: 32, width: 40, height: 1, background: '#c4a46e' }} />
         <p style={{ marginTop: 16, fontFamily: 'Cormorant Garamond, serif', fontSize: 14, fontStyle: 'italic', color: '#c4a46e' }}>
-          Yas ♥ Pera · 2025
+          Yas ♥ Pera · 30 Maggio 2026
         </p>
       </div>
     </>
@@ -376,7 +376,7 @@ export default function ContestFotoPage() {
         <header className="cf-hero">
           <div className="cf-ornament">✦ ✦ ✦</div>
           <h1 className="cf-h1">Contest<br /><em>Fotografico</em></h1>
-          <p className="cf-sub">Yas &amp; Pera · Matrimonio 2025</p>
+          <p className="cf-sub">Yas &amp; Pera · Matrimonio 30 Maggio 2026</p>
           {tavoloFromQR && (
             <div className="cf-badge">
               <span>✦</span>

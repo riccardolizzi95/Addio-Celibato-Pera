@@ -213,7 +213,7 @@ export default function PresentazionePage() {
       <div style={s.startInner}>
         <div style={{ fontSize: 52, marginBottom: 20 }}>💍</div>
         <h1 style={s.startTitle}>Contest Fotografico</h1>
-        <p style={s.startSub}>Yas ♥ Pera · 2025</p>
+        <p style={s.startSub}>Yas ♥ Pera · 30 Maggio 2026</p>
         <button style={s.startBtn} onClick={startPresentation}>
           ▶ Avvia Presentazione
         </button>

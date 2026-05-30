@@ -274,7 +274,7 @@ export default function ContestFotoAdmin() {
       <div className="adm">
         <header className="adm-header">
           <h1>Admin Contest Fotografico</h1>
-          <p>Yas ♥ Pera · Matrimonio 2025</p>
+          <p>Yas ♥ Pera · Matrimonio 30 Maggio 2026</p>
         </header>
 
         <div className="adm-body">
