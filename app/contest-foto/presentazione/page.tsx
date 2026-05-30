@@ -47,6 +47,15 @@ export default function PresentazionePage() {
     })
   }, [])
 
+  // Aggiorna stato presentazione su Supabase
+  const aggiornaStato = useCallback(async (attiva: boolean, foto_id: string | null) => {
+    await fetch('/api/contest-foto/stato', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attiva, foto_corrente_id: foto_id ?? null })
+    })
+  }, [])
+
   const loadVoti = useCallback(async () => {
     const r = await fetch('/api/contest-foto/voti')
     const data = await r.json()
@@ -62,7 +71,6 @@ export default function PresentazionePage() {
     await loadVoti()
     setCurrentIdx(0)
     setFase('slideshow')
-    // Poll voti pubblico ogni 3s
     pollRef.current = setInterval(loadVoti, 3000)
   }
 
@@ -70,14 +78,41 @@ export default function PresentazionePage() {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
-  // Genera QR per foto corrente
+  // Genera QR per foto corrente + aggiorna stato presentazione
   useEffect(() => {
     if (fase !== 'slideshow' || !fotos[currentIdx]) return
-    const url = `${baseUrl}/contest-foto/vota?foto_id=${fotos[currentIdx].id}`
+    const fotoId = fotos[currentIdx].id
+    const url = `${baseUrl}/contest-foto/vota?foto_id=${fotoId}`
     QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark: '#1a1208', light: '#faf7f2' } })
       .then(setQrUrl)
       .catch(() => setQrUrl(''))
-  }, [currentIdx, fotos, fase, baseUrl])
+    // Aggiorna stato su Supabase — la pagina contest-foto leggerà questo
+    aggiornaStato(true, fotoId)
+  }, [currentIdx, fotos, fase, baseUrl, aggiornaStato])
+
+  // Avvia stato quando entra in slideshow
+  useEffect(() => {
+    if (fase === 'slideshow' && fotos[currentIdx]) {
+      aggiornaStato(true, fotos[currentIdx].id)
+    }
+    // Disattiva stato quando va in classifica o esce
+    if (fase === 'classifica') {
+      aggiornaStato(false, null)
+    }
+  }, [fase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cleanup: disattiva stato quando si chiude la pagina
+  useEffect(() => {
+    const handleUnload = () => {
+      navigator.sendBeacon('/api/contest-foto/stato',
+        JSON.stringify({ attiva: false, foto_corrente_id: null }))
+    }
+    window.addEventListener('beforeunload', handleUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload)
+      aggiornaStato(false, null)
+    }
+  }, [aggiornaStato])
 
   // Voto sposi
   async function votaSposi() {

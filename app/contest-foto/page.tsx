@@ -30,17 +30,30 @@ export default function ContestFotoPage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Leggi tavolo dal QR — obbligatorio
+  // Se la presentazione è attiva, reindirizza alla pagina voto
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tavolo')
-    if (t && parseInt(t) >= 1 && parseInt(t) <= 9) {
-      setTavolo(t)
-      setTavoloFromQR(t)
-      checkFotoEsistente(t)
-    } else {
+    if (!t || parseInt(t) < 1 || parseInt(t) > 9) {
       setTavoloInvalido(true)
+      return
     }
-  }, [])
+    setTavolo(t)
+    setTavoloFromQR(t)
+
+    // Controlla se la presentazione è attiva
+    fetch('/api/contest-foto/stato')
+      .then(r => r.json())
+      .then(data => {
+        if (data.attiva && data.foto_corrente_id) {
+          // Reindirizza alla pagina voto
+          window.location.href = `/contest-foto/vota?foto_id=${data.foto_corrente_id}`
+        } else {
+          checkFotoEsistente(t)
+        }
+      })
+      .catch(() => checkFotoEsistente(t))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Controlla se esiste già una foto per il tavolo
   async function checkFotoEsistente(t: string) {
